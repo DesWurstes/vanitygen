@@ -240,26 +240,15 @@ out:
 }
 
 
-#if !defined(_WIN32)
 int
 count_processors(void)
 {
-	FILE *fp;
-	char buf[512];
-	int count = 0;
-
-	fp = fopen("/proc/cpuinfo", "r");
-	if (!fp)
+	int count = (int) std::thread::hardware_concurrency();
+	if (count == 0) {
 		return -1;
-
-	while (fgets(buf, sizeof(buf), fp)) {
-		if (!strncmp(buf, "processor\t", 10))
-			count += 1;
 	}
-	fclose(fp);
 	return count;
 }
-#endif
 
 int
 start_threads(vg_context_t *vcp, int nthreads)
