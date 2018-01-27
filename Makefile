@@ -1,17 +1,25 @@
 LIBS=-lpcre -lcrypto -lm -lpthread
-CFLAGS=-ggdb -O3 -Wall
+CFLAGS=-ggdb -Wall
 OBJS=vanitygen.o oclvanitygen.o oclvanityminer.o oclengine.o keyconv.o pattern.o util.o
 PROGS=vanitygen keyconv oclvanitygen oclvanityminer
+# OPTIMIZE
+# -O0 = no optimization
+# -O3 = good optimization
+# -Ofast = aggressive optimization
+# -Os = small file size
+CFLAGS+= -O3
 
 PLATFORM=$(shell uname -s)
 ifeq ($(PLATFORM),Darwin)
+	if [ -d "/usr/local/Cellar/gcc/7.3.0/bin/" ]; then \
+	CC=/usr/local/Cellar/gcc/7.3.0/bin/gcc-7; \
+	fi
 	OPENCL_LIBS=-framework OpenCL
 	LIBS+=-L/usr/local/opt/openssl/lib
 	CFLAGS+=-I/usr/local/opt/openssl/include
 else
 	OPENCL_LIBS=-lOpenCL
 endif
-
 
 most: vanitygen keyconv
 
