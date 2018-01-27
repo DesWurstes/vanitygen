@@ -5,7 +5,7 @@
  * Vanitygen is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * any later version. 
+ * any later version.
  *
  * Vanitygen is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -22,6 +22,7 @@
 #include <assert.h>
 
 #include <pthread.h>
+#include <thread>
 
 #include <openssl/sha.h>
 #include <openssl/ripemd.h>
@@ -243,6 +244,10 @@ out:
 int
 count_processors(void)
 {
+#if  (__GNUC__ > 3 && __GNUC_MINOR__ > 7) || __GNUC__ > 4
+	// C++11
+	return (int) std::thread::hardware_concurrency();
+#else
 #if !defined(_WIN32)
 	return sysconf( _SC_NPROCESSORS_ONLN );
 #else
@@ -261,7 +266,7 @@ count_processors(void)
 	fclose(fp);
 	return count;
 #endif
-
+#endif
 }
 
 int
@@ -362,7 +367,7 @@ main(int argc, char **argv)
 	int npattfp = 0;
 	int pattstdin = 0;
 
-	int i;
+	unsigned int i;
 
 	while ((opt = getopt(argc, argv, "vqnrik1eE:P:NTX:F:t:h?f:o:s:")) != -1) {
 		switch (opt) {
@@ -430,7 +435,7 @@ main(int argc, char **argv)
 			}
 			break;
 		}
-			
+
 		case 'e':
 			prompt_password = 1;
 			break;

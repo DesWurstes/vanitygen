@@ -5,7 +5,7 @@
  * Vanitygen is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * any later version. 
+ * any later version.
  *
  * Vanitygen is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -398,9 +398,9 @@ vg_output_timing_console(vg_context_t *vcp, double count,
 			 unsigned long long rate, unsigned long long total)
 {
 	double prob, time, targ;
-	char *unit;
+	std::string unit;
 	char linebuf[80];
-	int rem, p, i;
+	int rem, p;
 
 	const double targs[] = { 0.5, 0.75, 0.8, 0.9, 0.95, 1.0 };
 
@@ -416,6 +416,7 @@ vg_output_timing_console(vg_context_t *vcp, double count,
 	}
 
 	rem = sizeof(linebuf);
+	// Should do total.c_str?
 	p = snprintf(linebuf, rem, "[%.2f %s][total %lld]",
 		     targ, unit, total);
 	assert(p > 0);
@@ -436,7 +437,7 @@ vg_output_timing_console(vg_context_t *vcp, double count,
 			p = sizeof(linebuf) - rem;
 		}
 
-		for (i = 0; i < sizeof(targs)/sizeof(targs[0]); i++) {
+		for (unsigned i = 0; i < sizeof(targs)/sizeof(targs[0]); i++) {
 			targ = targs[i];
 			if ((targ < 1.0) && (prob <= targ))
 				break;
@@ -825,7 +826,7 @@ get_prefix_ranges(int addrtype, const char *pfx, BIGNUM **result,
 				BN_free(bnlow);
 				bnlow = bnlow2;
 				bnlow2 = NULL;
-			}			
+			}
 			else if (BN_cmp(&bnfloor, bnlow) > 0) {
 				/* Low prefix is partly below the floor */
 				BN_copy(bnlow, &bnfloor);
@@ -1105,12 +1106,12 @@ vg_prefix_add_ranges(avl_root_t *rootp, const char *pattern, BIGNUM **ranges,
 			vp2->vp_sibling = vp;
 	} else if (vp2) {
 		vp->vp_sibling = vp2;
-		vp2->vp_sibling = (master->vp_sibling ? 
+		vp2->vp_sibling = (master->vp_sibling ?
 				   master->vp_sibling :
 				   master);
 		master->vp_sibling = vp;
 	} else {
-		vp->vp_sibling = (master->vp_sibling ? 
+		vp->vp_sibling = (master->vp_sibling ?
 				  master->vp_sibling :
 				  master);
 		master->vp_sibling = vp;
@@ -1154,7 +1155,7 @@ static const unsigned char b58_case_map[256] = {
 static int
 prefix_case_iter_init(prefix_case_iter_t *cip, const char *pfx)
 {
-	int i;
+	unsigned int i;
 
 	cip->ci_nbits = 0;
 	cip->ci_value = 0;
@@ -1620,7 +1621,7 @@ vg_regex_context_add_patterns(vg_context_t *vcp,
 	if (!npatterns)
 		return 1;
 
-	if (npatterns > (vcrp->vcr_nalloc - vcrp->base.vc_npatterns)) {
+	if (npatterns > (signed) (vcrp->vcr_nalloc - vcrp->base.vc_npatterns)) {
 		count = npatterns + vcrp->base.vc_npatterns;
 		if (count < (2 * vcrp->vcr_nalloc)) {
 			count = (2 * vcrp->vcr_nalloc);
@@ -1647,7 +1648,7 @@ vg_regex_context_add_patterns(vg_context_t *vcp,
 	}
 
 	nres = vcrp->base.vc_npatterns;
-	for (i = 0; i < npatterns; i++) {
+	for (i = 0; i < (unsigned) npatterns; i++) {
 		vcrp->vcr_regex[nres] =
 			pcre_compile(patterns[i], 0,
 				     &pcre_errptr, &pcre_erroffset, NULL);
@@ -1687,7 +1688,7 @@ static void
 vg_regex_context_clear_all_patterns(vg_context_t *vcp)
 {
 	vg_regex_context_t *vcrp = (vg_regex_context_t *) vcp;
-	int i;
+	unsigned int i;
 	for (i = 0; i < vcrp->base.vc_npatterns; i++) {
 		if (vcrp->vcr_regex_extra[i])
 			pcre_free(vcrp->vcr_regex_extra[i]);
@@ -1714,7 +1715,8 @@ vg_regex_test(vg_exec_context_t *vxcp)
 	vg_regex_context_t *vcrp = (vg_regex_context_t *) vxcp->vxc_vc;
 
 	unsigned char hash1[32], hash2[32];
-	int i, zpfx, p, d, nres, re_vec[9];
+	int zpfx, p, d, nres, re_vec[9];
+	unsigned int i;
 	char b58[40];
 	BIGNUM bnrem;
 	BIGNUM *bn, *bndiv, *bnptmp;
@@ -1760,7 +1762,7 @@ restart_loop:
 		res = 2;
 		goto out;
 	}
-	for (i = 0; i < nres; i++) {
+	for (i = 0; i < (unsigned) nres; i++) {
 		d = pcre_exec(vcrp->vcr_regex[i],
 			      vcrp->vcr_regex_extra[i],
 			      &b58[p], (sizeof(b58) - 1) - p, 0,

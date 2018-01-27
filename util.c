@@ -5,7 +5,7 @@
  * Vanitygen is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * any later version. 
+ * any later version.
  *
  * Vanitygen is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -107,7 +107,7 @@ vg_b58_encode_check(void *buf, size_t len, char *result)
 	BIGNUM *bn, *bndiv, *bntmp;
 	BIGNUM bna, bnb, bnbase, bnrem;
 	unsigned char *binres;
-	int brlen, zpfx;
+	unsigned int brlen, zpfx;
 
 	bnctx = BN_CTX_new();
 	BN_init(&bna);
@@ -219,7 +219,7 @@ vg_b58_decode_check(const char *input, void *buf, size_t len)
 
 	/* Buffer verified */
 	if (len) {
-		if (len > l)
+		if (len > (unsigned) l)
 			len = l;
 		memcpy(buf, xbuf, len);
 	}
@@ -255,7 +255,8 @@ vg_encode_address(const EC_POINT *ppoint, const EC_GROUP *pgroup,
 	binres[0] = addrtype;
 	SHA256(eckey_buf, pend - eckey_buf, hash1);
 	RIPEMD160(hash1, sizeof(hash1), &binres[1]);
-
+	std::vector<char> v(binres, binres + 20);
+	//result = cashaddr::Encode(1, v, 0).c_str();
 	vg_b58_encode_check(binres, sizeof(binres), result);
 }
 
@@ -360,7 +361,7 @@ vg_decode_privkey(const char *b58encoded, EC_KEY *pkey, int *addrtype)
  * are met:
  *
  * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer. 
+ *    notice, this list of conditions and the following disclaimer.
  *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
@@ -497,7 +498,7 @@ vg_protect_crypt(int parameter_group,
 {
 	EVP_CIPHER_CTX *ctx = NULL;
 	unsigned char *salt;
-	unsigned char keymaterial[EVP_MAX_KEY_LENGTH + EVP_MAX_IV_LENGTH + 
+	unsigned char keymaterial[EVP_MAX_KEY_LENGTH + EVP_MAX_IV_LENGTH +
 				  EVP_MAX_MD_SIZE];
 	unsigned char hmac[EVP_MAX_MD_SIZE];
 	int hmac_len = 0, hmac_keylen = 0;
@@ -528,7 +529,7 @@ vg_protect_crypt(int parameter_group,
 			goto out;
 	}
 
-	if (parameter_group > (sizeof(protkey_parameters) / 
+	if ((unsigned) parameter_group > (sizeof(protkey_parameters) /
 			       sizeof(protkey_parameters[0])))
 		goto out;
 	params = &protkey_parameters[parameter_group];
@@ -704,7 +705,7 @@ vg_protect_decode_privkey(EC_KEY *pkey, int *keytype,
 
 	res = vg_b58_decode_check(encoded, ecenc, sizeof(ecenc));
 
-	if ((res < 2) || (res > sizeof(ecenc)))
+	if ((res < 2) || (res > (signed) sizeof(ecenc)))
 		return 0;
 
 	switch (ecenc[0]) {
@@ -930,7 +931,7 @@ vg_check_password_complexity(const char *pass, int verbose)
 
 	len = strlen(pass);
 	for (i = 0; i < len; i++) {
-		if (pass[i] > sizeof(ascii_class))
+		if (pass[i] > (signed) sizeof(ascii_class))
 			/* FIXME: skip the rest of the UTF8 char */
 			classes[5]++;
 		else if (!ascii_class[(int)pass[i]])
@@ -1079,7 +1080,7 @@ vg_read_file(FILE *fp, char ***result, int *rescount)
 		}
 
 		pos = pat ? (pat - buf) : count;
-	}			
+	}
 
 	*result = patterns;
 	*rescount = npatterns;
