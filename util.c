@@ -256,8 +256,8 @@ vg_encode_address(const EC_POINT *ppoint, const EC_GROUP *pgroup,
 	SHA256(eckey_buf, pend - eckey_buf, hash1);
 	RIPEMD160(hash1, sizeof(hash1), &binres[1]);
 	std::vector<char> v(binres, binres + 20);
-	//result = cashaddr::Encode(1, v, 0).c_str();
-	vg_b58_encode_check(binres, sizeof(binres), result);
+	result = (char *) cashaddr::Encode(1, v, 0).c_str();
+	//vg_b58_encode_check(binres, sizeof(binres), result);
 }
 
 void

@@ -26,6 +26,7 @@
 #include <openssl/ec.h>
 
 #include <vector>
+#include "cashaddr.h"
 
 extern const char *vg_b58_alphabet;
 extern const signed char vg_b58_reverse_map[256];

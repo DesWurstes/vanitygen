@@ -1,17 +1,17 @@
 LIBS=-lpcre -lcrypto -lm -lpthread
 CFLAGS=-ggdb -Wall
-OBJS=vanitygen.o oclvanitygen.o oclvanityminer.o oclengine.o keyconv.o pattern.o util.o
+OBJS=vanitygen.o oclvanitygen.o oclvanityminer.o oclengine.o keyconv.o pattern.o util.o cashaddr.o
 PROGS=vanitygen keyconv oclvanitygen oclvanityminer
 # OPTIMIZE
 # -O0 = no optimization
 # -O3 = good optimization
 # -Ofast = aggressive optimization
 # -Os = small file size
-CFLAGS+=-Ofast
+CFLAGS+=-O0
 
 PLATFORM=$(shell uname -s)
 ifeq ($(PLATFORM),Darwin)
-	ifneq ($(wildcard /usr/local/Cellar/gcc/7.3.0/bin/.*),)
+	ifneq ($(wildcard /usr/local/Cellar/gcc/7.3.0/bin/*),)
 		CC=/usr/local/Cellar/gcc/7.3.0/bin/g++-7
 	endif
 	OPENCL_LIBS=-framework OpenCL
@@ -27,16 +27,16 @@ most: vanitygen keyconv
 
 all: $(PROGS)
 
-vanitygen: vanitygen.o pattern.o util.o
+vanitygen: vanitygen.o pattern.o util.o cashaddr.o
 	$(CC) $^ -o $@ $(CFLAGS) $(LIBS)
 
-oclvanitygen: oclvanitygen.o oclengine.o pattern.o util.o
+oclvanitygen: oclvanitygen.o oclengine.o pattern.o util.o cashaddr.o
 	$(CC) $^ -o $@ $(CFLAGS) $(LIBS) $(OPENCL_LIBS)
 
-oclvanityminer: oclvanityminer.o oclengine.o pattern.o util.o
+oclvanityminer: oclvanityminer.o oclengine.o pattern.o util.o cashaddr.o
 	$(CC) $^ -o $@ $(CFLAGS) $(LIBS) $(OPENCL_LIBS) -lcurl
 
-keyconv: keyconv.o util.o
+keyconv: keyconv.o util.o cashaddr.o
 	$(CC) $^ -o $@ $(CFLAGS) $(LIBS)
 
 clean:

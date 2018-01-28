@@ -1,3 +1,6 @@
+#include <vector>
+#include <cstdint>
+#include <string>
 /*The MIT License (MIT)
 
 Copyright (c) 2009-2015 Bitcoin Developers
@@ -34,15 +37,15 @@ const char *CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
 /**
  * Concatenate two byte arrays.
  */
-std::vector<uint8_t> Cat(std::vector<uint8_t> x, const std::vector<uint8_t> &y) {
+std::vector<char> Cat(std::vector<char> x, const std::vector<char> &y) {
     x.insert(x.end(), y.begin(), y.end());
     return x;
 }
 
-uint64_t PolyMod(const std::vector<uint8_t> &v) {
+uint64_t PolyMod(const std::vector<char> &v) {
     uint64_t c = 1;
-    for (uint8_t d : v) {
-        uint8_t c0 = c >> 35;
+    for (char d : v) {
+        char c0 = c >> 35;
         c = ((c & 0x07ffffffff) << 5) ^ d;
         if (c0 & 0x01) {
             c ^= 0x98f2bc8e61;
@@ -65,28 +68,6 @@ uint64_t PolyMod(const std::vector<uint8_t> &v) {
         }
     }
     return c ^ 1;
-}
-
-std::string Encode(const int isMainNet, const std::vector<uint8_t> &payload, uint8_t type) {
-    std::vector<uint8_t> convertedPayload = PackAddrData(payload, type);
-    std::vector<uint8_t> checksum = CreateChecksum(isMainNet, &convertedPayload);
-    std::vector<uint8_t> combined = Cat(&convertedPayload, checksum);
-    std::string ret = prefix + ':';
-    ret.reserve(ret.size() + combined.size());
-    for (uint8_t c : combined) {
-        ret += CHARSET[c];
-    }
-    return ret;
-}
-
-std::vector<uint8_t> PackAddrData(const std::vector<uint8_t> &payload, uint8_t type) {
-    uint8_t version_byte(type << 3);
-    std::vector<uint8_t> data = {version_byte};
-    data.insert(data.end(), payload.begin(), payload.end());
-    std::vector<uint8_t> converted;
-    converted.reserve(((id.size() + 1) * 8 + 4) / 5);
-    ConvertBits<8, 5, true>(converted, std::begin(data), std::end(data));
-    return converted;
 }
 
 template <int frombits, int tobits, bool pad, typename O, typename I>
@@ -113,14 +94,41 @@ bool ConvertBits(O &out, I it, I end) {
     return true;
 }
 
-std::vector<uint8_t> CreateChecksum(const int isMainNet, const std::vector<uint8_t> &payload) {
-    std::vector<uint8_t> prefix = isMainNet ? {2, 9, 20, 3, 15, 9, 14, 3, 1, 19, 8, 0} : {2, 3, 8, 20, 5, 19, 20, 0};
-    std::vector<uint8_t> enc = Cat(prefix, payload);
+std::vector<char> PackAddrData(const std::vector<char> &payload, char type) {
+    char version_byte(type << 3);
+    std::vector<char> data = {version_byte};
+    data.insert(data.end(), payload.begin(), payload.end());
+    std::vector<char> converted;
+    converted.reserve(((20 + 1) * 8 + 4) / 5);
+    ConvertBits<8, 5, true>(converted, std::begin(data), std::end(data));
+    return converted;
+}
+
+std::vector<char> CreateChecksum(const int isMainNet, const std::vector<char> &payload) {
+  std::vector<char> prefix;
+    if (isMainNet != 0) {
+        prefix = {2, 9, 20, 3, 15, 9, 14, 3, 1, 19, 8, 0};
+    } else {
+        prefix = {2, 3, 8, 20, 5, 19, 20, 0};
+    }
+    std::vector<char> enc = Cat(prefix, payload);
     enc.resize(enc.size() + 8);
     uint64_t mod = PolyMod(enc);
-    std::vector<uint8_t> ret(8);
+    std::vector<char> ret(8);
     for (size_t i = 0; i < 8; ++i) {
         ret[i] = (mod >> (5 * (7 - i))) & 0x1f;
+    }
+    return ret;
+}
+
+std::string Encode(const int isMainNet, const std::vector<char> &payload, char type) {
+    std::vector<char> convertedPayload = PackAddrData(payload, type);
+    std::vector<char> checksum = CreateChecksum(isMainNet, convertedPayload);
+    std::vector<char> combined = Cat(convertedPayload, checksum);
+    std::string ret = (isMainNet ? "bitcoincash:" : "bchtest:");
+    ret.reserve(ret.size() + combined.size());
+    for (unsigned char c : combined) {
+        ret += CHARSET[c];
     }
     return ret;
 }
