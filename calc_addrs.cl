@@ -5,7 +5,7 @@
  * Vanitygen is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * any later version. 
+ * any later version.
  *
  * Vanitygen is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -206,9 +206,8 @@ __constant bn_word mont_n0[2] = { 0xd2253531, 0xd838091d };
 /*
  * Bitwise shift
  */
-
-void
-bn_lshift1(bignum *bn)
+void bn_lshift1(bignum *bn);
+void bn_lshift1(bignum *bn)
 {
 #define bn_lshift1_inner1(i)						\
 		bn->d[i] = (bn->d[i] << 1) | (bn->d[i-1] >> 31);
@@ -216,8 +215,8 @@ bn_lshift1(bignum *bn)
 	bn->d[0] <<= 1;
 }
 
-void
-bn_rshift(bignum *bn, int shift)
+void bn_rshift(bignum *bn, int shift);
+void bn_rshift(bignum *bn, int shift)
 {
 	int wd, iws, iwr;
 	bn_word ihw, ilw;
@@ -235,8 +234,8 @@ bn_rshift(bignum *bn, int shift)
 	bn->d[BN_NWORDS-1] = (ihw >> iws);
 }
 
-void
-bn_rshift1(bignum *bn)
+void bn_rshift1(bignum *bn);
+void bn_rshift1(bignum *bn)
 {
 #define bn_rshift1_inner1(i)						\
 		bn->d[i] = (bn->d[i+1] << 31) | (bn->d[i] >> 1);
@@ -244,8 +243,8 @@ bn_rshift1(bignum *bn)
 	bn->d[BN_NWORDS-1] >>= 1;
 }
 
-void
-bn_rshift1_2(bignum *bna, bignum *bnb)
+void bn_rshift1_2(bignum *bna, bignum *bnb);
+void bn_rshift1_2(bignum *bna, bignum *bnb)
 {
 #define bn_rshift1_2_inner1(i)						\
 		bna->d[i] = (bna->d[i+1] << 31) | (bna->d[i] >> 1);	\
@@ -259,9 +258,8 @@ bn_rshift1_2(bignum *bna, bignum *bnb)
 /*
  * Unsigned comparison
  */
-
-int
-bn_ucmp_ge(bignum *a, bignum *b)
+int bn_ucmp_ge(bignum *a, bignum *b);
+int bn_ucmp_ge(bignum *a, bignum *b)
 {
 	int l = 0, g = 0;
 
@@ -272,8 +270,8 @@ bn_ucmp_ge(bignum *a, bignum *b)
 	return (l > g) ? 0 : 1;
 }
 
-int
-bn_ucmp_ge_c(bignum *a, __constant bn_word *b)
+int bn_ucmp_ge_c(bignum *a, __constant bn_word *b);
+int bn_ucmp_ge_c(bignum *a, __constant bn_word *b)
 {
 	int l = 0, g = 0;
 
@@ -288,8 +286,8 @@ bn_ucmp_ge_c(bignum *a, __constant bn_word *b)
  * Negate
  */
 
-void
-bn_neg(bignum *n)
+void bn_neg(bignum *n);
+void bn_neg(bignum *n)
 {
 	int c = 1;
 
@@ -314,8 +312,8 @@ bn_neg(bignum *n)
 		r = t;						\
 	} while (0)
 
-bn_word
-bn_uadd_words_seq(bn_word *r, bn_word *a, bn_word *b)
+bn_word bn_uadd_words_seq(bn_word *r, bn_word *a, bn_word *b);
+bn_word bn_uadd_words_seq(bn_word *r, bn_word *a, bn_word *b)
 {
 	bn_word t, c = 0;
 
@@ -326,8 +324,8 @@ bn_uadd_words_seq(bn_word *r, bn_word *a, bn_word *b)
 	return c;
 }
 
-bn_word
-bn_uadd_words_c_seq(bn_word *r, bn_word *a, __constant bn_word *b)
+bn_word bn_uadd_words_c_seq(bn_word *r, bn_word *a, __constant bn_word *b);
+bn_word bn_uadd_words_c_seq(bn_word *r, bn_word *a, __constant bn_word *b)
 {
 	bn_word t, c = 0;
 
@@ -349,8 +347,8 @@ bn_uadd_words_c_seq(bn_word *r, bn_word *a, __constant bn_word *b)
 		r = t;				\
 	} while (0)
 
-bn_word
-bn_usub_words_seq(bn_word *r, bn_word *a, bn_word *b)
+bn_word bn_usub_words_seq(bn_word *r, bn_word *a, bn_word *b);
+bn_word bn_usub_words_seq(bn_word *r, bn_word *a, bn_word *b)
 {
 	bn_word t, c = 0;
 
@@ -362,8 +360,8 @@ bn_usub_words_seq(bn_word *r, bn_word *a, bn_word *b)
 	return c;
 }
 
-bn_word
-bn_usub_words_c_seq(bn_word *r, bn_word *a, __constant bn_word *b)
+bn_word bn_usub_words_c_seq(bn_word *r, bn_word *a, __constant bn_word *b);
+bn_word bn_usub_words_c_seq(bn_word *r, bn_word *a, __constant bn_word *b)
 {
 	bn_word t, c = 0;
 
@@ -375,8 +373,8 @@ bn_usub_words_c_seq(bn_word *r, bn_word *a, __constant bn_word *b)
 /*
  * Add/subtract better suited for AMD's VLIW architecture
  */
-bn_word
-bn_uadd_words_vliw(bn_word *r, bn_word *a, bn_word *b)
+bn_word bn_uadd_words_vliw(bn_word *r, bn_word *a, bn_word *b);
+bn_word bn_uadd_words_vliw(bn_word *r, bn_word *a, bn_word *b)
 {
 	bignum x;
 	bn_word c = 0, cp = 0;
@@ -399,8 +397,8 @@ bn_uadd_words_vliw(bn_word *r, bn_word *a, bn_word *b)
 	return c >> BN_NWORDS;
 }
 
-bn_word
-bn_uadd_words_c_vliw(bn_word *r, bn_word *a, __constant bn_word *b)
+bn_word bn_uadd_words_c_vliw(bn_word *r, bn_word *a, __constant bn_word *b);
+bn_word bn_uadd_words_c_vliw(bn_word *r, bn_word *a, __constant bn_word *b)
 {
 	bignum x;
 	bn_word c = 0, cp = 0;
@@ -413,8 +411,8 @@ bn_uadd_words_c_vliw(bn_word *r, bn_word *a, __constant bn_word *b)
 	return c >> BN_NWORDS;
 }
 
-bn_word
-bn_usub_words_vliw(bn_word *r, bn_word *a, bn_word *b)
+bn_word bn_usub_words_vliw(bn_word *r, bn_word *a, bn_word *b);
+bn_word bn_usub_words_vliw(bn_word *r, bn_word *a, bn_word *b)
 {
 	bignum x;
 	bn_word c = 0, cp = 0;
@@ -437,8 +435,8 @@ bn_usub_words_vliw(bn_word *r, bn_word *a, bn_word *b)
 	return c >> BN_NWORDS;
 }
 
-bn_word
-bn_usub_words_c_vliw(bn_word *r, bn_word *a, __constant bn_word *b)
+bn_word bn_usub_words_c_vliw(bn_word *r, bn_word *a, __constant bn_word *b);
+bn_word bn_usub_words_c_vliw(bn_word *r, bn_word *a, __constant bn_word *b)
 {
 	bignum x;
 	bn_word c = 0, cp = 0;
@@ -473,23 +471,23 @@ bn_usub_words_c_vliw(bn_word *r, bn_word *a, __constant bn_word *b)
  * Modular add/sub
  */
 
-void
-bn_mod_add(bignum *r, bignum *a, bignum *b)
+void bn_mod_add(bignum *r, bignum *a, bignum *b);
+void bn_mod_add(bignum *r, bignum *a, bignum *b)
 {
 	if (bn_uadd(r, a, b) ||
 	    (bn_ucmp_ge_c(r, modulus)))
 		bn_usub_c(r, r, modulus);
 }
 
-void
-bn_mod_sub(bignum *r, bignum *a, bignum *b)
+void bn_mod_sub(bignum *r, bignum *a, bignum *b);
+void bn_mod_sub(bignum *r, bignum *a, bignum *b)
 {
 	if (bn_usub(r, a, b))
 		bn_uadd_c(r, r, modulus);
 }
 
-void
-bn_mod_lshift1(bignum *bn)
+void bn_mod_lshift1(bignum *bn);
+void bn_mod_lshift1(bignum *bn)
 {
 	bn_word c = (bn->d[BN_NWORDS-1] & 0x80000000);
 	bn_lshift1(bn);
@@ -517,14 +515,14 @@ bn_mod_lshift1(bignum *bn)
 		c = (s < c) ? p + 1 : p;	\
 		if (r < s) c++;			\
 	} while (0)
-void
-bn_mul_mont(bignum *r, bignum *a, bignum *b)
+void bn_mul_mont(bignum *r, bignum *a, bignum *b);
+void bn_mul_mont(bignum *r, bignum *a, bignum *b)
 {
 	bignum t;
 	bn_word tea, teb, c, p, s, m;
 
 #if !defined(VERY_EXPENSIVE_BRANCHES)
-	int q;
+	unsigned int q;
 #endif
 
 	c = 0;
@@ -585,8 +583,8 @@ bn_mul_mont(bignum *r, bignum *a, bignum *b)
 #endif
 }
 
-void
-bn_from_mont(bignum *rb, bignum *b)
+void bn_from_mont(bignum *rb, bignum *b);
+void bn_from_mont(bignum *rb, bignum *b)
 {
 #define WORKSIZE ((2*BN_NWORDS) + 1)
 	bn_word r[WORKSIZE];
@@ -656,11 +654,11 @@ bn_from_mont(bignum *rb, bignum *b)
  * Modular inversion
  */
 
-void
-bn_mod_inverse(bignum *r, bignum *n)
+void bn_mod_inverse(bignum *r, bignum *n);
+void bn_mod_inverse(bignum *r, bignum *n)
 {
 	bignum a, b, x, y;
-	int shift;
+	unsigned int shift;
 	bn_word xc, yc;
 	for (shift = 0; shift < BN_NWORDS; shift++) {
 		a.d[shift] = modulus[shift];
@@ -759,8 +757,8 @@ __constant uint sha2_k[64] = {
 	0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
 };
 
-void
-sha2_256_init(uint *out)
+void sha2_256_init(uint *out);
+void sha2_256_init(uint *out)
 {
 #define sha2_256_init_inner_1(i) \
 	out[i] = sha2_init[i];
@@ -781,8 +779,8 @@ sha2_256_init(uint *out)
 #define sha2_ma(a, b, c) ((a & c) | (b & (a | c)))
 #endif
 
-void
-sha2_256_block(uint *out, uint *in)
+void sha2_256_block(uint *out, uint *in);
+void sha2_256_block(uint *out, uint *in)
 {
 	uint state[8], t1, t2;
 #if defined(PRAGMA_UNROLL)
@@ -910,8 +908,8 @@ __constant uchar ripemd160_rlp[] = {
 			rotate(ripemd160_valp(vals, i, 2), 10U);	\
 	} while (0)
 
-void
-ripemd160_init(uint *out)
+void ripemd160_init(uint *out);
+void ripemd160_init(uint *out)
 {
 #define ripemd160_init_inner_1(i) \
 	out[i] = ripemd160_iv[i];
@@ -919,8 +917,8 @@ ripemd160_init(uint *out)
 	hash160_unroll(ripemd160_init_inner_1);
 }
 
-void
-ripemd160_block(uint *out, uint *in)
+void ripemd160_block(uint *out, uint *in);
+void ripemd160_block(uint *out, uint *in)
 {
 	uint vals[10], t;
 #if defined(PRAGMA_UNROLL)
@@ -1017,7 +1015,7 @@ test_mod_inverse(__global bignum *inv_out, __global bignum *nums_in,
 #define ACCESS_STRIDE (ACCESS_BUNDLE/BN_NWORDS)
 
 __kernel void
-ec_add_grid(__global bn_word *points_out, __global bn_word *z_heap, 
+ec_add_grid(__global bn_word *points_out, __global bn_word *z_heap,
 	    __global bn_word *row_in, __global bignum *col_in)
 {
 	bignum rx, ry;
@@ -1205,8 +1203,8 @@ heap_invert(__global bn_word *z_heap, int batch)
 	}
 }
 
-void
-hash_ec_point(uint *hash_out, __global bn_word *xy, __global bn_word *zip)
+void hash_ec_point(uint *hash_out, __global bn_word *xy, __global bn_word *zip);
+void hash_ec_point(uint *hash_out, __global bn_word *xy, __global bn_word *zip)
 {
 	uint hash1[16], hash2[16];
 	bignum c, zi, zzi;
@@ -1346,8 +1344,8 @@ hash_ec_point_get(__global uint *hashes_out,
  * This one compares a hash160 with an upper and lower bound in one
  * function to work around a problem with AMD's OpenCL compiler.
  */
-int
-hash160_ucmp_g(uint *a, __global uint *bound)
+int hash160_ucmp_g(uint *a, __global uint *bound);
+int hash160_ucmp_g(uint *a, __global uint *bound)
 {
 	uint gv;
 
