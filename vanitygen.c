@@ -192,7 +192,7 @@ vg_thread_loop(void *arg)
 
 		EC_POINTs_make_affine(pgroup, nbatch, ppnt, vxcp->vxc_bnctx);
 
-		for (i = 0; i < nbatch; i++, vxcp->vxc_delta++) {
+		for (unsigned i = 0; i < (unsigned) nbatch; i++, vxcp->vxc_delta++) {
 			/* Hash the public key */
 			len = EC_POINT_point2oct(pgroup, ppnt[i],
 						 POINT_CONVERSION_UNCOMPRESSED,
@@ -241,10 +241,10 @@ out:
 }
 
 
-int
+unsigned int
 count_processors(void)
 {
-#if  (__GNUC__ > 3 && __GNUC_MINOR__ > 7) || __GNUC__ > 4
+#if (__GNUC__ > 3 && __GNUC_MINOR__ > 7) || __GNUC__ > 4
 	// C++11
 	return (int) std::thread::hardware_concurrency();
 #else
@@ -253,11 +253,11 @@ count_processors(void)
 #else
 	FILE *fp;
 	char buf[512];
-	int count = 0;
+	unsigned int count = 0;
 
 	fp = fopen("/proc/cpuinfo", "r");
 	if (!fp)
-		return -1;
+		return 0;
 
 	while (fgets(buf, sizeof(buf), fp)) {
 		if (!strncmp(buf, "processor\t", 10))
@@ -277,7 +277,7 @@ start_threads(vg_context_t *vcp, int nthreads)
 	if (nthreads <= 0) {
 		/* Determine the number of threads */
 		nthreads = count_processors();
-		if (nthreads <= 0) {
+		if (nthreads == 0) {
 			fprintf(stderr,
 				"ERROR: could not determine processor count\n");
 			nthreads = 1;
@@ -577,7 +577,7 @@ main(int argc, char **argv)
 		return 1;
 	}
 
-	for (i = 0; i < npattfp; i++) {
+	for (i = 0; i < (unsigned) npattfp; i++) {
 		fp = pattfp[i];
 		if (!vg_read_file(fp, &patterns, &npatterns)) {
 			fprintf(stderr, "Failed to load pattern file\n");

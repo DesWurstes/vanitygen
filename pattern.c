@@ -398,19 +398,19 @@ vg_output_timing_console(vg_context_t *vcp, double count,
 			 unsigned long long rate, unsigned long long total)
 {
 	double prob, time, targ;
-	std::string unit;
+	char *unit;
 	char linebuf[80];
 	int rem, p;
 
 	const double targs[] = { 0.5, 0.75, 0.8, 0.9, 0.95, 1.0 };
 
 	targ = rate;
-	unit = "key/s";
+	unit = (char*) "key/s";
 	if (targ > 1000) {
-		unit = "Kkey/s";
+		unit = (char*) "Kkey/s";
 		targ /= 1000.0;
 		if (targ > 1000) {
-			unit = "Mkey/s";
+			unit = (char*) "Mkey/s";
 			targ /= 1000.0;
 		}
 	}
@@ -446,19 +446,19 @@ vg_output_timing_console(vg_context_t *vcp, double count,
 		if (targ < 1.0) {
 			time = ((-vcp->vc_chance * log(1.0 - targ)) - count) /
 				rate;
-			unit = "s";
+			unit = (char*) "s";
 			if (time > 60) {
 				time /= 60;
-				unit = "min";
+				unit = (char*) "min";
 				if (time > 60) {
 					time /= 60;
-					unit = "h";
+					unit = (char*) "h";
 					if (time > 24) {
 						time /= 24;
-						unit = "d";
+						unit = (char*) "d";
 						if (time > 365) {
 							time /= 365;
-							unit = "y";
+							unit = (char*) "y";
 						}
 					}
 				}
