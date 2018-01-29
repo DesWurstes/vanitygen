@@ -19,6 +19,7 @@ ifeq ($(PLATFORM),Darwin)
 	CFLAGS +=-I/usr/local/opt/pcre/include
 	LIBS+=-L/usr/local/opt/openssl/lib
 	CFLAGS+=-I/usr/local/opt/openssl/include
+	CFLAGS+=-D_GLIBCXX_USE_CXX11_ABI=0
 else
 	OPENCL_LIBS=-lOpenCL
 endif

@@ -38,6 +38,7 @@
 
 #include "pattern.h"
 #include "util.h"
+#include "cashaddr.h"
 
 const char *vg_b58_alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 
@@ -237,10 +238,11 @@ out:
 
 void
 vg_encode_address(const EC_POINT *ppoint, const EC_GROUP *pgroup,
-		  int addrtype, char *result)
+		  int addrtype, const char *result)
 {
 	unsigned char eckey_buf[128], *pend;
-	unsigned char binres[21] = {0,};
+	unsigned char binres[20] = {};
+	//unsigned char binres[21] = {0,};
 	unsigned char hash1[32];
 
 	pend = eckey_buf;
@@ -252,11 +254,16 @@ vg_encode_address(const EC_POINT *ppoint, const EC_GROUP *pgroup,
 			   sizeof(eckey_buf),
 			   NULL);
 	pend = eckey_buf + 0x41;
-	binres[0] = addrtype;
+	//binres[0] = addrtype;
 	SHA256(eckey_buf, pend - eckey_buf, hash1);
-	RIPEMD160(hash1, sizeof(hash1), &binres[1]);
-	std::vector<char> v(binres, binres + 20);
-	result = (char *) cashaddr::Encode(1, v, 0).c_str();
+	//RIPEMD160(hash1, sizeof(hash1), &binres[1]);
+	RIPEMD160(hash1, sizeof(hash1), &binres[0]);
+	result = CashAddrEncode(1, &binres[0], 0).c_str();
+	//std::vector<unsigned char> v(binres, binres + 20);
+	//Encode(1, v, 0);
+	//result = CashAddrEncode(1, v, 0).c_str();
+	//result = std::vector<char> cstr(str.c_str(), str.c_str() + str.size() + 1);;
+	//result = CashAddrEncode(1, binres, 0).c_str();
 	//vg_b58_encode_check(binres, sizeof(binres), result);
 }
 

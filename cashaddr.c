@@ -7,7 +7,7 @@ Copyright (c) 2009-2015 Bitcoin Developers
 Copyright (c) 2009-2017 The Bitcoin Core developers
 Copyright (c) 2017 The Bitcoin ABC developers
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
+Permission is hereby granted, free of unsigned charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
@@ -30,22 +30,22 @@ THE SOFTWARE.*/
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 /**
- * The cashaddr character set for encoding.
+ * The cashaddr unsigned character set for encoding.
  */
 const char *CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
 
 /**
  * Concatenate two byte arrays.
  */
-std::vector<char> Cat(std::vector<char> x, const std::vector<char> &y) {
+std::vector<unsigned char> Cat(std::vector<unsigned char> x, const std::vector<unsigned char> &y) {
     x.insert(x.end(), y.begin(), y.end());
     return x;
 }
 
-uint64_t PolyMod(const std::vector<char> &v) {
+uint64_t PolyMod(const std::vector<unsigned char> &v) {
     uint64_t c = 1;
-    for (char d : v) {
-        char c0 = c >> 35;
+    for (unsigned char d : v) {
+        unsigned char c0 = c >> 35;
         c = ((c & 0x07ffffffff) << 5) ^ d;
         if (c0 & 0x01) {
             c ^= 0x98f2bc8e61;
@@ -94,37 +94,38 @@ bool ConvertBits(O &out, I it, I end) {
     return true;
 }
 
-std::vector<char> PackAddrData(const std::vector<char> &payload, char type) {
-    char version_byte(type << 3);
-    std::vector<char> data = {version_byte};
+std::vector<unsigned char> PackAddrData(const std::vector<unsigned char> &payload, unsigned char type) {
+    unsigned char version_byte(type << 3);
+    std::vector<unsigned char> data = {version_byte};
     data.insert(data.end(), payload.begin(), payload.end());
-    std::vector<char> converted;
+    std::vector<unsigned char> converted;
     converted.reserve(((20 + 1) * 8 + 4) / 5);
     ConvertBits<8, 5, true>(converted, std::begin(data), std::end(data));
     return converted;
 }
 
-std::vector<char> CreateChecksum(const int isMainNet, const std::vector<char> &payload) {
-  std::vector<char> prefix;
+std::vector<unsigned char> CreateChecksum(const int isMainNet, const std::vector<unsigned char> &payload) {
+  std::vector<unsigned char> prefix;
     if (isMainNet != 0) {
         prefix = {2, 9, 20, 3, 15, 9, 14, 3, 1, 19, 8, 0};
     } else {
         prefix = {2, 3, 8, 20, 5, 19, 20, 0};
     }
-    std::vector<char> enc = Cat(prefix, payload);
+    std::vector<unsigned char> enc = Cat(prefix, payload);
     enc.resize(enc.size() + 8);
     uint64_t mod = PolyMod(enc);
-    std::vector<char> ret(8);
+    std::vector<unsigned char> ret(8);
     for (size_t i = 0; i < 8; ++i) {
         ret[i] = (mod >> (5 * (7 - i))) & 0x1f;
     }
     return ret;
 }
 
-std::string Encode(const int isMainNet, const std::vector<char> &payload, char type) {
-    std::vector<char> convertedPayload = PackAddrData(payload, type);
-    std::vector<char> checksum = CreateChecksum(isMainNet, convertedPayload);
-    std::vector<char> combined = Cat(convertedPayload, checksum);
+std::string CashAddrEncode(const int isMainNet, /*const std::vector<unsigned char> &payload*//*unsigned char payload[20]*/unsigned char* payload, unsigned int type) {
+    std::vector<unsigned char> payloadPreConverted(payload, payload+20);
+    std::vector<unsigned char> convertedPayload = PackAddrData(payloadPreConverted, type);
+    std::vector<unsigned char> checksum = CreateChecksum(isMainNet, convertedPayload);
+    std::vector<unsigned char> combined = Cat(convertedPayload, checksum);
     std::string ret = (isMainNet ? "bitcoincash:" : "bchtest:");
     ret.reserve(ret.size() + combined.size());
     for (unsigned char c : combined) {
