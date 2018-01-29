@@ -8,12 +8,14 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <iostream>
 
 //namespace cashaddr {
 
 /**
  * Encode a cashaddr string. Returns the empty string in case of failure.
  */
-extern std::string CashAddrEncode(const int isMainNet, /*const std::vector<unsigned char> &payload*//*unsigned char payload[20]*/unsigned char *payload, unsigned int type);
+extern const char* CashAddrEncode(const int isMainNet, unsigned char *payload, unsigned int type);
 //}
 #endif
+/*const std::vector<unsigned char> &payload*/ /*unsigned char payload[20]*/
