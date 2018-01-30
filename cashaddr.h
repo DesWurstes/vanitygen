@@ -15,7 +15,7 @@
 /**
  * Encode a cashaddr string. Returns the empty string in case of failure.
  */
-extern const char* CashAddrEncode(const int isMainNet, unsigned char *payload, unsigned int type);
+extern /*const char* */std::string CashAddrEncode(const int isMainNet, unsigned char *payload, unsigned int type);
 //}
 #endif
 /*const std::vector<unsigned char> &payload*/ /*unsigned char payload[20]*/

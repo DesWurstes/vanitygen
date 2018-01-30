@@ -122,7 +122,7 @@ std::vector<unsigned char> CreateChecksum(const int isMainNet, const std::vector
     return ret;
 }
 
-const char* CashAddrEncode(const int isMainNet, /*const std::vector<unsigned char> &payload*//*unsigned char payload[20]*/unsigned char* payload, unsigned int type) {
+/*const char* */std::string CashAddrEncode(const int isMainNet, /*const std::vector<unsigned char> &payload*//*unsigned char payload[20]*/unsigned char* payload, unsigned int type) {
     std::vector<unsigned char> payloadPreConverted(payload, payload+20);
     std::vector<unsigned char> convertedPayload = PackAddrData(payloadPreConverted, type);
     std::vector<unsigned char> checksum = CreateChecksum(isMainNet, convertedPayload);
@@ -132,7 +132,8 @@ const char* CashAddrEncode(const int isMainNet, /*const std::vector<unsigned cha
     for (unsigned char c : combined) {
         ret += CHARSET[c];
     }
-    return ret.c_str();
+    std::cout << "z0" << ret.c_str();
+    return ret;
     /*char characters[isMainNet != 0 ? (54 + 1) : (50 + 1)] = isMainNet != 0 ? "bitcoincash:" : "bchtest";
     characters[sizeof(characters) - 1] =
     for (unsigned int i = sizeof(characters) - 2; i >)

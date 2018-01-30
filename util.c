@@ -258,21 +258,7 @@ vg_encode_address(const EC_POINT *ppoint, const EC_GROUP *pgroup,
 	SHA256(eckey_buf, pend - eckey_buf, hash1);
 	//RIPEMD160(hash1, sizeof(hash1), &binres[1]);
 	RIPEMD160(hash1, sizeof(hash1), &binres[0]);
-	//char *resultChar = CashAddrEncode(1, &binres[0], 0);
-	//result = resultChar;
-	/*char[55] chars;
-	strncpy(chars, CashAddrEncode(1, &binres[0], 0).c_str(), 55);
-	chars[55] = "\0";*/
-	const char* r1 = CashAddrEncode(1, &binres[0], 0);
-	printf("THERE:%s\n", result);
-	result = (char*) r1;
-	printf("LOLZ:%s\n", result);
-	//printf("%s", CashAddrEncode(1, &binres[0], 0));
-	//std::vector<unsigned char> v(binres, binres + 20);
-	//Encode(1, v, 0);
-	//result = CashAddrEncode(1, v, 0).c_str();
-	//result = std::vector<char> cstr(str.c_str(), str.c_str() + str.size() + 1);;
-	//result = CashAddrEncode(1, binres, 0).c_str();
+	strcpy(result, CashAddrEncode(1, &binres[0], 0).c_str());
 	//vg_b58_encode_check(binres, sizeof(binres), result);
 }
 

@@ -8,15 +8,17 @@ PROGS=vanitygen keyconv oclvanitygen oclvanityminer
 # -Ofast = aggressive optimization
 # -Os = small file size
 CFLAGS+=-O0
+CXXFLAGS+=-O0
 
 PLATFORM=$(shell uname -s)
 ifeq ($(PLATFORM),Darwin)
 	ifneq ($(wildcard /usr/local/Cellar/gcc/7.3.0/bin/*),)
 		CC=/usr/local/Cellar/gcc/7.3.0/bin/g++-7
+		CXX=/usr/local/Cellar/gcc/7.3.0/bin/g++-7
 	endif
 	OPENCL_LIBS=-framework OpenCL
 	LIBS+=-L/usr/local/opt/pcre/lib
-	CFLAGS +=-I/usr/local/opt/pcre/include
+	CFLAGS+=-I/usr/local/opt/pcre/include
 	LIBS+=-L/usr/local/opt/openssl/lib
 	CFLAGS+=-I/usr/local/opt/openssl/include
 else
