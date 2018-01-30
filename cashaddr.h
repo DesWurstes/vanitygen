@@ -10,12 +10,12 @@
 #include <vector>
 #include <iostream>
 
-//namespace cashaddr {
+extern const char *CHARSET;
+
+extern const signed char CHARSET_REV[256];
 
 /**
  * Encode a cashaddr string. Returns the empty string in case of failure.
  */
-extern /*const char* */std::string CashAddrEncode(const int isMainNet, unsigned char *payload, unsigned int type);
-//}
+extern std::string CashAddrEncode(const int isMainNet, unsigned char *payload, unsigned int type);
 #endif
-/*const std::vector<unsigned char> &payload*/ /*unsigned char payload[20]*/

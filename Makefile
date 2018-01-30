@@ -42,4 +42,5 @@ keyconv: keyconv.o util.o cashaddr.o
 	$(CC) $^ -o $@ $(CFLAGS) $(LIBS)
 
 clean:
-	rm -f $(OBJS) $(PROGS) $(TESTS)
+	./cleanup.command
+	#rm -f $(OBJS) $(PROGS) $(TESTS)

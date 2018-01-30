@@ -345,7 +345,6 @@ main(int argc, char **argv)
 	int pubkeytype;
 	enum vg_format format = VCF_PUBKEY;
 	int regex = 0;
-	int caseinsensitive = 0;
 	int verbose = 1;
 	int simulate = 0;
 	int remove_on_match = 1;
@@ -369,7 +368,7 @@ main(int argc, char **argv)
 
 	unsigned int i;
 
-	while ((opt = getopt(argc, argv, "vqnrik1eE:P:NTX:F:t:h?f:o:s:")) != -1) {
+	while ((opt = getopt(argc, argv, "vqnrk1eE:P:NTX:F:t:h?f:o:s:")) != -1) {
 		switch (opt) {
 		case 'v':
 			verbose = 2;
@@ -382,9 +381,6 @@ main(int argc, char **argv)
 			break;
 		case 'r':
 			regex = 1;
-			break;
-		case 'i':
-			caseinsensitive = 1;
 			break;
 		case 'k':
 			remove_on_match = 0;
@@ -473,7 +469,7 @@ main(int argc, char **argv)
 				}
 			}
 			pattfp[npattfp] = fp;
-			pattfpi[npattfp] = caseinsensitive;
+			pattfpi[npattfp] = 0;
 			npattfp++;
 			break;
 		case 'o':
@@ -506,11 +502,6 @@ main(int argc, char **argv)
 			"WARNING: Use OpenSSL 1.0.0d+ for best performance\n");
 	}
 #endif
-
-	if (caseinsensitive && regex)
-		fprintf(stderr,
-			"WARNING: case insensitive mode incompatible with "
-			"regular expressions\n");
 
 	pubkeytype = addrtype;
 	if (format == VCF_SCRIPT)
@@ -549,7 +540,7 @@ main(int argc, char **argv)
 
 	} else {
 		vcp = vg_prefix_context_new(addrtype, privtype,
-					    caseinsensitive);
+					    0);
 	}
 
 	vcp->vc_verbose = verbose;

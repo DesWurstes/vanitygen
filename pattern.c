@@ -35,6 +35,21 @@
 #include "util.h"
 #include "avl.h"
 
+const signed char CHARSET_REV[256] = {
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 15, -1, 10, 17, 21, 20, 26, 30, 7,
+    5,  -1, -1, -1, -1, -1, -1, -1, 29, -1, 24, 13, 25, 9,  8,  23, -1, 18, 22,
+    31, 27, 19, -1, 1,  0,  3,  16, 11, 28, 12, 14, 6,  4,  2,  -1, -1, -1, -1,
+    -1, -1, 29, -1, 24, 13, 25, 9,  8,  23, -1, 18, 22, 31, 27, 19, -1, 1,  0,
+    3, 16, 11, 28, 12, 14, 6, 4, 2, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
 
 /*
  * Common code for execution helper
@@ -156,7 +171,8 @@ vg_exec_context_init(vg_context_t *vcp, vg_exec_context_t *vxcp)
 	BN_init(&vxcp->vxc_bntmp);
 	BN_init(&vxcp->vxc_bntmp2);
 
-	BN_set_word(&vxcp->vxc_bnbase, 58);
+	//BN_set_word(&vxcp->vxc_bnbase, 58);
+	BN_set_word(&vxcp->vxc_bnbase, 32);
 
 	vxcp->vxc_bnctx = BN_CTX_new();
 	assert(vxcp->vxc_bnctx);
@@ -690,7 +706,8 @@ get_prefix_ranges(int addrtype, const char *pfx, BIGNUM **result,
 	int i, p, c;
 	int zero_prefix = 0;
 	int check_upper = 0;
-	int b58pow, b58ceil, b58top = 0;
+	//int b58pow, b58ceil, b58top = 0;
+	int b32pow, b32ceil, b32top = 0;
 	int ret = -1;
 
 	BIGNUM bntarg, bnceil, bnfloor;
@@ -706,12 +723,14 @@ get_prefix_ranges(int addrtype, const char *pfx, BIGNUM **result,
 	BN_init(&bntmp);
 	BN_init(&bntmp2);
 
-	BN_set_word(&bnbase, 58);
+	//BN_set_word(&bnbase, 58);
+	BN_set_word(&bnbase, 32);
 
 	p = strlen(pfx);
 
 	for (i = 0; i < p; i++) {
-		c = vg_b58_reverse_map[(int)pfx[i]];
+		//c = vg_b58_reverse_map[(int)pfx[i]];
+		c = CHARSET_REV[(int)pfx[i]];
 		if (c == -1) {
 			fprintf(stderr,
 				"Invalid character '%c' in prefix '%s'\n",
@@ -732,9 +751,9 @@ get_prefix_ranges(int addrtype, const char *pfx, BIGNUM **result,
 			}
 
 			/* First non-zero character */
-			b58top = c;
+			//b58top = c;
+			b32top = c;
 			BN_set_word(&bntarg, c);
-
 		} else {
 			BN_set_word(&bntmp2, c);
 			BN_mul(&bntmp, &bntarg, &bnbase, bnctx);
@@ -751,7 +770,8 @@ get_prefix_ranges(int addrtype, const char *pfx, BIGNUM **result,
 	bnlow = BN_new();
 	bnhigh = BN_new();
 
-	if (b58top) {
+	//if (b58top) {
+	if (b32top) {
 		/*
 		 * If a non-zero was given in the prefix, find the
 		 * numeric boundaries of the prefix.
@@ -760,17 +780,21 @@ get_prefix_ranges(int addrtype, const char *pfx, BIGNUM **result,
 		BN_copy(&bntmp, &bnceil);
 		bnap = &bntmp;
 		bnbp = &bntmp2;
-		b58pow = 0;
+		//b58pow = 0;
+		b32pow = 0;
 		while (BN_cmp(bnap, &bnbase) > 0) {
-			b58pow++;
+			//b58pow++;
+			b32pow++;
 			BN_div(bnbp, NULL, bnap, &bnbase, bnctx);
 			bntp = bnap;
 			bnap = bnbp;
 			bnbp = bntp;
 		}
-		b58ceil = BN_get_word(bnap);
+		//b58ceil = BN_get_word(bnap);
+		b32ceil = BN_get_word(bnap);
 
-		if ((b58pow - (p - zero_prefix)) < 6) {
+		//if ((b58pow - (p - zero_prefix)) < 6) {
+		if ((b32pow - (p - zero_prefix)) < 6) {
 			/*
 			 * Do not allow the prefix to constrain the
 			 * check value, this is ridiculous.
@@ -779,13 +803,15 @@ get_prefix_ranges(int addrtype, const char *pfx, BIGNUM **result,
 			goto out;
 		}
 
-		BN_set_word(&bntmp2, b58pow - (p - zero_prefix));
+		//BN_set_word(&bntmp2, b58pow - (p - zero_prefix));
+		BN_set_word(&bntmp2, b32pow - (p - zero_prefix));
 		BN_exp(&bntmp, &bnbase, &bntmp2, bnctx);
 		BN_mul(bnlow, &bntmp, &bntarg, bnctx);
 		BN_sub(&bntmp2, &bntmp, BN_value_one());
 		BN_add(bnhigh, bnlow, &bntmp2);
 
-		if (b58top <= b58ceil) {
+		//if (b58top <= b58ceil) {
+		if (b32top <= b32ceil) {
 			/* Fill out the upper range too */
 			check_upper = 1;
 			bnlow2 = BN_new();
@@ -793,7 +819,8 @@ get_prefix_ranges(int addrtype, const char *pfx, BIGNUM **result,
 
 			BN_mul(bnlow2, bnlow, &bnbase, bnctx);
 			BN_mul(&bntmp2, bnhigh, &bnbase, bnctx);
-			BN_set_word(&bntmp, 57);
+			//BN_set_word(&bntmp, 57);
+			BN_set_word(&bntmp, 31);
 			BN_add(bnhigh2, &bntmp2, &bntmp);
 
 			/*
@@ -838,6 +865,8 @@ get_prefix_ranges(int addrtype, const char *pfx, BIGNUM **result,
 		BN_clear(bnlow);
 	}
 
+	// START CASHADDR
+	//if
 	/* Limit the prefix to the address type */
 	BN_clear(&bntmp);
 	BN_set_word(&bntmp, addrtype);
