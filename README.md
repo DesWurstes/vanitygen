@@ -1,6 +1,6 @@
-# Vanitygen Cash ![](https://img.shields.io/badge/build-passing-brightgreen.svg) [![](https://img.shields.io/badge/download-click%20me!-blue.svg)](https://github.com/DesWurstes/vanitygen/blob/master/releases)
+# Vanitygen Cash ![](https://img.shields.io/badge/build-passing-brightgreen.svg) [![](https://img.shields.io/badge/download-click%20me!-blue.svg)](https://github.com/cashaddress/vanitygen-cash/releases)
 
-Vanitygen for Bitcoin Cash!
+Vanitygen for Bitcoin Cash! Crafted by the creators of [CashAddress.Github.io](https://cashaddress.github.io/)
 
 ```
 $ '/Users/Mevanitygen/oclvanitygen' -d 2 qrelay2
@@ -12,7 +12,7 @@ Privkey: 5KUNEbYAEL6W1TowXuXkItWontWorkRSaCBm2JhJFN5tFhHZNAJvvK
 
 ## Download
 
-The compiled binaries can be found at [releases](https://github.com/DesWurstes/vanitygen/blob/master/releases)
+The compiled binaries can be found at [releases](https://github.com/cashaddress/vanitygen-cash/releases)
 
 ## Tips
 
@@ -20,17 +20,23 @@ Alphabet: `023456789acdefghjklmnpqrstuvwxyz`
 
 - The first character should be `q`
 
-- The second character should be either `q`, `p`, `z`, or `z`, however you can type any other character, it will put a `q` behind it (e.g. `qh0dl` => `qqh0l`)
+- The second character should be either `q`, `p`, `z`, or `r`, however you can type any other character, it will put a `q` behind it (e.g. `qh0dl` => `qqh0l`)
 
 ## To build:
 
-Mac & Linux
+Mac (compiles the latest gcc, 50+ minutes)
 
+    brew install gcc
+    make
+
+Linux
+
+    sudo apt-get install libpcre3-dev g++-7 ocl-icd-opencl-dev
     make
 
 Windows
 
-    make -f Makefile.Win32
+[too long](/INSTALL)
 
 ### Significant changes made (to comply with AGPL v3)
 

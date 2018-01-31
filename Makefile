@@ -7,8 +7,8 @@ PROGS=vanitygen keyconv oclvanitygen oclvanityminer
 # -O3 = good optimization
 # -Ofast = aggressive optimization
 # -Os = small file size
-CFLAGS+=-O0
-CXXFLAGS+=-O0
+CFLAGS+=-Ofast
+CXXFLAGS+=-Ofast
 
 PLATFORM=$(shell uname -s)
 ifeq ($(PLATFORM),Darwin)
@@ -22,6 +22,8 @@ ifeq ($(PLATFORM),Darwin)
 	LIBS+=-L/usr/local/opt/openssl/lib
 	CFLAGS+=-I/usr/local/opt/openssl/include
 else
+	CC=g++-7
+	CXX=g++-7
 	OPENCL_LIBS=-lOpenCL
 endif
 
