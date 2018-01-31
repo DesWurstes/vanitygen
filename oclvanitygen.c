@@ -276,7 +276,7 @@ main(int argc, char **argv)
 	}
 
 	if (verbose == 2) {
-		fprintf("Built on %s.", __DATE__);
+		printf("Built on %s.", __DATE__);
 	}
 
 #if OPENSSL_VERSION_NUMBER < 0x10000000L

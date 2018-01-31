@@ -266,9 +266,9 @@ vg_encode_address(const EC_POINT *ppoint, const EC_GROUP *pgroup,
 	//RIPEMD160(hash1, sizeof(hash1), &binres[1]);
 	RIPEMD160(hash1, sizeof(hash1), &binres[0]);
 	if (addrtype == 0) {
-		strcpy(result, CashAddrEncode(1, &binres[0], 0, 1).c_str());
+		strcpy(result, CashAddrEncode(1, &binres[0], 0, 1));
 	} else if (addrtype == 111) {
-		strcpy(result, CashAddrEncode(0, &binres[0], 0, 1).c_str());
+		strcpy(result, CashAddrEncode(0, &binres[0], 0, 1));
 	}
 	//vg_b58_encode_check(binres, sizeof(binres), result);
 }
@@ -300,9 +300,9 @@ vg_encode_script_address(const EC_POINT *ppoint, const EC_GROUP *pgroup,
 	//RIPEMD160(hash1, sizeof(hash1), &binres[1]);
 	RIPEMD160(hash1, sizeof(hash1), &binres[0]);
 	if (addrtype == 5) {
-		strcpy(result, CashAddrEncode(1, &binres[0], 1, 1).c_str());
+		strcpy(result, CashAddrEncode(1, &binres[0], 1, 1));
 	} else {
-		strcpy(result, CashAddrEncode(0, &binres[0], 1, 1).c_str());
+		strcpy(result, CashAddrEncode(0, &binres[0], 1, 1));
 	}
 	//vg_b58_encode_check(binres, sizeof(binres), result);
 }
