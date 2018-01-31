@@ -1171,14 +1171,6 @@ vg_prefix_range_sum(vg_prefix_t *vp, BIGNUM *result, BIGNUM *tmp1)
 	} while (vp && (vp != startp));
 }
 
-
-typedef struct _prefix_case_iter_s {
-	char	ci_prefix[32];
-	char	ci_case_map[32];
-	char	ci_nbits;
-	int	ci_value;
-} prefix_case_iter_t;
-
 static const unsigned char b58_case_map[256] = {
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -1189,58 +1181,6 @@ static const unsigned char b58_case_map[256] = {
 	0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 2, 1, 1, 0,
 	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0,
 };
-
-static int
-prefix_case_iter_init(prefix_case_iter_t *cip, const char *pfx)
-{
-	unsigned int i;
-
-	cip->ci_nbits = 0;
-	cip->ci_value = 0;
-	for (i = 0; pfx[i]; i++) {
-		if (i > sizeof(cip->ci_prefix))
-			return 0;
-		if (!b58_case_map[(int)pfx[i]]) {
-			/* Character isn't case-swappable, ignore it */
-			cip->ci_prefix[i] = pfx[i];
-			continue;
-		}
-		if (b58_case_map[(int)pfx[i]] == 2) {
-			/* Character invalid, but valid in swapped case */
-			cip->ci_prefix[i] = pfx[i] ^ 0x20;
-			continue;
-		}
-		/* Character is case-swappable */
-		cip->ci_prefix[i] = pfx[i] | 0x20;
-		cip->ci_case_map[(int)cip->ci_nbits] = i;
-		cip->ci_nbits++;
-	}
-	cip->ci_prefix[i] = '\0';
-	return 1;
-}
-
-static int
-prefix_case_iter_next(prefix_case_iter_t *cip)
-{
-	unsigned long val, max, mask;
-	int i, nbits;
-
-	nbits = cip->ci_nbits;
-	max = (1UL << nbits) - 1;
-	val = cip->ci_value + 1;
-	if (val > max)
-		return 0;
-
-	for (i = 0, mask = 1; i < nbits; i++, mask <<= 1) {
-		if (val & mask)
-			cip->ci_prefix[(int)cip->ci_case_map[i]] &= 0xdf;
-		else
-			cip->ci_prefix[(int)cip->ci_case_map[i]] |= 0x20;
-	}
-	cip->ci_value = val;
-	return 1;
-}
-
 
 typedef struct _vg_prefix_context_s {
 	vg_context_t		base;
@@ -1313,14 +1253,12 @@ vg_prefix_context_add_patterns(vg_context_t *vcp,
 			       const char ** const patterns, int npatterns)
 {
 	vg_prefix_context_t *vcpp = (vg_prefix_context_t *) vcp;
-	prefix_case_iter_t caseiter;
-	vg_prefix_t *vp, *vp2;
+	vg_prefix_t *vp;
 	BN_CTX *bnctx;
 	BIGNUM bntmp, bntmp2, bntmp3;
 	BIGNUM *ranges[4];
 	int ret = 0;
 	int i, impossible = 0;
-	int case_impossible;
 	unsigned long npfx;
 	char *dbuf;
 
@@ -1331,66 +1269,14 @@ vg_prefix_context_add_patterns(vg_context_t *vcp,
 
 	npfx = 0;
 	for (i = 0; i < npatterns; i++) {
-		if (!vcpp->vcp_caseinsensitive) {
-			vp = NULL;
-			ret = get_prefix_ranges(vcpp->base.vc_addrtype,
-						patterns[i],
-						ranges, bnctx);
-			if (!ret) {
-				vp = vg_prefix_add_ranges(&vcpp->vcp_avlroot,
-							  patterns[i],
-							  ranges, NULL);
-			}
-
-		} else {
-			/* Case-enumerate the prefix */
-			if (!prefix_case_iter_init(&caseiter, patterns[i])) {
-				fprintf(stderr,
-					"Prefix '%s' is too long\n",
-					patterns[i]);
-				continue;
-			}
-
-			if (caseiter.ci_nbits > 16) {
-				fprintf(stderr,
-					"WARNING: Prefix '%s' has "
-					"2^%d case-varied derivatives\n",
-					patterns[i], caseiter.ci_nbits);
-			}
-
-			case_impossible = 0;
-			vp = NULL;
-			do {
-				ret = get_prefix_ranges(vcpp->base.vc_addrtype,
-							caseiter.ci_prefix,
-							ranges, bnctx);
-				if (ret == -2) {
-					case_impossible++;
-					ret = 0;
-					continue;
-				}
-				if (ret)
-					break;
-				vp2 = vg_prefix_add_ranges(&vcpp->vcp_avlroot,
-							   patterns[i],
-							   ranges,
-							   vp);
-				if (!vp2) {
-					ret = -1;
-					break;
-				}
-				if (!vp)
-					vp = vp2;
-
-			} while (prefix_case_iter_next(&caseiter));
-
-			if (!vp && case_impossible)
-				ret = -2;
-
-			if (ret && vp) {
-				vg_prefix_delete(&vcpp->vcp_avlroot, vp);
-				vp = NULL;
-			}
+		vp = NULL;
+		ret = get_prefix_ranges(vcpp->base.vc_addrtype,
+					patterns[i],
+					ranges, bnctx);
+		if (!ret) {
+			vp = vg_prefix_add_ranges(&vcpp->vcp_avlroot,
+						  patterns[i],
+						  ranges, NULL);
 		}
 
 		if (ret == -2) {
@@ -1429,16 +1315,12 @@ vg_prefix_context_add_patterns(vg_context_t *vcp,
 		const char *ats = "bitcoin", *bw = "\"1\"";
 		switch (vcpp->base.vc_addrtype) {
 		case 5:
-			ats = "bitcoin script";
+			ats = "bitcoin cash script";
 			bw = "\"3\"";
 			break;
 		case 111:
 			ats = "testnet";
 			bw = "\"m\" or \"n\"";
-			break;
-		case 52:
-			ats = "namecoin";
-			bw = "\"M\" or \"N\"";
 			break;
 		default:
 			break;
@@ -1805,24 +1687,24 @@ vg_regex_test(vg_exec_context_t *vxcp)
 	vg_regex_context_t *vcrp = (vg_regex_context_t *) vxcp->vxc_vc;
 
 	//unsigned char hash1[32], hash2[32];
-	int /*zpfx, p,*/ d, nres, re_vec[9];
-	unsigned int i;
+	int /*zpfx, p,*/ d, re_vec[9];
+	unsigned int i, nres;
 	//char b58[40];
-	char b32[43];
+	//const char b32[43];
 	//BIGNUM bnrem;
 	//BIGNUM *bn, *bndiv, *bnptmp;
+  //char* cashAddr;
 	int res = 0;
-
 	pcre *re;
-	if (vxcp->vxc_binres[0] == 0) {
-		strcpy(b32, CashAddrEncode(1, &vxcp->vxc_binres[1], 0, 0).c_str());
+	/*if (vxcp->vxc_binres[0] == 0) {
+    cashAddr = (CashAddrEncode(1, &vxcp->vxc_binres[1], 0, 0).c_str());
 	} else if (vxcp->vxc_binres[0] == 0x6f) {
-		strcpy(b32, CashAddrEncode(0, &vxcp->vxc_binres[1], 0, 0).c_str());
+		cashAddr = CashAddrEncode(0, &vxcp->vxc_binres[1], 0, 0).c_str();
 	} else if (vxcp->vxc_binres[0] == 0x05) {
-		strcpy(b32, CashAddrEncode(1, &vxcp->vxc_binres[1], 1, 0).c_str());
-	} else /*0xc4*/ {
-		strcpy(b32, CashAddrEncode(0, &vxcp->vxc_binres[1], 1, 0).c_str());
-	}
+		cashAddr = CashAddrEncode(1, &vxcp->vxc_binres[1], 1, 0).c_str();
+	} else { // 0xc4
+		cashAddr = CashAddrEncode(0, &vxcp->vxc_binres[1], 1, 0).c_str();
+	}*/
 
 	//BN_init(&bnrem);
 
@@ -1857,16 +1739,22 @@ vg_regex_test(vg_exec_context_t *vxcp)
 	 * SLOW, runs in linear time with the number of REs
 	 */
 restart_loop:
-	nres = vcrp->base.vc_npatterns;
+	nres = (unsigned) vcrp->base.vc_npatterns;
 	if (!nres) {
 		res = 2;
 		goto out;
 	}
-	for (i = 0; i < (unsigned) nres; i++) {
+	for (i = 0; i < nres; i++) {
 		d = pcre_exec(vcrp->vcr_regex[i],
 			      vcrp->vcr_regex_extra[i],
             //&b58[p], (sizeof(b58) - 1) - p, 0,
-			      &b32[0], (sizeof(b32) - 1), 0,
+			      //b32, (sizeof(b32) - 1), 0,
+            //cashAddr, 42, 0,
+            vxcp->vxc_binres[0] == 0 ? (CashAddrEncode(1, &vxcp->vxc_binres[1], 0, 0).c_str()) : (
+              (vxcp->vxc_binres[0] == 0x6f) ? (CashAddrEncode(0, &vxcp->vxc_binres[1], 0, 0).c_str()) : (
+                (vxcp->vxc_binres[0] == 0x05) ? (CashAddrEncode(1, &vxcp->vxc_binres[1], 1, 0).c_str()) : (CashAddrEncode(0, &vxcp->vxc_binres[1], 1, 0).c_str())
+              )
+            ), 42, 0,
 			      0,
 			      re_vec, sizeof(re_vec)/sizeof(re_vec[0]));
 

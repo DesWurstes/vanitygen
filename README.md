@@ -46,9 +46,8 @@ Windows
 
 ### TODOs:
 
-- Remove "version byte"
-
-- Fix prefixes that contain only `q`s (can be used safely, just tries to find an address with
-more `q`s)
+- Remove "version byte" completely
 
 - Base58 required the expected prefix number to be converted to a BigNum. Base32 doesn't require this. ([These lines](https://github.com/samr7/vanitygen/blob/master/pattern.c#L1478-L1481))
+
+- Port libsecp256k1 code (long term)

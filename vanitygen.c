@@ -323,12 +323,9 @@ usage(const char *name)
 "-n            Simulate\n"
 "-r            Use regular expression match instead of prefix\n"
 "              (Feasibility of expression is not checked)\n"
-"-i            Case-insensitive prefix search\n"
 "-k            Keep pattern and continue search after finding a match\n"
 "-1            Stop after first match\n"
-"-N            Generate namecoin address\n"
-"-T            Generate bitcoin testnet address\n"
-"-X <version>  Generate address with the given version\n"
+"-T            Generate Bitcoin Cash testnet address\n"
 "-F <format>   Generate address with the given format (pubkey or script)\n"
 "-P <pubkey>   Specify base public key for piecewise key generation\n"
 "-e            Encrypt private keys, prompt for password\n"
@@ -375,7 +372,7 @@ main(int argc, char **argv)
 
 	unsigned int i;
 
-	while ((opt = getopt(argc, argv, "vqnrk1eE:P:NTX:F:t:h?f:o:s:")) != -1) {
+	while ((opt = getopt(argc, argv, "vqnrk1eE:P:T:F:t:h?f:o:s:")) != -1) {
 		switch (opt) {
 		case 'v':
 			verbose = 2;
@@ -395,20 +392,10 @@ main(int argc, char **argv)
 		case '1':
 			only_one = 1;
 			break;
-		case 'N':
-			addrtype = 52;
-			privtype = 180;
-			scriptaddrtype = -1;
-			break;
 		case 'T':
 			addrtype = 111;
 			privtype = 239;
 			scriptaddrtype = 196;
-			break;
-		case 'X':
-			addrtype = atoi(optarg);
-			privtype = 128 + addrtype;
-			scriptaddrtype = addrtype;
 			break;
 		case 'F':
 			if (!strcmp(optarg, "script"))
@@ -521,18 +508,16 @@ main(int argc, char **argv)
 		}
 		addrtype = scriptaddrtype;
 	}
-
+#if !defined(_WIN32)
 	if (!seedfile)
 	{
-#if !defined(_WIN32)
-	 struct stat st;
-	 if (stat("/dev/random", &st) == 0)
-	 {
-	     seedfile = "/dev/random";
-	 }
-#endif
+		struct stat st1;
+		if (stat("/dev/random", &st1) == 0)
+		{
+			seedfile = (char*) "/dev/random";
+		}
 	}
-
+#endif
 	if (seedfile) {
 		opt = -1;
 #if !defined(_WIN32)
@@ -547,7 +532,7 @@ main(int argc, char **argv)
 			fprintf(stderr, "Could not load RNG seed %s\n", optarg);
 			return 1;
 		}
-		if (verbose > 0) {
+		if (verbose > 0 && strcmp(seedfile, (char*) "/dev/random")) {
 			fprintf(stderr,
 				"Read %d bytes from RNG seed file\n", opt);
 		}

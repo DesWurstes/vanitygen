@@ -54,4 +54,3 @@ keyconv: keyconv.o util.o cashaddr.o
 
 clean:
 	./cleanup.command
-	#rm -f $(OBJS) $(PROGS) $(TESTS)

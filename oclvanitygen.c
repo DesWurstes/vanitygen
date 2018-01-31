@@ -5,7 +5,7 @@
  * Vanitygen is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * any later version. 
+ * any later version.
  *
  * Vanitygen is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -54,12 +54,9 @@ usage(const char *name)
 "Options:\n"
 "-v            Verbose output\n"
 "-q            Quiet output\n"
-"-i            Case-insensitive prefix search\n"
 "-k            Keep pattern and continue search after finding a match\n"
 "-1            Stop after first match\n"
-"-N            Generate namecoin address\n"
-"-T            Generate bitcoin testnet address\n"
-"-X <version>  Generate address with the given version\n"
+"-T            Generate Bitcoin Cash testnet address\n"
 "-P <pubkey>   Specify base public key for piecewise key generation\n"
 "-e            Encrypt private keys, prompt for password\n"
 "-E <password> Encrypt private keys with <password> (UNSAFE)\n"
@@ -124,7 +121,7 @@ main(int argc, char **argv)
 	int i;
 
 	while ((opt = getopt(argc, argv,
-			     "vqik1NTX:eE:p:P:d:w:t:g:b:VSh?f:o:s:D:")) != -1) {
+			     "vqk1T:eE:p:P:d:w:t:g:b:VSh?f:o:s:D:")) != -1) {
 		switch (opt) {
 		case 'v':
 			verbose = 2;
@@ -132,26 +129,15 @@ main(int argc, char **argv)
 		case 'q':
 			verbose = 0;
 			break;
-		case 'i':
-			caseinsensitive = 1;
-			break;
 		case 'k':
 			remove_on_match = 0;
 			break;
 		case '1':
 			only_one = 1;
 			break;
-		case 'N':
-			addrtype = 52;
-			privtype = 180;
-			break;
 		case 'T':
 			addrtype = 111;
 			privtype = 239;
-			break;
-		case 'X':
-			addrtype = atoi(optarg);
-			privtype = 128 + addrtype;
 			break;
 		case 'e':
 			prompt_password = 1;
@@ -298,21 +284,16 @@ main(int argc, char **argv)
 	}
 #endif
 
-	if (caseinsensitive && regex)
-		fprintf(stderr,
-			"WARNING: case insensitive mode incompatible with "
-			"regular expressions\n");
-
+#if !defined(_WIN32)
 	if (!seedfile)
 	{
-#if !defined(_WIN32)
-	 struct stat st;
-	 if (stat("/dev/random", &st) == 0)
+	 struct stat st1;
+	 if (stat("/dev/random", &st1) == 0)
 	 {
-	     seedfile = "/dev/random";
+	     seedfile = (char*) "/dev/random";
 	 }
-#endif
 	}
+#endif
 
 	if (seedfile) {
 		opt = -1;
@@ -328,7 +309,7 @@ main(int argc, char **argv)
 			fprintf(stderr, "Could not load RNG seed %s\n", optarg);
 			return 1;
 		}
-		if (verbose > 0) {
+		if (verbose > 0 && strcmp(seedfile, (char*) "/dev/random")) {
 			fprintf(stderr,
 				"Read %d bytes from RNG seed file\n", opt);
 		}
