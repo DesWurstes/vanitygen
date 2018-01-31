@@ -26,6 +26,13 @@
 #include <assert.h>
 #include <math.h>
 
+#ifndef SHA256_ASM
+#define SHA256_ASM
+#endif
+#ifndef RMD160_ASM
+#define RMD160_ASM
+#endif
+
 #include <openssl/bn.h>
 #include <openssl/sha.h>
 #include <openssl/ripemd.h>

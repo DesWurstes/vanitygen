@@ -23,6 +23,13 @@
 
 #include <pthread.h>
 
+#ifndef SHA256_ASM
+#define SHA256_ASM
+#endif
+#ifndef RMD160_ASM
+#define RMD160_ASM
+#endif
+
 #include <openssl/sha.h>
 #include <openssl/ripemd.h>
 #include <openssl/bn.h>

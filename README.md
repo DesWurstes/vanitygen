@@ -20,7 +20,7 @@ Alphabet: `023456789acdefghjklmnpqrstuvwxyz`
 
 - The first character should be `q`
 
-- The second character should be either `q`, `p`, `z`, or `r`, however you can type any other character, it will put a `q` behind it (e.g. `qh0dl` => `qqh0l`)
+- The second character should be either `q`, `p`, `z`, or `r`, however, you can type any other character, it will put a `q` behind it (e.g. `qh0dl` => `qqh0l`)
 
 ## To build:
 
@@ -51,4 +51,4 @@ Windows
 - Fix prefixes that contain only `q`s (can be used safely, just tries to find an address with
 more `q`s)
 
-- Base58 required the expected prefix number to be converted to a BigNum. Base32 doesn't require this.
+- Base58 required the expected prefix number to be converted to a BigNum. Base32 doesn't require this. ([These lines](https://github.com/samr7/vanitygen/blob/master/pattern.c#L1478-L1481))
