@@ -275,6 +275,10 @@ main(int argc, char **argv)
 		}
 	}
 
+	if (verbose == 2) {
+		fprintf("Built on %s.", __DATE__);
+	}
+
 #if OPENSSL_VERSION_NUMBER < 0x10000000L
 	/* Complain about older versions of OpenSSL */
 	if (verbose > 0) {

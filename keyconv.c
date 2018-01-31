@@ -39,6 +39,10 @@ usage(const char *progname)
 int
 main(int argc, char **argv)
 {
+	if (argc == 1) {
+		usage(argv[0]);
+		return 0;
+	}
 	char pwbuf[128];
 	char ecprot[128];
 	char pbuf[1024];
@@ -195,7 +199,7 @@ main(int argc, char **argv)
 		fprintf(stderr, "Privkey (hex): ");
 		dumpbn(EC_KEY_get0_private_key(pkey));
 	}
-			
+
 	if (pkcs8) {
 		res = vg_pkcs8_encode_privkey(pbuf, sizeof(pbuf),
 					      pkey, pass_in);
