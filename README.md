@@ -1,4 +1,4 @@
-# Vanitygen Cash ![](https://img.shields.io/badge/build-passing-brightgreen.svg) [![](https://img.shields.io/badge/download-click%20me!-blue.svg)](/releases)
+# Vanitygen Cash ![](https://img.shields.io/badge/build-passing-brightgreen.svg) [![](https://img.shields.io/badge/download-click%20me!-blue.svg)](https://github.com/DesWurstes/vanitygen/blob/master/releases)
 
 Vanitygen for Bitcoin Cash!
 
@@ -12,7 +12,7 @@ Privkey: 5KUNEbYAEL6W1TowXuXkItWontWorkRSaCBm2JhJFN5tFhHZNAJvvK
 
 ## Download
 
-The compiled binaries can be found at [releases](/releases)
+The compiled binaries can be found at [releases](https://github.com/DesWurstes/vanitygen/blob/master/releases)
 
 ## Tips
 
