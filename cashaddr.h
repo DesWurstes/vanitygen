@@ -17,5 +17,5 @@ extern const signed char CHARSET_REV[256];
 /**
  * Encode a cashaddr string. Returns the empty string in case of failure.
  */
-extern std::string CashAddrEncode(const int isMainNet, unsigned char *payload, unsigned int type);
+extern std::string CashAddrEncode(const int isMainNet, unsigned char *payload, const unsigned int type, const unsigned int withPrefix);
 #endif

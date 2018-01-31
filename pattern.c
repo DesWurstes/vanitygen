@@ -34,6 +34,7 @@
 #include "pattern.h"
 #include "util.h"
 #include "avl.h"
+#include "cashaddr.h"
 
 const signed char CHARSET_REV[256] = {
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -756,7 +757,8 @@ get_prefix_ranges(int addrtype, const char *pfx, BIGNUM **result,
 			BN_set_word(&bntarg, c);
 		} else {
 			BN_set_word(&bntmp2, c);
-			BN_mul(&bntmp, &bntarg, &bnbase, bnctx);
+			//BN_mul(&bntmp, &bntarg, &bnbase, bnctx);
+			BN_lshift(&bntmp, &bntarg, 5);
 			BN_add(&bntarg, &bntmp, &bntmp2);
 		}
 	}
@@ -817,8 +819,10 @@ get_prefix_ranges(int addrtype, const char *pfx, BIGNUM **result,
 			bnlow2 = BN_new();
 			bnhigh2 = BN_new();
 
-			BN_mul(bnlow2, bnlow, &bnbase, bnctx);
-			BN_mul(&bntmp2, bnhigh, &bnbase, bnctx);
+			//BN_mul(bnlow2, bnlow, &bnbase, bnctx);
+			BN_lshift(bnlow2, bnlow, 5);
+			//BN_mul(&bntmp2, bnhigh, &bnbase, bnctx);
+			BN_lshift(&bntmp2, bnhigh, 5);
 			//BN_set_word(&bntmp, 57);
 			BN_set_word(&bntmp, 31);
 			BN_add(bnhigh2, &bntmp2, &bntmp);
@@ -865,8 +869,6 @@ get_prefix_ranges(int addrtype, const char *pfx, BIGNUM **result,
 		BN_clear(bnlow);
 	}
 
-	// START CASHADDR
-	//if
 	/* Limit the prefix to the address type */
 	BN_clear(&bntmp);
 	BN_set_word(&bntmp, addrtype);
@@ -1738,25 +1740,87 @@ vg_regex_context_free(vg_context_t *vcp)
 	free(vcrp);
 }
 
+/*The MIT License (MIT)
+
+Copyright (c) 2009-2015 Bitcoin Developers
+Copyright (c) 2009-2017 The Bitcoin Core developers
+Copyright (c) 2017 The Bitcoin ABC developers
+
+Permission is hereby granted, free of unsigned charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.*/
+// Copyright (c) 2017 Pieter Wuille
+// Copyright (c) 2017 The Bitcoin developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+template <int frombits, int tobits, bool pad, typename O, typename I>
+bool ConvertBits(O &out, I it, I end) {
+    size_t acc = 0;
+    size_t bits = 0;
+    constexpr size_t maxv = (1 << tobits) - 1;
+    constexpr size_t max_acc = (1 << (frombits + tobits - 1)) - 1;
+    while (it != end) {
+        acc = ((acc << frombits) | *it) & max_acc;
+        bits += frombits;
+        while (bits >= tobits) {
+            bits -= tobits;
+            out.push_back((acc >> bits) & maxv);
+        }
+        ++it;
+    }
+    if (!pad && bits) {
+        return false;
+    }
+    if (pad && bits) {
+        out.push_back((acc << (tobits - bits)) & maxv);
+    }
+    return true;
+}
+
 static int
 vg_regex_test(vg_exec_context_t *vxcp)
 {
 	vg_regex_context_t *vcrp = (vg_regex_context_t *) vxcp->vxc_vc;
 
-	unsigned char hash1[32], hash2[32];
-	int zpfx, p, d, nres, re_vec[9];
+	//unsigned char hash1[32], hash2[32];
+	int /*zpfx, p,*/ d, nres, re_vec[9];
 	unsigned int i;
-	char b58[40];
-	BIGNUM bnrem;
-	BIGNUM *bn, *bndiv, *bnptmp;
+	//char b58[40];
+	char b32[43];
+	//BIGNUM bnrem;
+	//BIGNUM *bn, *bndiv, *bnptmp;
 	int res = 0;
 
 	pcre *re;
+	if (vxcp->vxc_binres[0] == 0) {
+		strcpy(b32, CashAddrEncode(1, &vxcp->vxc_binres[1], 0, 0).c_str());
+	} else if (vxcp->vxc_binres[0] == 0x6f) {
+		strcpy(b32, CashAddrEncode(0, &vxcp->vxc_binres[1], 0, 0).c_str());
+	} else if (vxcp->vxc_binres[0] == 0x05) {
+		strcpy(b32, CashAddrEncode(1, &vxcp->vxc_binres[1], 1, 0).c_str());
+	} else /*0xc4*/ {
+		strcpy(b32, CashAddrEncode(0, &vxcp->vxc_binres[1], 1, 0).c_str());
+	}
 
-	BN_init(&bnrem);
+	//BN_init(&bnrem);
 
 	/* Hash the hash and write the four byte check code */
-	SHA256(vxcp->vxc_binres, 21, hash1);
+	/*SHA256(vxcp->vxc_binres, 21, hash1);
 	SHA256(hash1, sizeof(hash1), hash2);
 	memcpy(&vxcp->vxc_binres[21], hash2, 4);
 
@@ -1765,7 +1829,7 @@ vg_regex_test(vg_exec_context_t *vxcp)
 
 	BN_bin2bn(vxcp->vxc_binres, 25, bn);
 
-	/* Compute the complete encoded address */
+	// Compute the complete encoded address
 	for (zpfx = 0; zpfx < 25 && vxcp->vxc_binres[zpfx] == 0; zpfx++);
 	p = sizeof(b58) - 1;
 	b58[p] = '\0';
@@ -1779,7 +1843,7 @@ vg_regex_test(vg_exec_context_t *vxcp)
 	}
 	while (zpfx--) {
 		b58[--p] = vg_b58_alphabet[0];
-	}
+	}*/
 
 	/*
 	 * Run the regular expressions on it
@@ -1794,7 +1858,8 @@ restart_loop:
 	for (i = 0; i < (unsigned) nres; i++) {
 		d = pcre_exec(vcrp->vcr_regex[i],
 			      vcrp->vcr_regex_extra[i],
-			      &b58[p], (sizeof(b58) - 1) - p, 0,
+            //&b58[p], (sizeof(b58) - 1) - p, 0,
+			      &b32[0], (sizeof(b32) - 1), 0,
 			      0,
 			      re_vec, sizeof(re_vec)/sizeof(re_vec[0]));
 
@@ -1844,7 +1909,7 @@ restart_loop:
 		res = 1;
 	}
 out:
-	BN_clear_free(&bnrem);
+	//BN_clear_free(&bnrem);
 	return res;
 }
 

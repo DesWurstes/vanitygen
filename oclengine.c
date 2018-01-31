@@ -5,7 +5,7 @@
  * Vanitygen is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * any later version. 
+ * any later version.
  *
  * Vanitygen is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -305,13 +305,17 @@ vg_ocl_dump_info(vg_ocl_context_t *vocp)
 	       vg_ocl_device_getstr(did, CL_DEVICE_PROFILE));
 	fprintf(stderr, "Version: %s\n",
 	       vg_ocl_device_getstr(did, CL_DEVICE_VERSION));
-	fprintf(stderr, "Max compute units: %"PRSIZET"d\n",
+	//fprintf(stderr, "Max compute units: %" PRSIZET "d\n",
+	fprintf(stderr, "Max compute units: %lu\n",
 	       vg_ocl_device_getsizet(did, CL_DEVICE_MAX_COMPUTE_UNITS));
-	fprintf(stderr, "Max workgroup size: %"PRSIZET"d\n",
+	//fprintf(stderr, "Max workgroup size: %" PRSIZET "d\n",
+	fprintf(stderr, "Max workgroup size: %lu\n",
 	       vg_ocl_device_getsizet(did, CL_DEVICE_MAX_WORK_GROUP_SIZE));
-	fprintf(stderr, "Global memory: %ld\n",
+	//fprintf(stderr, "Global memory: %ld\n",
+	fprintf(stderr, "Global memory: %llu\n",
 	       vg_ocl_device_getulong(did, CL_DEVICE_GLOBAL_MEM_SIZE));
-	fprintf(stderr, "Max allocation: %ld\n",
+	//fprintf(stderr, "Max allocation: %ld\n",
+	fprintf(stderr, "Max allocation: %llu\n",
 	       vg_ocl_device_getulong(did, CL_DEVICE_MAX_MEM_ALLOC_SIZE));
 	vocp->voc_dump_done = 1;
 }
@@ -375,7 +379,7 @@ vg_ocl_buildlog(vg_ocl_context_t *vocp, cl_program prog)
 				break;
 			log[off] = '\0';
 		}
-		for (off = 0; off < logbufsize; off++) {
+		for (off = 0; (unsigned) off < logbufsize; off++) {
 			if ((log[off] != '\r') &&
 			    (log[off] != '\n'))
 				break;
@@ -786,7 +790,8 @@ vg_ocl_load_program(vg_context_t *vcp, vg_ocl_context_t *vocp,
 		buf = (char *) malloc(szr);
 		if (!buf) {
 			fprintf(stderr,
-				"WARNING: Could not allocate %"PRSIZET"d bytes "
+				//"WARNING: Could not allocate %"PRSIZET"d bytes "
+				"WARNING: Could not allocate %lu bytes "
 				"for CL binary\n",
 			       szr);
 			goto out;
@@ -834,7 +839,9 @@ vg_ocl_load_program(vg_context_t *vcp, vg_ocl_context_t *vocp,
 				fprintf(stderr,
 					"WARNING: short write on CL kernel "
 					"binary file: expected "
-					"%"PRSIZET"d, got %"PRSIZET"d\n",
+					//"%"PRSIZET"d, got %"PRSIZET"d\n",
+					//"%d, got %d\n",
+					"%lu, got %lu\n",
 					szr, sz);
 				unlink(bin_name);
 			}
@@ -1023,7 +1030,7 @@ vg_ocl_kernel_arg_alloc(vg_ocl_context_t *vocp, int slot,
 					     karg,
 					     sizeof(clbuf),
 					     &clbuf);
-			
+
 			if (ret) {
 				fprintf(stderr,
 					"clSetKernelArg(%d,%d): ", knum, karg);
@@ -1055,7 +1062,7 @@ vg_ocl_copyout_arg(vg_ocl_context_t *vocp, int wslot, int arg,
 				   buffer,
 				   0, NULL,
 				   NULL);
-			
+
 	if (ret) {
 		fprintf(stderr, "clEnqueueWriteBuffer(%d): ", arg);
 		vg_ocl_error(vocp, ret, NULL);
@@ -1197,7 +1204,7 @@ vg_ocl_kernel_start(vg_ocl_context_t *vocp, int slot, int ncol, int nrow,
 {
 	cl_int val, ret;
 	cl_event ev;
-	size_t globalws[2] = { ncol, nrow };
+	size_t globalws[2] = { (long unsigned int) ncol, (long unsigned int) nrow };
 	size_t invws = (ncol * nrow) / invsize;
 
 	assert(!vocp->voc_oclkrnwait[slot]);
@@ -1417,7 +1424,8 @@ show_elapsed(struct timeval *tv, const char *place)
         gettimeofday(&now, NULL);
 	timersub(&now, tv, &delta);
 	fprintf(stderr,
-		"%s spent %ld.%06lds\n", place, delta.tv_sec, delta.tv_usec);
+		//"%s spent %ld.%06lds\n", place, delta.tv_sec, delta.tv_usec);
+		"%s spent %ld.%06ds\n", place, delta.tv_sec, delta.tv_usec);
 }
 
 
@@ -1550,7 +1558,7 @@ vg_ocl_prefix_check(vg_ocl_context_t *vocp, int slot)
 	vg_test_func_t test_func = vcp->vc_test;
 	uint32_t *ocl_found_out;
 	uint32_t found_delta;
-	int orig_delta, tablesize;
+	int orig_delta/*, tablesize*/;
 	int res = 0;
 
 	/* Retrieve the found indicator */
@@ -1582,7 +1590,7 @@ vg_ocl_prefix_check(vg_ocl_context_t *vocp, int slot)
 			 * The match was not found in
 			 * the pattern list.  Hmm.
 			 */
-			tablesize = ocl_found_out[2];
+			//tablesize = ocl_found_out[2];
 			fprintf(stderr, "Match idx: %d\n", ocl_found_out[1]);
 			fprintf(stderr, "CPU hash: ");
 			fdumphex(stderr, vxcp->vxc_binres + 1, 20);
@@ -2182,7 +2190,7 @@ l_rekey:
 			slot_busy = 1;
 			slot = (slot + 1) % nslots;
 
-		} else { 
+		} else {
 			if (slot_busy) {
 				pthread_mutex_lock(&vocp->voc_lock);
 				while (vocp->voc_ocl_slot != -1) {
@@ -2586,8 +2594,8 @@ vg_ocl_context_new(vg_context_t *vcp,
 		 */
 		wsmult = 1;
 		while ((!worksize || ((wsmult * 2) <= worksize)) &&
-		       ((ncols * nrows * 2 * 128) < memsize) &&
-		       ((ncols * nrows * 2 * 64) < allocsize)) {
+		       ((((unsigned) ncols) * ((unsigned) nrows) * 2 * 128) < memsize) &&
+		       ((((unsigned) ncols) * ((unsigned) nrows) * 2 * 64) < allocsize)) {
 			if (ncols > nrows)
 				nrows *= 2;
 			else
