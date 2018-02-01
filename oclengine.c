@@ -28,6 +28,7 @@
 #include <openssl/rand.h>
 #include <openssl/evp.h>
 
+#define CL_USE_DEPRECATED_OPENCL_1_2_APIS
 #ifdef __APPLE__
 #include <OpenCL/cl.h>
 #ifndef CL_CALLBACK
@@ -312,11 +313,13 @@ vg_ocl_dump_info(vg_ocl_context_t *vocp)
 	fprintf(stderr, "Max workgroup size: %lu\n",
 	       vg_ocl_device_getsizet(did, CL_DEVICE_MAX_WORK_GROUP_SIZE));
 	//fprintf(stderr, "Global memory: %ld\n",
+	// This is long long unsigned on Mac and long unsigned on Linux
 	fprintf(stderr, "Global memory: %llu\n",
-	       vg_ocl_device_getulong(did, CL_DEVICE_GLOBAL_MEM_SIZE));
+	       vg_ocl_device_getulong(did, (unsigned long long) CL_DEVICE_GLOBAL_MEM_SIZE));
 	//fprintf(stderr, "Max allocation: %ld\n",
+	// This is long long unsigned on Mac and long unsigned on Linux
 	fprintf(stderr, "Max allocation: %llu\n",
-	       vg_ocl_device_getulong(did, CL_DEVICE_MAX_MEM_ALLOC_SIZE));
+	       vg_ocl_device_getulong(did, (unsigned long long) CL_DEVICE_MAX_MEM_ALLOC_SIZE));
 	vocp->voc_dump_done = 1;
 }
 
@@ -913,9 +916,13 @@ vg_ocl_init(vg_context_t *vcp, vg_ocl_context_t *vocp, cl_device_id did,
 		vg_ocl_error(vocp, ret, "clCreateContext");
 		return 0;
 	}
-
+#ifndef CL_USE_DEPRECATED_OPENCL_1_2_APIS
+	vocp->voc_oclcmdq = clCreateCommandQueueWithProperties(vocp->voc_oclctx,
+						 &vocp->voc_ocldid,
+#else
 	vocp->voc_oclcmdq = clCreateCommandQueue(vocp->voc_oclctx,
 						 vocp->voc_ocldid,
+#endif
 						 0, &ret);
 	if (!vocp->voc_oclcmdq) {
 		vg_ocl_error(vocp, ret, "clCreateCommandQueue");
@@ -1427,7 +1434,8 @@ show_elapsed(struct timeval *tv, const char *place)
 	timersub(&now, tv, &delta);
 	fprintf(stderr,
 		//"%s spent %ld.%06lds\n", place, delta.tv_sec, delta.tv_usec);
-		"%s spent %ld.%06ds\n", place, delta.tv_sec, delta.tv_usec);
+		// delta.tv_usec is long int on Linux an int on Mac
+		"%s spent %ld.%06lds\n", place, delta.tv_sec, (long int) delta.tv_usec);
 }
 
 

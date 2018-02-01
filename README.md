@@ -1,4 +1,4 @@
-# Vanitygen Cash ![](https://img.shields.io/badge/build-passing-brightgreen.svg) [![](https://img.shields.io/badge/download-click%20me!-blue.svg)](https://github.com/cashaddress/vanitygen-cash/releases)
+# Vanitygen Cash ![](https://img.shields.io/badge/build-passing-brightgreen.svg) [![](https://img.shields.io/badge/download-click%20me!-blue.svg)](https://github.com/cashaddress/vanitygen-cash/releases) ![](https://img.shields.io/github/downloads/cashaddress/vanitygen-cash/total.svg)
 
 Vanitygen for Bitcoin Cash! Crafted by the creators of [CashAddress.Github.io](https://cashaddress.github.io/)
 
@@ -7,7 +7,7 @@ $ '/Users/Mevanitygen/oclvanitygen' -d 2 qrelay2
 Difficulty: 130150524
 Pattern: qrelay2
 Address: bitcoincash:qrelay2wpzd34hgurjrf8hfke9xcg0mthgx4sgfwuy
-Privkey: 5KUNEbYAEL6W1TowXuXkItWontWorkRSaCBm2JhJFN5tFhHZNAJvvK
+Privkey: 5KUNEbYAEL6W1TowXuXkIEasTEreGGWorkRSaCBm2JhJFN5tFhHZNAJvvK
 ```
 
 ## Download
@@ -20,13 +20,13 @@ Alphabet: `023456789acdefghjklmnpqrstuvwxyz`
 
 - The first character should be `q`
 
-- The second character should be either `q`, `p`, `z`, or `r`, however, you can type any other character, it will put a `q` behind it (e.g. `qh0dl` => `qqh0l`)
+- The second character should be either `q`, `p`, `z`, or `r`, however, you can type any other character, it will put a `q` behind it (e.g. `qh0dl` => `qqh0dl`)
 
 ## To build:
 
 Mac (compiles the latest gcc, 50+ minutes)
 
-    brew install gcc
+    brew install gcc openssl pcre
     make
 
 Linux
