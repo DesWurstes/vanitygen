@@ -244,6 +244,36 @@ out:
 }
 
 void
+vg_encode_compressed_address(const EC_POINT *ppoint, const EC_GROUP *pgroup,
+		  int addrtype, char *result)
+{
+	unsigned char eckey_buf[128], *pend;
+	unsigned char binres[20] = {};
+	//unsigned char binres[21] = {0,};
+	unsigned char hash1[32];
+
+	pend = eckey_buf;
+
+	EC_POINT_point2oct(pgroup,
+			   ppoint,
+			   POINT_CONVERSION_COMPRESSED,
+			   eckey_buf,
+			   sizeof(eckey_buf),
+			   NULL);
+	pend = eckey_buf + 0x21;
+	//binres[0] = addrtype;
+	SHA256(eckey_buf, pend - eckey_buf, hash1);
+	//RIPEMD160(hash1, sizeof(hash1), &binres[1]);
+	RIPEMD160(hash1, sizeof(hash1), &binres[0]);
+	if (addrtype == 0) {
+		strcpy(result, CashAddrEncode(1, &binres[0], 0, 1).c_str());
+	} else if (addrtype == 111) {
+		strcpy(result, CashAddrEncode(0, &binres[0], 0, 1).c_str());
+	}
+	//vg_b58_encode_check(binres, sizeof(binres), result);
+}
+
+void
 vg_encode_address(const EC_POINT *ppoint, const EC_GROUP *pgroup,
 		  int addrtype, char *result)
 {
@@ -305,6 +335,25 @@ vg_encode_script_address(const EC_POINT *ppoint, const EC_GROUP *pgroup,
 		strcpy(result, CashAddrEncode(0, &binres[0], 1, 1).c_str());
 	}
 	//vg_b58_encode_check(binres, sizeof(binres), result);
+}
+
+void
+vg_encode_privkey_compressed(const EC_KEY *pkey, int addrtype, char *result)
+{
+	unsigned char eckey_buf[128];
+	const BIGNUM *bn;
+	int nbytes;
+
+	bn = EC_KEY_get0_private_key(pkey);
+
+	eckey_buf[0] = addrtype;
+	nbytes = BN_num_bytes(bn);
+	assert(nbytes <= 32);
+	if (nbytes < 32)
+		memset(eckey_buf + 1, 0, 32 - nbytes);
+	BN_bn2bin(bn, &eckey_buf[33 - nbytes]);
+	eckey_buf[33] = 1;
+	vg_b58_encode_check(eckey_buf, 34, result);
 }
 
 void

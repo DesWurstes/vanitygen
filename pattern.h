@@ -58,6 +58,7 @@ struct _vg_exec_context_s {
 	BIGNUM				vxc_bnbase;
 	BIGNUM				vxc_bntmp;
 	BIGNUM				vxc_bntmp2;
+	int				vxc_isoutputcompressed;
 
 	vg_exec_context_threadfunc_t	vxc_threadfunc;
 	pthread_t			vxc_pthread;
@@ -79,7 +80,7 @@ typedef int (*vg_test_func_t)(vg_exec_context_t *);
 typedef int (*vg_hash160_sort_func_t)(vg_context_t *vcp, void *buf);
 typedef void (*vg_output_error_func_t)(vg_context_t *vcp, const char *info);
 typedef void (*vg_output_match_func_t)(vg_context_t *vcp, EC_KEY *pkey,
-				       const char *pattern);
+				       const char *pattern, int isaddresscompressed);
 typedef void (*vg_output_timing_func_t)(vg_context_t *vcp, double count,
 					unsigned long long rate,
 					unsigned long long total);
@@ -153,7 +154,7 @@ extern vg_context_t *vg_regex_context_new(int addrtype, int privtype);
 /* Utility functions */
 extern int vg_output_timing(vg_context_t *vcp, int cycle, struct timeval *last);
 extern void vg_output_match_console(vg_context_t *vcp, EC_KEY *pkey,
-				    const char *pattern);
+				    const char *pattern, int isaddresscompressed);
 extern void vg_output_timing_console(vg_context_t *vcp, double count,
 				     unsigned long long rate,
 				     unsigned long long total);

@@ -39,11 +39,14 @@ extern void dumpbn(const BIGNUM *bn);
 extern void vg_b58_encode_check(void *buf, size_t len, char *result);
 extern int vg_b58_decode_check(const char *input, void *buf, size_t len);
 
+extern void vg_encode_compressed_address(const EC_POINT *ppoint, const EC_GROUP *pgroup,
+			      int addrtype, char *result);
 extern void vg_encode_address(const EC_POINT *ppoint, const EC_GROUP *pgroup,
 			      int addrtype, char *result);
 extern void vg_encode_script_address(const EC_POINT *ppoint,
 				     const EC_GROUP *pgroup,
 				     int addrtype, char *result);
+extern void vg_encode_privkey_compressed(const EC_KEY *pkey, int addrtype, char *result);
 extern void vg_encode_privkey(const EC_KEY *pkey, int addrtype, char *result);
 extern int vg_set_privkey(const BIGNUM *bnpriv, EC_KEY *pkey);
 extern int vg_decode_privkey(const char *b58encoded,

@@ -54,8 +54,8 @@ vg_thread_loop(void *arg)
 	unsigned char *eckey_buf;
 	unsigned char hash1[32];
 
-	int i, c, len, output_interval;
-	int hash_len;
+	int c, len, output_interval;
+	unsigned int i;
 
 	const BN_ULONG rekey_max = 10000000;
 	BN_ULONG npoints, rekey_at, nbatch;
@@ -118,11 +118,9 @@ vg_thread_loop(void *arg)
 		hash_buf[67] = 0x51;  // OP_1
 		hash_buf[68] = 0xae;  // OP_CHECKMULTISIG
 		eckey_buf = hash_buf + 2;
-		hash_len = 69;
 
 	} else {
 		eckey_buf = hash_buf;
-		hash_len = 65;
 	}
 
 	while (!vcp->vc_halt) {
@@ -198,33 +196,85 @@ vg_thread_loop(void *arg)
 		 */
 
 		EC_POINTs_make_affine(pgroup, nbatch, ppnt, vxcp->vxc_bnctx);
+		if (vcp->vc_format == VCF_SCRIPT) {
+			for (i = 0; i < (unsigned) nbatch; i++, vxcp->vxc_delta++) {
+				/* Hash the public key */
+				len = EC_POINT_point2oct(pgroup, ppnt[i],
+							 POINT_CONVERSION_UNCOMPRESSED,
+							 eckey_buf,
+							 65,
+							 vxcp->vxc_bnctx);
+				assert(len == 65);
 
-		for (unsigned i = 0; i < (unsigned) nbatch; i++, vxcp->vxc_delta++) {
-			/* Hash the public key */
-			len = EC_POINT_point2oct(pgroup, ppnt[i],
-						 POINT_CONVERSION_UNCOMPRESSED,
-						 eckey_buf,
-						 65,
-						 vxcp->vxc_bnctx);
-			assert(len == 65);
+				SHA256(hash_buf, 69, hash1);
+				RIPEMD160(hash1, sizeof(hash1), &vxcp->vxc_binres[1]);
+				vxcp->vxc_isoutputcompressed = 0;
+				switch (test_func(vxcp)) {
+				case 1:
+					npoints = 0;
+					rekey_at = 0;
+					i = nbatch;
+					break;
+				case 2:
+					goto out;
+					break;
+				default:
+					break;
+				}
+			}
+		} else {
+			for (i = 0; i < (unsigned) nbatch; i++, vxcp->vxc_delta++) {
+				/* Hash the public key */
+				len = EC_POINT_point2oct(pgroup, ppnt[i],
+							 POINT_CONVERSION_UNCOMPRESSED,
+							 eckey_buf,
+							 65,
+							 vxcp->vxc_bnctx);
+				assert(len == 65);
 
-			SHA256(hash_buf, hash_len, hash1);
-			RIPEMD160(hash1, sizeof(hash1), &vxcp->vxc_binres[1]);
+				SHA256(hash_buf, 65, hash1);
+				RIPEMD160(hash1, sizeof(hash1), &vxcp->vxc_binres[1]);
+				vxcp->vxc_isoutputcompressed = 0;
+				switch (test_func(vxcp)) {
+				case 1:
+					npoints = 0;
+					rekey_at = 0;
+					i = nbatch;
+					break;
+				case 2:
+					goto out;
+					break;
+				default:
+					break;
+				}
 
-			switch (test_func(vxcp)) {
-			case 1:
-				npoints = 0;
-				rekey_at = 0;
-				i = nbatch;
-				break;
-			case 2:
-				goto out;
-			default:
-				break;
+				len = EC_POINT_point2oct(pgroup, ppnt[i],
+							 POINT_CONVERSION_COMPRESSED,
+							 eckey_buf,
+							 33,
+							 vxcp->vxc_bnctx);
+				assert(len == 33);
+
+				SHA256(hash_buf, 33, hash1);
+				RIPEMD160(hash1, sizeof(hash1), &vxcp->vxc_binres[1]);
+				vxcp->vxc_isoutputcompressed = 1;
+				switch (test_func(vxcp)) {
+				case 1:
+					npoints = 0;
+					rekey_at = 0;
+					i = nbatch;
+					break;
+				case 2:
+					printf("compressed!\n");
+					goto out;
+					break;
+				default:
+					break;
+				}
 			}
 		}
 
-		c += i;
+		c += i << 1;
 		if (c >= output_interval) {
 			output_interval = vg_output_timing(vcp, c, &tvstart);
 			if (output_interval > 250000)

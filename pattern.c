@@ -280,7 +280,7 @@ vg_exec_context_calc_address(vg_exec_context_t *vxcp)
 	}
 	len = EC_POINT_point2oct(pgroup,
 				 pubkey,
-				 POINT_CONVERSION_UNCOMPRESSED,
+				 vxcp->vxc_isoutputcompressed ? POINT_CONVERSION_COMPRESSED : POINT_CONVERSION_UNCOMPRESSED,
 				 eckey_buf,
 				 sizeof(eckey_buf),
 				 vxcp->vxc_bnctx);
@@ -527,8 +527,9 @@ vg_output_timing_console(vg_context_t *vcp, double count,
 }
 
 void
-vg_output_match_console(vg_context_t *vcp, EC_KEY *pkey, const char *pattern)
+vg_output_match_console(vg_context_t *vcp, EC_KEY *pkey, const char *pattern, int isaddresscompressed)
 {
+  printf("%d\n", isaddresscompressed);
 	unsigned char key_buf[512], *pend;
 	char addr_buf[64], addr2_buf[64];
 	char privkey_buf[VG_PROTKEY_MAX_B58];
@@ -553,15 +554,24 @@ vg_output_match_console(vg_context_t *vcp, EC_KEY *pkey, const char *pattern)
 	}
 
 	assert(EC_KEY_check_key(pkey));
-	vg_encode_address(ppnt,
-			  EC_KEY_get0_group(pkey),
-			  vcp->vc_pubkeytype, addr_buf);
 	if (isscript)
 		vg_encode_script_address(ppnt,
 					 EC_KEY_get0_group(pkey),
 					 vcp->vc_addrtype, addr2_buf);
+  else {
+    if (isaddresscompressed) {
+      vg_encode_compressed_address(ppnt,
+            EC_KEY_get0_group(pkey),
+            vcp->vc_pubkeytype, addr_buf);
+    } else {
+      vg_encode_address(ppnt,
+            EC_KEY_get0_group(pkey),
+            vcp->vc_pubkeytype, addr_buf);
+    }
+  }
 
 	if (vcp->vc_key_protect_pass) {
+    // TODO: Compressed address!
 		len = vg_protect_encode_privkey(privkey_buf,
 						pkey, vcp->vc_privtype,
 						VG_PROTKEY_DEFAULT,
@@ -575,7 +585,10 @@ vg_output_match_console(vg_context_t *vcp, EC_KEY *pkey, const char *pattern)
 		}
 	}
 	if (!vcp->vc_key_protect_pass) {
-		vg_encode_privkey(pkey, vcp->vc_privtype, privkey_buf);
+    if (isaddresscompressed)
+      vg_encode_privkey_compressed(pkey, vcp->vc_privtype, privkey_buf);
+    else
+		  vg_encode_privkey(pkey, vcp->vc_privtype, privkey_buf);
 	}
 
 	if (!vcp->vc_result_file || (vcp->vc_verbose > 0)) {
@@ -1406,7 +1419,7 @@ research:
 
 		vg_exec_context_consolidate_key(vxcp);
 		vcpp->base.vc_output_match(&vcpp->base, vxcp->vxc_key,
-					   vp->vp_pattern);
+					   vp->vp_pattern, vxcp->vxc_isoutputcompressed);
 
 		vcpp->base.vc_found++;
 
@@ -1776,7 +1789,7 @@ restart_loop:
 
 		vg_exec_context_consolidate_key(vxcp);
 		vcrp->base.vc_output_match(&vcrp->base, vxcp->vxc_key,
-					   vcrp->vcr_regex_pat[i]);
+					   vcrp->vcr_regex_pat[i], vxcp->vxc_isoutputcompressed);
 		vcrp->base.vc_found++;
 
 		if (vcrp->base.vc_only_one) {
