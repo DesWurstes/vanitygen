@@ -138,7 +138,7 @@ std::vector<unsigned char> CreateChecksum(const int isMainNet, const std::vector
     return ret;
 }
 
-const char* CashAddrEncode(const int isMainNet, const unsigned char* payload, const unsigned int type, const unsigned int withPrefix) {
+std::string CashAddrEncode(const int isMainNet, const unsigned char* payload, const unsigned int type, const unsigned int withPrefix) {
     std::vector<unsigned char> payloadPreConverted(payload, payload+20);
     std::vector<unsigned char> convertedPayload = PackAddrData(payloadPreConverted, type);
     std::vector<unsigned char> checksum = CreateChecksum(isMainNet, convertedPayload);
@@ -165,5 +165,5 @@ const char* CashAddrEncode(const int isMainNet, const unsigned char* payload, co
     for (unsigned char c : combined) {
         ret += CHARSET[c];
     }
-    return ret.c_str();
+    return ret;
 }

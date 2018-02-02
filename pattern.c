@@ -1750,9 +1750,9 @@ restart_loop:
             //&b58[p], (sizeof(b58) - 1) - p, 0,
 			      //b32, (sizeof(b32) - 1), 0,
             //cashAddr, 42, 0,
-            vxcp->vxc_binres[0] == 0 ? (CashAddrEncode(1, &vxcp->vxc_binres[1], 0, 0)) : (
-              (vxcp->vxc_binres[0] == 0x6f) ? (CashAddrEncode(0, &vxcp->vxc_binres[1], 0, 0)) : (
-                (vxcp->vxc_binres[0] == 0x05) ? (CashAddrEncode(1, &vxcp->vxc_binres[1], 1, 0)) : (CashAddrEncode(0, &vxcp->vxc_binres[1], 1, 0))
+            vxcp->vxc_binres[0] == 0 ? (CashAddrEncode(1, &vxcp->vxc_binres[1], 0, 0).c_str()) : (
+              (vxcp->vxc_binres[0] == 0x6f) ? (CashAddrEncode(0, &vxcp->vxc_binres[1], 0, 0).c_str()) : (
+                (vxcp->vxc_binres[0] == 0x05) ? (CashAddrEncode(1, &vxcp->vxc_binres[1], 1, 0).c_str()) : (CashAddrEncode(0, &vxcp->vxc_binres[1], 1, 0).c_str())
               )
             ), 42, 0,
 			      0,
