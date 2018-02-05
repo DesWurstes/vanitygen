@@ -2125,7 +2125,7 @@ l_rekey:
 				break;
 			}
 
-			c += round;
+			c += round << 1;
 			if (!halt && (c >= output_interval)) {
 				output_interval =
 					vg_output_timing(vcp, c, &tvstart);
