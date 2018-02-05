@@ -415,7 +415,6 @@ main(int argc, char **argv)
 	EC_POINT *pubkey_base = NULL;
 
 	FILE *pattfp[MAX_FILE], *fp;
-	int pattfpi[MAX_FILE];
 	int npattfp = 0;
 	int pattstdin = 0;
 
@@ -512,7 +511,6 @@ main(int argc, char **argv)
 				}
 			}
 			pattfp[npattfp] = fp;
-			pattfpi[npattfp] = 0;
 			npattfp++;
 			break;
 		case 'o':
@@ -594,8 +592,7 @@ main(int argc, char **argv)
 		vcp = vg_regex_context_new(addrtype, privtype);
 
 	} else {
-		vcp = vg_prefix_context_new(addrtype, privtype,
-					    0);
+		vcp = vg_prefix_context_new(addrtype, privtype);
 	}
 
 	vcp->vc_verbose = verbose;
@@ -631,9 +628,6 @@ main(int argc, char **argv)
 		}
 		if (fp != stdin)
 			fclose(fp);
-
-		if (!regex)
-			vg_prefix_context_set_case_insensitive(vcp, pattfpi[i]);
 
 		if (!vg_context_add_patterns(vcp,
 					     (const char ** const) patterns,

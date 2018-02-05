@@ -1198,14 +1198,7 @@ typedef struct _vg_prefix_context_s {
 	vg_context_t		base;
 	avl_root_t		vcp_avlroot;
 	BIGNUM			vcp_difficulty;
-	int			vcp_caseinsensitive;
 } vg_prefix_context_t;
-
-void
-vg_prefix_context_set_case_insensitive(vg_context_t *vcp, int caseinsensitive)
-{
-	((vg_prefix_context_t *) vcp)->vcp_caseinsensitive = caseinsensitive;
-}
 
 static void
 vg_prefix_context_clear_all_patterns(vg_context_t *vcp)
@@ -1503,7 +1496,7 @@ vg_prefix_hash160_sort(vg_context_t *vcp, void *buf)
 }
 
 vg_context_t *
-vg_prefix_context_new(int addrtype, int privtype, int caseinsensitive)
+vg_prefix_context_new(int addrtype, int privtype)
 {
 	vg_prefix_context_t *vcpp;
 
@@ -1524,7 +1517,6 @@ vg_prefix_context_new(int addrtype, int privtype, int caseinsensitive)
 		vcpp->base.vc_hash160_sort = vg_prefix_hash160_sort;
 		avl_root_init(&vcpp->vcp_avlroot);
 		BN_init(&vcpp->vcp_difficulty);
-		vcpp->vcp_caseinsensitive = caseinsensitive;
 	}
 	return &vcpp->base;
 }

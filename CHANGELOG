@@ -119,4 +119,5 @@ Version 0.23, released January 31, 2018:
 Version 0.24pre, not released yet:
 	- Use assembly sha256, and /dev/random on !Windows
 	- AMD 68XX, 69XX, 70XX GPU fix
-	- A little faster regex search
+	- 100% faster prefix and regex search
+	- Clean up
