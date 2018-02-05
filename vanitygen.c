@@ -265,7 +265,6 @@ vg_thread_loop(void *arg)
 					i = nbatch;
 					break;
 				case 2:
-					printf("compressed!\n");
 					goto out;
 					break;
 				default:

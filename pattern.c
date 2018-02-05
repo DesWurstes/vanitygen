@@ -529,7 +529,6 @@ vg_output_timing_console(vg_context_t *vcp, double count,
 void
 vg_output_match_console(vg_context_t *vcp, EC_KEY *pkey, const char *pattern, int isaddresscompressed)
 {
-  printf("%d\n", isaddresscompressed);
 	unsigned char key_buf[512], *pend;
 	char addr_buf[64], addr2_buf[64];
 	char privkey_buf[VG_PROTKEY_MAX_B58];

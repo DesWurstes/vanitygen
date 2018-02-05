@@ -1470,12 +1470,10 @@ vg_ocl_gethash_check(vg_ocl_context_t *vocp, int slot)
 	}
 
 	round = vocp->voc_ocl_cols * vocp->voc_ocl_rows;
-
 	for (i = 0; i < round; i++, vxcp->vxc_delta++) {
 		memcpy(&vxcp->vxc_binres[1],
 		       ocl_hashes_out + (20*i),
 		       20);
-
 		res = test_func(vxcp);
 		if (res)
 			break;
@@ -1526,7 +1524,7 @@ vg_ocl_prefix_rekey(vg_ocl_context_t *vocp)
 				" for slot %d (rekey)\n", i);
 			return -1;
 		}
-		ocl_found_out[0] = 0xffffffff;
+		ocl_found_out[1] = 0xffffffff;
 		vg_ocl_unmap_arg_buffer(vocp, i, 0, ocl_found_out);
 	}
 
@@ -1580,18 +1578,19 @@ vg_ocl_prefix_check(vg_ocl_context_t *vocp, int slot)
 			" for slot %d\n", slot);
 		return 2;
 	}
-	found_delta = ocl_found_out[0];
+	found_delta = ocl_found_out[1];
 
 	if (found_delta != 0xffffffff) {
 		/* GPU code claims match, verify with CPU version */
 		orig_delta = vxcp->vxc_delta;
 		vxcp->vxc_delta += found_delta;
+		vxcp->vxc_isoutputcompressed = ocl_found_out[0];
 		vg_exec_context_calc_address(vxcp);
 
 		/* Make sure the GPU produced the expected hash */
 		res = 0;
 		if (!memcmp(vxcp->vxc_binres + 1,
-			    ocl_found_out + 2,
+			    ocl_found_out + 3,
 			    20)) {
 			res = test_func(vxcp);
 		}
@@ -1600,13 +1599,13 @@ vg_ocl_prefix_check(vg_ocl_context_t *vocp, int slot)
 			 * The match was not found in
 			 * the pattern list.  Hmm.
 			 */
-			//tablesize = ocl_found_out[2];
-			fprintf(stderr, "Match idx: %d\n", ocl_found_out[1]);
+			//tablesize = ocl_found_out[3];
+			fprintf(stderr, "Match idx: %d\n", ocl_found_out[2]);
 			fprintf(stderr, "CPU hash: ");
 			fdumphex(stderr, vxcp->vxc_binres + 1, 20);
 			fprintf(stderr, "GPU hash: ");
 			fdumphex(stderr,
-				 (unsigned char *) (ocl_found_out + 2), 20);
+				 (unsigned char *) (ocl_found_out + 3), 20);
 			fprintf(stderr, "Found delta: %d "
 			       "Start delta: %d\n",
 			       found_delta, orig_delta);
