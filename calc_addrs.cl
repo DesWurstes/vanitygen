@@ -1493,7 +1493,7 @@ hash_ec_point_search_prefix(__global uint *found,
 	points_in += start;
 
 	/* Complete the coordinates and hash */
-	hash_ec_point(hash, points_in, z_heap);
+	hash_ec_point_compressed(hash, points_in, z_heap);
 
 	/*
 	 * Unconditionally byteswap the hash result, because:
@@ -1501,35 +1501,31 @@ hash_ec_point_search_prefix(__global uint *found,
 	 * - We are comparing it in big-endian order
 	 */
 #define hash_ec_point_search_prefix_inner_1(i)	\
-	hash[i] = bswap32(hash[i]);
-
+ 	hash[i] = bswap32(hash[i]);
 	hash160_unroll(hash_ec_point_search_prefix_inner_1);
 
 	/* Binary-search the target table for the hash we just computed */
 	for (high = ntargets - 1, low = 0, i = high >> 1;
-	     high >= low;
-	     i = low + ((high - low) >> 1)) {
+			 high >= low;
+			 i = low + ((high - low) >> 1)) {
 		p = hash160_ucmp_g(hash, &target_table[10*i]);
 		low = (p > 0) ? (i + 1) : low;
 		high = (p < 0) ? (i - 1) : high;
 		if (p == 0) {
-			found[0] = 0;
+			found[0] = 1;
 			/* For debugging purposes, write the hash value */
 			found[1] = ((get_global_id(1) * get_global_size(0)) +
-				    get_global_id(0));
+						get_global_id(0));
 			found[2] = i;
-
 #define hash_ec_point_search_prefix_inner_2(i)	\
-			found[i+3] = load_be32(hash[i]);
-
+	found[i+3] = load_be32(hash[i]);
 			hash160_unroll(hash_ec_point_search_prefix_inner_2);
 			high = -1;
 			return;
 		}
 	}
 
-	/* Complete the coordinates and hash */
-	hash_ec_point_compressed(hash, points_in, z_heap);
+	hash_ec_point(hash, points_in, z_heap);
 
 	/*
 	 * Unconditionally byteswap the hash result, because:
@@ -1546,11 +1542,12 @@ hash_ec_point_search_prefix(__global uint *found,
 		low = (p > 0) ? (i + 1) : low;
 		high = (p < 0) ? (i - 1) : high;
 		if (p == 0) {
-			found[0] = 1;
+			found[0] = 0;
 			/* For debugging purposes, write the hash value */
 			found[1] = ((get_global_id(1) * get_global_size(0)) +
 						get_global_id(0));
 			found[2] = i;
+
 			hash160_unroll(hash_ec_point_search_prefix_inner_2);
 			high = -1;
 		}
