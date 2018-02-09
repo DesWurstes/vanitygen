@@ -359,7 +359,7 @@ usage(const char *name)
 {
 	fprintf(stderr,
 "Vanitygen Cash %s (" OPENSSL_VERSION_TEXT ")\n"
-"Usage: %s [-vqnrik1NT] [-t <threads>] [-f <filename>|-] [<pattern>...]\n"
+"Usage: %s [-vqnrk1T] [-t <threads>] [-f <filename>|-] [<pattern>...]\n"
 "Generates a bitcoin receiving address matching <pattern>, and outputs the\n"
 "address and associated private key.  The private key may be stored in a safe\n"
 "location or imported into a bitcoin client to spend any balance received on\n"
@@ -377,8 +377,6 @@ usage(const char *name)
 "-T            Generate Bitcoin Cash testnet address\n"
 "-F <format>   Generate address with the given format (pubkey or script)\n"
 "-P <pubkey>   Specify base public key for piecewise key generation\n"
-"-e            Encrypt private keys, prompt for password\n"
-"-E <password> Encrypt private keys with <password> (UNSAFE)\n"
 "-t <threads>  Set number of worker threads (Default: number of CPUs)\n"
 "-f <file>     File containing list of patterns, one per line\n"
 "              (Use \"-\" as the file name for stdin)\n"
@@ -402,12 +400,9 @@ main(int argc, char **argv)
 	int simulate = 0;
 	int remove_on_match = 1;
 	int only_one = 0;
-	int prompt_password = 0;
 	int opt;
 	char *seedfile = NULL;
-	char pwbuf[128];
 	const char *result_file = NULL;
-	const char *key_password = NULL;
 	char **patterns;
 	int npatterns = 0;
 	int nthreads = 0;
@@ -420,7 +415,7 @@ main(int argc, char **argv)
 
 	unsigned int i;
 
-	while ((opt = getopt(argc, argv, "vqnrk1eE:P:T:F:t:h?f:o:s:")) != -1) {
+	while ((opt = getopt(argc, argv, "vqnrk1P:T:F:t:h?f:o:s:")) != -1) {
 		switch (opt) {
 		case 'v':
 			verbose = 2;
@@ -473,13 +468,6 @@ main(int argc, char **argv)
 			}
 			break;
 		}
-
-		case 'e':
-			prompt_password = 1;
-			break;
-		case 'E':
-			key_password = optarg;
-			break;
 		case 't':
 			nthreads = atoi(optarg);
 			if (nthreads == 0) {
@@ -638,19 +626,6 @@ main(int argc, char **argv)
 	if (!vcp->vc_npatterns) {
 		fprintf(stderr, "No patterns to search\n");
 		return 1;
-	}
-
-	if (prompt_password) {
-		if (!vg_read_password(pwbuf, sizeof(pwbuf)))
-			return 1;
-		key_password = pwbuf;
-	}
-	vcp->vc_key_protect_pass = key_password;
-	if (key_password) {
-		if (!vg_check_password_complexity(key_password, verbose))
-			fprintf(stderr,
-				"WARNING: Protecting private keys with "
-				"weak password\n");
 	}
 
 	if ((verbose > 0) && regex && (vcp->vc_npatterns > 1))

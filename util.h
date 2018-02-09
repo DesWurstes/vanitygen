@@ -76,9 +76,6 @@ extern int vg_pkcs8_decode_privkey(EC_KEY *pkey, const char *pem_in,
 extern int vg_decode_privkey_any(EC_KEY *pkey, int *addrtype,
 				 const char *input, const char *pass);
 
-extern int vg_read_password(char *buf, size_t size);
-extern int vg_check_password_complexity(const char *pass, int verbose);
-
 extern int vg_read_file(FILE *fp, char ***result, int *rescount);
 
 #endif /* !defined (__VG_UTIL_H__) */

@@ -39,7 +39,7 @@ usage(const char *name)
 {
 	fprintf(stderr,
 "oclVanitygen Cash %s (" OPENSSL_VERSION_TEXT ")\n"
-"Usage: %s [-vqrik1NTS] [-d <device>] [-f <filename>|-] [<pattern>...]\n"
+"Usage: %s [-vqk1NTS] [-d <device>] [-f <filename>|-] [<pattern>...]\n"
 "Generates a bitcoin receiving address matching <pattern>, and outputs the\n"
 "address and associated private key.  The private key may be stored in a safe\n"
 "location or imported into a bitcoin client to spend any balance received on\n"
@@ -58,8 +58,6 @@ usage(const char *name)
 "-1            Stop after first match\n"
 "-T            Generate Bitcoin Cash testnet address\n"
 "-P <pubkey>   Specify base public key for piecewise key generation\n"
-"-e            Encrypt private keys, prompt for password\n"
-"-E <password> Encrypt private keys with <password> (UNSAFE)\n"
 "-p <platform> Select OpenCL platform\n"
 "-d <device>   Select OpenCL device\n"
 "-D <devstr>   Use OpenCL device, identified by device string\n"
@@ -88,9 +86,7 @@ main(int argc, char **argv)
 	int privtype = 128;
 	int regex = 0;
 	int opt;
-	char pwbuf[128];
 	int platformidx = -1, deviceidx = -1;
-	int prompt_password = 0;
 	char *seedfile = NULL;
 	char **patterns, *pend;
 	int verbose = 1;
@@ -107,7 +103,6 @@ main(int argc, char **argv)
 	vg_ocl_context_t *vocp = NULL;
 	EC_POINT *pubkey_base = NULL;
 	const char *result_file = NULL;
-	const char *key_password = NULL;
 	char *devstrs[MAX_DEVS];
 	int ndevstrs = 0;
 	int opened = 0;
@@ -119,7 +114,7 @@ main(int argc, char **argv)
 	int i;
 
 	while ((opt = getopt(argc, argv,
-			     "vqk1T:eE:p:P:d:w:t:g:b:VSh?f:o:s:D:")) != -1) {
+			     "vqk1T:p:P:d:w:t:g:b:VSh?f:o:s:D:")) != -1) {
 		switch (opt) {
 		case 'v':
 			verbose = 2;
@@ -136,12 +131,6 @@ main(int argc, char **argv)
 		case 'T':
 			addrtype = 111;
 			privtype = 239;
-			break;
-		case 'e':
-			prompt_password = 1;
-			break;
-		case 'E':
-			key_password = optarg;
 			break;
 		case 'p':
 			platformidx = atoi(optarg);
@@ -366,19 +355,6 @@ main(int argc, char **argv)
 	if (!vcp->vc_npatterns) {
 		fprintf(stderr, "No patterns to search\n");
 		return 1;
-	}
-
-	if (prompt_password) {
-		if (!vg_read_password(pwbuf, sizeof(pwbuf)))
-			return 1;
-		key_password = pwbuf;
-	}
-	vcp->vc_key_protect_pass = key_password;
-	if (key_password) {
-		if (!vg_check_password_complexity(key_password, verbose))
-			fprintf(stderr,
-				"WARNING: Protecting private keys with "
-				"weak password\n");
 	}
 
 	if ((verbose > 0) && regex && (vcp->vc_npatterns > 1))

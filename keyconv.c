@@ -28,8 +28,6 @@ usage(const char *progname)
 "Usage: %s [-8] [-e|-E <password>] [-c <key>] [<key>]\n"
 "-G            Generate a key pair and output the full public key\n"
 "-8            Output key in PKCS#8 form\n"
-"-e            Encrypt output key, prompt for password\n"
-"-E <password> Encrypt output key with <password> (UNSAFE)\n"
 "-c <key>      Combine private key parts to make complete private key\n"
 "-v            Verbose output\n",
 		version, progname);
@@ -43,43 +41,23 @@ main(int argc, char **argv)
 		usage(argv[0]);
 		return 0;
 	}
-	char pwbuf[128];
 	char ecprot[128];
 	char pbuf[1024];
 	const char *key_in;
 	const char *pass_in = NULL;
 	const char *key2_in = NULL;
 	EC_KEY *pkey;
-	int parameter_group = -1;
 	int privtype, addrtype;
 	int pkcs8 = 0;
-	int pass_prompt = 0;
 	int verbose = 0;
 	int generate = 0;
 	int opt;
 	int res;
 
-	while ((opt = getopt(argc, argv, "8E:ec:vG")) != -1) {
+	while ((opt = getopt(argc, argv, "8c:vG")) != -1) {
 		switch (opt) {
 		case '8':
 			pkcs8 = 1;
-			break;
-		case 'E':
-			if (pass_prompt) {
-				usage(argv[0]);
-				return 1;
-			}
-			pass_in = optarg;
-			if (!vg_check_password_complexity(pass_in, 1))
-				fprintf(stderr,
-					"WARNING: Using weak password\n");
-			break;
-		case 'e':
-			if (pass_in) {
-				usage(argv[0]);
-				return 1;
-			}
-			pass_prompt = 1;
 			break;
 		case 'c':
 			key2_in = optarg;
@@ -128,12 +106,6 @@ main(int argc, char **argv)
 	}
 
 	res = vg_decode_privkey_any(pkey, &privtype, key_in, NULL);
-	if (res < 0) {
-		if (EVP_read_pw_string(pwbuf, sizeof(pwbuf),
-				       "Enter import password:", 0) ||
-		    !vg_decode_privkey_any(pkey, &privtype, key_in, pwbuf))
-			return 1;
-	}
 
 	if (!res) {
 		fprintf(stderr, "ERROR: Unrecognized key format\n");
@@ -147,13 +119,6 @@ main(int argc, char **argv)
 
 		pkey2 = EC_KEY_new_by_curve_name(NID_secp256k1);
 		res = vg_decode_privkey_any(pkey2, &privtype, key2_in, NULL);
-		if (res < 0) {
-			if (EVP_read_pw_string(pwbuf, sizeof(pwbuf),
-					       "Enter import password:", 0) ||
-			    !vg_decode_privkey_any(pkey2, &privtype,
-						   key2_in, pwbuf))
-				return 1;
-		}
 
 		if (!res) {
 			fprintf(stderr, "ERROR: Unrecognized key format\n");
@@ -173,16 +138,6 @@ main(int argc, char **argv)
 		BN_clear_free(&bntmp);
 		BN_clear_free(&bntmp2);
 		BN_CTX_free(bnctx);
-	}
-
-	if (pass_prompt) {
-		res = EVP_read_pw_string(pwbuf, sizeof(pwbuf),
-					 "Enter password:", 1);
-		if (res)
-			return 1;
-		pass_in = pwbuf;
-		if (!vg_check_password_complexity(pwbuf, 1))
-			fprintf(stderr, "WARNING: Using weak password\n");
 	}
 
 	switch (privtype) {
@@ -211,23 +166,6 @@ main(int argc, char **argv)
 		printf("%s", pbuf);
 	}
 
-	else if (pass_in) {
-		res = vg_protect_encode_privkey(ecprot, pkey, privtype,
-						parameter_group, pass_in);
-
-		if (!res) {
-			fprintf(stderr, "ERROR: could not password-protect "
-				"private key\n");
-			return 1;
-		}
-
-		vg_encode_address(EC_KEY_get0_public_key(pkey),
-				  EC_KEY_get0_group(pkey),
-				  addrtype, pwbuf);
-		printf("Address: %s\n", pwbuf);
-		printf("Protkey: %s\n", ecprot);
-	}
-
 	else {
 		vg_encode_address(EC_KEY_get0_public_key(pkey),
 				  EC_KEY_get0_group(pkey),
@@ -236,8 +174,6 @@ main(int argc, char **argv)
 		vg_encode_privkey(pkey, privtype, ecprot);
 		printf("Privkey: %s\n", ecprot);
 	}
-
-	OPENSSL_cleanse(pwbuf, sizeof(pwbuf));
 
 	EC_KEY_free(pkey);
 	return 0;

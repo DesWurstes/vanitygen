@@ -568,27 +568,10 @@ vg_output_match_console(vg_context_t *vcp, EC_KEY *pkey, const char *pattern, in
             vcp->vc_pubkeytype, addr_buf);
     }
   }
-
-	if (vcp->vc_key_protect_pass) {
-    // TODO: Compressed address!
-		len = vg_protect_encode_privkey(privkey_buf,
-						pkey, vcp->vc_privtype,
-						VG_PROTKEY_DEFAULT,
-						vcp->vc_key_protect_pass);
-		if (len) {
-			keytype = "Protkey";
-		} else {
-			fprintf(stderr,
-				"ERROR: could not password-protect key\n");
-			vcp->vc_key_protect_pass = NULL;
-		}
-	}
-	if (!vcp->vc_key_protect_pass) {
-    if (isaddresscompressed)
-      vg_encode_privkey_compressed(pkey, vcp->vc_privtype, privkey_buf);
-    else
-		  vg_encode_privkey(pkey, vcp->vc_privtype, privkey_buf);
-	}
+  if (isaddresscompressed)
+    vg_encode_privkey_compressed(pkey, vcp->vc_privtype, privkey_buf);
+  else
+	 vg_encode_privkey(pkey, vcp->vc_privtype, privkey_buf);
 
 	if (!vcp->vc_result_file || (vcp->vc_verbose > 0)) {
 		printf("\r%79s\rPattern: %s\n", "", pattern);
