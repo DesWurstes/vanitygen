@@ -121,9 +121,9 @@ std::vector<unsigned char> PackAddrData(const std::vector<unsigned char> &payloa
     return converted;
 }
 
-std::vector<unsigned char> CreateChecksum(const int isMainNet, const std::vector<unsigned char> &payload) {
+std::vector<unsigned char> CreateChecksum(const int isTestNet, const std::vector<unsigned char> &payload) {
     std::vector<unsigned char> prefix;
-    if (isMainNet != 0) {
+    if (isTestNet == 0) {
         prefix = {2, 9, 20, 3, 15, 9, 14, 3, 1, 19, 8, 0};
     } else {
         prefix = {2, 3, 8, 20, 5, 19, 20, 0};
@@ -138,10 +138,10 @@ std::vector<unsigned char> CreateChecksum(const int isMainNet, const std::vector
     return ret;
 }
 
-std::string CashAddrEncode(const int isMainNet, const unsigned char* payload, const unsigned int type, const unsigned int withPrefix) {
+std::string CashAddrEncode(const int isTestNet, const unsigned char* payload, const unsigned int type, const unsigned int withPrefix) {
     std::vector<unsigned char> payloadPreConverted(payload, payload+20);
     std::vector<unsigned char> convertedPayload = PackAddrData(payloadPreConverted, type);
-    std::vector<unsigned char> checksum = CreateChecksum(isMainNet, convertedPayload);
+    std::vector<unsigned char> checksum = CreateChecksum(isTestNet, convertedPayload);
     std::vector<unsigned char> combined = Cat(convertedPayload, checksum);
     /*char ret[withPrefix == 0 ? 43 : (isMainNet != 0 ? 55 : 51)];
     isMainNet != 0 ? ret = (char*) "bitcoincash:" : ret = (char*) "bchtest:";
@@ -152,12 +152,12 @@ std::string CashAddrEncode(const int isMainNet, const unsigned char* payload, co
     ret[sizeof(ret) - 1] = '\0';*/
     std::string ret;
     if (withPrefix) {
-      if (isMainNet) {
-        ret.reserve(54);
-        ret = "bitcoincash:";
-      } else {
+      if (isTestNet) {
         ret.reserve(50);
         ret = "bchtest:";
+      } else {
+        ret.reserve(54);
+        ret = "bitcoincash:";
       }
     } else {
       ret.reserve(42);

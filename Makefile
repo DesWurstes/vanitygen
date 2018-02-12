@@ -7,8 +7,8 @@ PROGS=vanitygen keyconv oclvanitygen oclvanityminer
 # -O3 = good optimization
 # -Ofast = aggressive optimization
 # -Os = small file size
-CFLAGS+=-Ofast
-CXXFLAGS+=-Ofast
+CFLAGS+=-O0
+CXXFLAGS+=-O0
 
 PLATFORM=$(shell uname -s)
 ifeq ($(PLATFORM),Darwin)
@@ -36,7 +36,7 @@ else
 	OPENCL_LIBS=-lOpenCL
 endif
 
-most: vanitygen keyconv
+most: vanitygen
 
 all: $(PROGS)
 

@@ -93,6 +93,7 @@ enum vg_format {
 /* Application-level context, incl. parameters and global pattern store */
 struct _vg_context_s {
 	int			vc_addrtype;
+	int			vc_istestnet;
 	int			vc_privtype;
 	unsigned long		vc_npatterns;
 	unsigned long		vc_npatterns_start;
@@ -141,11 +142,11 @@ extern void vg_context_stop_threads(vg_context_t *vcp);
 extern void vg_context_wait_for_completion(vg_context_t *vcp);
 
 /* Prefix context methods */
-extern vg_context_t *vg_prefix_context_new(int addrtype, int privtype);
+extern vg_context_t *vg_prefix_context_new(int addrtype, int privtype, int testnet);
 extern double vg_prefix_get_difficulty(int addrtype, const char *pattern);
 
 /* Regex context methods */
-extern vg_context_t *vg_regex_context_new(int addrtype, int privtype);
+extern vg_context_t *vg_regex_context_new(int addrtype, int privtype, int testnet);
 
 /* Utility functions */
 extern int vg_output_timing(vg_context_t *vcp, int cycle, struct timeval *last);

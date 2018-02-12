@@ -118,7 +118,6 @@ vg_thread_loop(void *arg)
 		hash_buf[67] = 0x51;  // OP_1
 		hash_buf[68] = 0xae;  // OP_CHECKMULTISIG
 		eckey_buf = hash_buf + 2;
-
 	} else {
 		eckey_buf = hash_buf;
 	}
@@ -208,7 +207,6 @@ vg_thread_loop(void *arg)
 
 				SHA256(hash_buf, 69, hash1);
 				RIPEMD160(hash1, sizeof(hash1), &vxcp->vxc_binres[1]);
-				vxcp->vxc_isoutputcompressed = 0;
 				switch (test_func(vxcp)) {
 				case 1:
 					npoints = 0;
@@ -368,6 +366,7 @@ usage(const char *name)
 "\n"
 "Options:\n"
 "-v            Verbose output\n"
+"-c            Print conditions for a valid address prefix (e.g. alpahbet) and quit\n"
 "-q            Quiet output\n"
 "-n            Simulate\n"
 "-r            Use regular expression match instead of prefix\n"
@@ -390,8 +389,9 @@ version, name);
 int
 main(int argc, char **argv)
 {
+	int testnet = 0;
 	int addrtype = 0;
-	int scriptaddrtype = 5;
+	int scriptaddrtype = 8;
 	int privtype = 128;
 	int pubkeytype;
 	enum vg_format format = VCF_PUBKEY;
@@ -415,8 +415,16 @@ main(int argc, char **argv)
 
 	unsigned int i;
 
-	while ((opt = getopt(argc, argv, "vqnrk1P:T:F:t:h?f:o:s:")) != -1) {
+	while ((opt = getopt(argc, argv, "cvqnrk1P:TF:t:h?f:o:s:")) != -1) {
 		switch (opt) {
+		case 'c':
+			fprintf(stderr, "%s\n",
+			"Conditions:\n"
+			"• The alphabet is 023456789acdefghjklmnpqrstuvwxyz\n"
+			"• The first character must be 'q' for standard addresses or 'p' for P2SH\n"
+			"• The second character must be either 'p', 'q', 'r' or 'z'.\n"
+			"• The prefix must be lowercase and written without the prefix (e.g. \"bitcoincash:\")\n");
+			return 1;
 		case 'v':
 			verbose = 2;
 			break;
@@ -436,9 +444,11 @@ main(int argc, char **argv)
 			only_one = 1;
 			break;
 		case 'T':
-			addrtype = 111;
+			//addrtype = 111;
 			privtype = 239;
-			scriptaddrtype = 196;
+			//scriptaddrtype = 196;
+			scriptaddrtype = 8;
+			testnet = 1;
 			break;
 		case 'F':
 			if (!strcmp(optarg, "script"))
@@ -538,12 +548,12 @@ main(int argc, char **argv)
 	pubkeytype = addrtype;
 	if (format == VCF_SCRIPT)
 	{
-		if (scriptaddrtype == -1)
+		/*if (scriptaddrtype == -1)
 		{
 			fprintf(stderr,
 				"Address type incompatible with script format\n");
 			return 1;
-		}
+		}*/
 		addrtype = scriptaddrtype;
 	}
 #if !defined(_WIN32)
@@ -577,10 +587,10 @@ main(int argc, char **argv)
 	}
 
 	if (regex) {
-		vcp = vg_regex_context_new(addrtype, privtype);
+		vcp = vg_regex_context_new(addrtype, privtype, testnet);
 
 	} else {
-		vcp = vg_prefix_context_new(addrtype, privtype);
+		vcp = vg_prefix_context_new(addrtype, privtype, testnet);
 	}
 
 	vcp->vc_verbose = verbose;

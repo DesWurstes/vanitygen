@@ -46,6 +46,8 @@ Windows
 
 ### TODOs:
 
+- Remove BN_Init for OpenSSL 1.1 ([More info](https://wiki.openssl.org/index.php/Manual:BN_new(3)#REMOVED_FUNCTIONALITY))
+
 - Remove case sensitivity completely
 
 - Allow to choose between compressed and uncompressed addresses
