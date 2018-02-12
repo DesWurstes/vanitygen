@@ -53,6 +53,7 @@ usage(const char *name)
 "\n"
 "Options:\n"
 "-v            Verbose output\n"
+"-c            Print conditions for a valid address prefix (e.g. alpahbet) and quit\n"
 "-q            Quiet output\n"
 "-k            Keep pattern and continue search after finding a match\n"
 "-1            Stop after first match\n"
@@ -82,6 +83,7 @@ version, name);
 int
 main(int argc, char **argv)
 {
+	int testnet = 0;
 	int addrtype = 0;
 	int privtype = 128;
 	int regex = 0;
@@ -114,11 +116,19 @@ main(int argc, char **argv)
 	int i;
 
 	while ((opt = getopt(argc, argv,
-			     "vqk1T:p:P:d:w:t:g:b:VSh?f:o:s:D:")) != -1) {
+			     "vcqk1Tp:P:d:w:t:g:b:VSh?f:o:s:D:")) != -1) {
 		switch (opt) {
 		case 'v':
 			verbose = 2;
 			break;
+		case 'c':
+			fprintf(stderr, "%s\n",
+			"Conditions:\n"
+			"• The alphabet is 023456789acdefghjklmnpqrstuvwxyz\n"
+			"• The first character must be 'q' for standard addresses or 'p' for P2SH\n"
+			"• The second character must be either 'p', 'q', 'r' or 'z'.\n"
+			"• The prefix must be lowercase and written without the prefix (e.g. \"bitcoincash:\")\n");
+			return 1;
 		case 'q':
 			verbose = 0;
 			break;
@@ -129,8 +139,8 @@ main(int argc, char **argv)
 			only_one = 1;
 			break;
 		case 'T':
-			addrtype = 111;
 			privtype = 239;
+			testnet = 1;
 			break;
 		case 'p':
 			platformidx = atoi(optarg);
@@ -263,7 +273,7 @@ main(int argc, char **argv)
 	}
 
 	if (verbose == 2) {
-		printf("Built on %s.", __DATE__);
+		printf("Built on %s.\n", __DATE__);
 	}
 
 #if OPENSSL_VERSION_NUMBER < 0x10000000L
@@ -279,9 +289,9 @@ main(int argc, char **argv)
 	if (!seedfile)
 	{
 	 struct stat st1;
-	 if (stat("/dev/random", &st1) == 0)
+	 if (stat("/dev/urandom", &st1) == 0)
 	 {
-	     seedfile = (char*) "/dev/random";
+	     seedfile = (char*) "/dev/urandom";
 	 }
 	}
 #endif
@@ -300,17 +310,17 @@ main(int argc, char **argv)
 			fprintf(stderr, "Could not load RNG seed %s\n", optarg);
 			return 1;
 		}
-		if (verbose > 0 && strcmp(seedfile, (char*) "/dev/random")) {
+		if (verbose > 0 && strcmp(seedfile, (char*) "/dev/urandom")) {
 			fprintf(stderr,
 				"Read %d bytes from RNG seed file\n", opt);
 		}
 	}
 
 	if (regex) {
-		vcp = vg_regex_context_new(addrtype, privtype);
+		vcp = vg_regex_context_new(addrtype, privtype, testnet);
 
 	} else {
-		vcp = vg_prefix_context_new(addrtype, privtype);
+		vcp = vg_prefix_context_new(addrtype, privtype, testnet);
 	}
 
 	vcp->vc_verbose = verbose;

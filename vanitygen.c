@@ -447,7 +447,6 @@ main(int argc, char **argv)
 			//addrtype = 111;
 			privtype = 239;
 			//scriptaddrtype = 196;
-			scriptaddrtype = 8;
 			testnet = 1;
 			break;
 		case 'F':
@@ -533,7 +532,7 @@ main(int argc, char **argv)
 		}
 	}
 	if (verbose == 2) {
-		printf("Built on %s.", __DATE__);
+		printf("Built on %s.\n", __DATE__);
 	}
 
 #if OPENSSL_VERSION_NUMBER < 0x10000000L
@@ -560,9 +559,9 @@ main(int argc, char **argv)
 	if (!seedfile)
 	{
 		struct stat st1;
-		if (stat("/dev/random", &st1) == 0)
+		if (stat("/dev/urandom", &st1) == 0)
 		{
-			seedfile = (char*) "/dev/random";
+			seedfile = (char*) "/dev/urandom";
 		}
 	}
 #endif
@@ -580,7 +579,7 @@ main(int argc, char **argv)
 			fprintf(stderr, "Could not load RNG seed %s\n", optarg);
 			return 1;
 		}
-		if (verbose > 0 && strcmp(seedfile, (char*) "/dev/random")) {
+		if (verbose > 0 && strcmp(seedfile, (char*) "/dev/urandom")) {
 			fprintf(stderr,
 				"Read %d bytes from RNG seed file\n", opt);
 		}
