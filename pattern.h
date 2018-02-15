@@ -54,10 +54,10 @@ struct _vg_exec_context_s {
 	EC_KEY				*vxc_key;
 	int				vxc_delta;
 	unsigned char			vxc_binres[28];
-	BIGNUM				vxc_bntarg;
-	BIGNUM				vxc_bnbase;
-	BIGNUM				vxc_bntmp;
-	BIGNUM				vxc_bntmp2;
+	BIGNUM				*vxc_bntarg;
+	BIGNUM				*vxc_bnbase;
+	BIGNUM				*vxc_bntmp;
+	BIGNUM				*vxc_bntmp2;
 	int				vxc_isoutputcompressed;
 
 	vg_exec_context_threadfunc_t	vxc_threadfunc;

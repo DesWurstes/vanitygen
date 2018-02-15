@@ -5,10 +5,8 @@
 
 #ifndef CASHADDR_H
 #define CASHADDR_H
-#include <cstdint>
 #include <string>
 #include <vector>
-#include <iostream>
 
 extern const char *CHARSET;
 
