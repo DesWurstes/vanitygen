@@ -920,14 +920,6 @@ vg_prefix_add_ranges(avl_root_t *rootp, const char *pattern, BIGNUM **ranges,
 	if (!vp)
 		return NULL;
 
-	if (ranges[2]) {
-		vp2 = vg_prefix_add(rootp, pattern, ranges[2], ranges[3]);
-		if (!vp2) {
-			vg_prefix_delete(rootp, vp);
-			return NULL;
-		}
-	}
-
 	if (!master) {
 		vp->vp_sibling = vp2;
 		if (vp2)
@@ -1139,10 +1131,6 @@ vg_prefix_get_difficulty(int addrtype, const char *pattern)
 	if (ret == 0) {
 		BN_sub(bntmp, ranges[1], ranges[0]);
 		BN_add(result, result, bntmp);
-		if (ranges[2]) {
-			BN_sub(bntmp, ranges[3], ranges[2]);
-			BN_add(result, result, bntmp);
-		}
 		free_ranges(ranges);
 
 		BN_clear(bntmp);
