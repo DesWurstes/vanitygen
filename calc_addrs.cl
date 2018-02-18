@@ -59,7 +59,6 @@
  *
  * -------------------------------
  * Kernel: hash_ec_point_get
- * Kernel: hash_ec_point_get_compressed
  *
  * Inputs:
  * - Intermediate point buffer
@@ -68,7 +67,7 @@
  * Steps:
  * - Compute Px = Pxj * (1/Pz)^2
  * - Compute Py = Pyj * (1/Pz)^3
- * - Compute H = RIPEMD160(SHA256({0x02|0x03|0x04} | Px | Py))
+ * - Compute H = RIPEMD160(SHA256(0x04 | Px | Py))
  *
  * Output:
  * - Array of 20-byte address hash values
@@ -79,8 +78,6 @@
  * Like hash_ec_point_get, but instead of storing the complete hash
  * value to an output buffer, it searches a sorted list of ranges,
  * and if a match is found, writes a flag to an output buffer.
- *
- * The first element of the result array is "isoutputcompressed"
  */
 
 
@@ -1312,115 +1309,6 @@ void hash_ec_point(uint *hash_out, __global bn_word *xy, __global bn_word *zip)
 }
 
 
-void hash_ec_point_compressed(uint *hash_out, __global bn_word *xy, __global bn_word *zip);
-void hash_ec_point_compressed(uint *hash_out, __global bn_word *xy, __global bn_word *zip)
-{
-	uint hash1[16], hash2[16];
-	bignum c, zi, zzi;
-	bn_word wh, wl;
-
-	/*
-	 * Multiply the coordinates by the inverted Z values.
-	 * Stash the coordinates in the hash buffer.
-	 * SHA-2 requires big endian, and our intended hash input
-	 * is big-endian, so swapping is unnecessary, but
-	 * inserting the format byte in front causes a headache.
-	 */
-
-	bn_unroll(hash_ec_point_inner_1);
-
-	bn_mul_mont(&zzi, &zi, &zi);  /* 1 / Z^2 */
-
-	bn_unroll(hash_ec_point_inner_2);
-
-	bn_mul_mont(&c, &c, &zzi);  /* X / Z^2 */
-	bn_from_mont(&c, &c);
-
-	wh = 0x00000002;  /* POINT_CONVERSION_COMPRESSED */
-
-	bn_unroll(hash_ec_point_inner_3);
-
-	bn_mul_mont(&zzi, &zzi, &zi);  /* 1 / Z^3 */
-
-	bn_unroll(hash_ec_point_inner_4);
-
-	bn_mul_mont(&c, &c, &zzi);  /* Y / Z^3 */
-	bn_from_mont(&c, &c);
-
-	if (bn_is_odd(c)) {
-		hash1[0] |= 0x01000000; /* 0x03 for odd y */
-	}
-
-	/*
-	 * Put in the last byte + SHA-2 padding.
-	 */
-	hash1[8] = wh << 24 | 0x800000;
-	hash1[9] = 0;
-	hash1[10] = 0;
-	hash1[11] = 0;
-	hash1[12] = 0;
-	hash1[13] = 0;
-	hash1[14] = 0;
-	hash1[15] = 33 * 8;
-
-	/*
-	 * Hash the first 64 bytes of the buffer
-	 */
-	sha2_256_init(hash2);
-	sha2_256_block(hash2, hash1);
-
-	/*
-	 * Hash the SHA-2 result with RIPEMD160
-	 * Unfortunately, SHA-2 outputs big-endian, but
-	 * RIPEMD160 expects little-endian.  Need to swap!
-	 */
-
-	hash256_unroll(hash_ec_point_inner_6);
-
-	hash2[8] = bswap32(0x80000000);
-	hash2[9] = 0;
-	hash2[10] = 0;
-	hash2[11] = 0;
-	hash2[12] = 0;
-	hash2[13] = 0;
-	hash2[14] = 32 * 8;
-	hash2[15] = 0;
-	ripemd160_init(hash_out);
-	ripemd160_block(hash_out, hash2);
-}
-
-// This is required to the ones who use "getHash".
-// Todo: Implement getHash compressed address "speedup"
-__kernel void
-hash_ec_point_get_compressed(__global uint *hashes_out,
-		  __global bn_word *points_in, __global bn_word *z_heap)
-{
-	uint hash[5];
-	int i, p, cell, start;
-
-	cell = ((get_global_id(1) * get_global_size(0)) + get_global_id(0));
-	start = (((cell / ACCESS_STRIDE) * ACCESS_BUNDLE) +
-		 (cell % ACCESS_STRIDE));
-	z_heap += start;
-
-	start = ((((2 * cell) / ACCESS_STRIDE) * ACCESS_BUNDLE) +
-		 (cell % (ACCESS_STRIDE/2)));
-	points_in += start;
-
-	/* Complete the coordinates and hash */
-	hash_ec_point_compressed(hash, points_in, z_heap);
-
-	p = get_global_size(0);
-	i = p * get_global_id(1);
-	hashes_out += 5 * (i + get_global_id(0));
-
-	/* Output the hash in proper byte-order */
-#define hash_ec_point_get_inner_1(i)		\
-	hashes_out[i] = load_le32(hash[i]);
-
-	hash160_unroll(hash_ec_point_get_inner_1);
-}
-
 __kernel void
 hash_ec_point_get(__global uint *hashes_out,
 		  __global bn_word *points_in, __global bn_word *z_heap)
@@ -1443,6 +1331,10 @@ hash_ec_point_get(__global uint *hashes_out,
 	p = get_global_size(0);
 	i = p * get_global_id(1);
 	hashes_out += 5 * (i + get_global_id(0));
+
+	/* Output the hash in proper byte-order */
+#define hash_ec_point_get_inner_1(i)		\
+	hashes_out[i] = load_le32(hash[i]);
 
 	hash160_unroll(hash_ec_point_get_inner_1);
 }
@@ -1473,7 +1365,6 @@ int hash160_ucmp_g(uint *a, __global uint *bound)
 	return 0;
 }
 
-// The found[] indexes are increased by one, found[0] is "isaddresscompressed"
 __kernel void
 hash_ec_point_search_prefix(__global uint *found,
 			    __global bn_word *points_in,
@@ -1491,40 +1382,8 @@ hash_ec_point_search_prefix(__global uint *found,
 	start = ((((2 * cell) / ACCESS_STRIDE) * ACCESS_BUNDLE) +
 		 (cell % (ACCESS_STRIDE/2)));
 	points_in += start;
-#define hash_ec_point_search_prefix_inner_1(i)	\
-	hash[i] = bswap32(hash[i]);
-#define hash_ec_point_search_prefix_inner_2(i)	\
-	found[i+3] = load_be32(hash[i]);
 
 	/* Complete the coordinates and hash */
-	hash_ec_point_compressed(hash, points_in, z_heap);
-
-	/*
-	 * Unconditionally byteswap the hash result, because:
-	 * - The byte-level convention of RIPEMD160 is little-endian
-	 * - We are comparing it in big-endian order
-	 */
-	hash160_unroll(hash_ec_point_search_prefix_inner_1);
-
-	/* Binary-search the target table for the hash we just computed */
-	for (high = ntargets - 1, low = 0, i = high >> 1;
-			 high >= low;
-			 i = low + ((high - low) >> 1)) {
-		p = hash160_ucmp_g(hash, &target_table[10*i]);
-		low = (p > 0) ? (i + 1) : low;
-		high = (p < 0) ? (i - 1) : high;
-		if (p == 0) {
-			found[0] = 1;
-			/* For debugging purposes, write the hash value */
-			found[1] = ((get_global_id(1) * get_global_size(0)) +
-						get_global_id(0));
-			found[2] = i;
-
-			hash160_unroll(hash_ec_point_search_prefix_inner_2);
-			high = -1;
-			return;
-		}
-	}
 	hash_ec_point(hash, points_in, z_heap);
 
 	/*
@@ -1532,25 +1391,29 @@ hash_ec_point_search_prefix(__global uint *found,
 	 * - The byte-level convention of RIPEMD160 is little-endian
 	 * - We are comparing it in big-endian order
 	 */
+#define hash_ec_point_search_prefix_inner_1(i)	\
+	hash[i] = bswap32(hash[i]);
+
 	hash160_unroll(hash_ec_point_search_prefix_inner_1);
 
 	/* Binary-search the target table for the hash we just computed */
 	for (high = ntargets - 1, low = 0, i = high >> 1;
-			 high >= low;
-			 i = low + ((high - low) >> 1)) {
+	     high >= low;
+	     i = low + ((high - low) >> 1)) {
 		p = hash160_ucmp_g(hash, &target_table[10*i]);
 		low = (p > 0) ? (i + 1) : low;
 		high = (p < 0) ? (i - 1) : high;
 		if (p == 0) {
-			found[0] = 0;
 			/* For debugging purposes, write the hash value */
-			found[1] = ((get_global_id(1) * get_global_size(0)) +
-						get_global_id(0));
-			found[2] = i;
+			found[0] = ((get_global_id(1) * get_global_size(0)) +
+				    get_global_id(0));
+			found[1] = i;
+
+#define hash_ec_point_search_prefix_inner_2(i)	\
+			found[i+2] = load_be32(hash[i]);
 
 			hash160_unroll(hash_ec_point_search_prefix_inner_2);
 			high = -1;
-			return;
 		}
 	}
 }
