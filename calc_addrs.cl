@@ -1491,6 +1491,10 @@ hash_ec_point_search_prefix(__global uint *found,
 	start = ((((2 * cell) / ACCESS_STRIDE) * ACCESS_BUNDLE) +
 		 (cell % (ACCESS_STRIDE/2)));
 	points_in += start;
+#define hash_ec_point_search_prefix_inner_1(i)	\
+	hash[i] = bswap32(hash[i]);
+#define hash_ec_point_search_prefix_inner_2(i)	\
+	found[i+3] = load_be32(hash[i]);
 
 	/* Complete the coordinates and hash */
 	hash_ec_point_compressed(hash, points_in, z_heap);
@@ -1500,8 +1504,6 @@ hash_ec_point_search_prefix(__global uint *found,
 	 * - The byte-level convention of RIPEMD160 is little-endian
 	 * - We are comparing it in big-endian order
 	 */
-#define hash_ec_point_search_prefix_inner_1(i)	\
- 	hash[i] = bswap32(hash[i]);
 	hash160_unroll(hash_ec_point_search_prefix_inner_1);
 
 	/* Binary-search the target table for the hash we just computed */
@@ -1517,14 +1519,12 @@ hash_ec_point_search_prefix(__global uint *found,
 			found[1] = ((get_global_id(1) * get_global_size(0)) +
 						get_global_id(0));
 			found[2] = i;
-#define hash_ec_point_search_prefix_inner_2(i)	\
-	found[i+3] = load_be32(hash[i]);
+
 			hash160_unroll(hash_ec_point_search_prefix_inner_2);
 			high = -1;
 			return;
 		}
 	}
-
 	hash_ec_point(hash, points_in, z_heap);
 
 	/*
@@ -1550,6 +1550,7 @@ hash_ec_point_search_prefix(__global uint *found,
 
 			hash160_unroll(hash_ec_point_search_prefix_inner_2);
 			high = -1;
+			return;
 		}
 	}
 }

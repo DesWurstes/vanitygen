@@ -22,13 +22,13 @@ ifeq ($(PLATFORM),Darwin)
 		CFLAGS+=-std=c++14
 		CXXFLAGS+=-std=c++14
 	endif
-	#ifneq ($(wildcard /usr/local/opt/openssl@1.1/lib/*),)
+	ifneq ($(wildcard /usr/local/opt/openssl@1.1/lib/*),)
 		LIBS+=-L/usr/local/opt/openssl@1.1/lib
 		CFLAGS+=-I/usr/local/opt/openssl@1.1/include
-	#else
-	#	LIBS+=-L/usr/local/opt/openssl/lib
-	#	CFLAGS+=-I/usr/local/opt/openssl/include
-	#endif
+	else
+		LIBS+=-L/usr/local/opt/openssl/lib
+		CFLAGS+=-I/usr/local/opt/openssl/include
+	endif
 	OPENCL_LIBS=-framework OpenCL
 	LIBS+=-L/usr/local/opt/pcre/lib
 	CFLAGS+=-I/usr/local/opt/pcre/include

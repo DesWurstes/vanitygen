@@ -26,7 +26,7 @@ Alphabet: `023456789acdefghjklmnpqrstuvwxyz`
 
 Mac (compiles the latest gcc, 50+ minutes)
 
-    brew install gcc openssl pcre
+    brew install gcc openssl@1.1 pcre
     make
 
 Linux
@@ -40,9 +40,13 @@ Windows
 
 ### Significant changes made (to comply with AGPL v3)
 
-- Make it generate addresses in CashAddr format
+- Make it generate addresses in CashAddr format (remove case sensitivity...)
 
 - Fix some warnings
+
+- Make it OpenSSL compatible
+
+- Let Vanitygen and OclVanitygen search for both compressed and uncompressed addresses.
 
 ### TODOs:
 

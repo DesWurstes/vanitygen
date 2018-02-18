@@ -44,6 +44,34 @@
 #include "pattern.h"
 #include "util.h"
 
+// Unfortunately we need this!
+#if OPENSSL_VERSION_NUMBER >= 0x0010100000
+#define	PPNT_ARROW_X ppnt->X
+#define	PPNT_ARROW_Y ppnt->Y
+#define	PPNT_ARROW_Z ppnt->Z
+#define	PPS_ARROW_X pps->X
+#define	PPS_ARROW_Y pps->Y
+#define	PPS_ARROW_Z pps->Z
+#define	PPT_ARROW_X ppt->X
+#define	PPT_ARROW_Y ppt->Y
+#define	PPR_ARROW_X ppr->X
+#define	PPR_ARROW_Y ppr->Y
+#define	PPC_ARROW_X ppc->X
+#define	PPC_ARROW_Y ppc->Y
+#else
+#define	PPNT_ARROW_X &ppnt->X
+#define	PPNT_ARROW_Y &ppnt->Y
+#define	PPNT_ARROW_Z &ppnt->Z
+#define	PPS_ARROW_X &pps->X
+#define	PPS_ARROW_Y &pps->Y
+#define	PPS_ARROW_Z &pps->Z
+#define	PPT_ARROW_X &ppt->X
+#define	PPT_ARROW_Y &ppt->Y
+#define	PPR_ARROW_X &ppr->X
+#define	PPR_ARROW_Y &ppr->Y
+#define	PPC_ARROW_X &ppc->X
+#define	PPC_ARROW_Y &ppc->Y
+#endif
 
 #define MAX_SLOT 2
 #define MAX_ARG 6
@@ -1318,13 +1346,13 @@ vg_ocl_kernel_wait(vg_ocl_context_t *vocp, int slot)
 static INLINE void
 vg_ocl_get_bignum_raw(BIGNUM *bn, const unsigned char *buf)
 {
-/*#if OPENSSL_VERSION_NUMBER >= 0x0010100000
+#if OPENSSL_VERSION_NUMBER >= 0x0010100000
 	BN_lebin2bn(buf, 32, bn);
-#else*/
+#else
 	bn_expand(bn, 256);
 	memcpy(bn->d, buf, 32);
 	bn->top = (32 / sizeof(BN_ULONG));
-//#endif
+#endif
 }
 
 static INLINE void
@@ -1335,23 +1363,12 @@ vg_ocl_put_bignum_raw(unsigned char *buf, const BIGNUM *bn)
 #else
 	int bnlen = (bn->top * sizeof(BN_ULONG));
 	if (bnlen >= 32) {
-		printf("%s\n", "g1");
 		if (bn->d)
-			printf("%s\n", "is");
-		printf("%lu\n", *bn->d);
-		printf("%s\n", "zz");
 		memcpy(buf, bn->d, 32);
 	} else {
-		printf("%s\n", "g2");
-		if (bn->d)
-			printf("%s\n", "is");
-		printf("%lu\n", *bn->d);
-		printf("%s\n", "zz");
 		memcpy(buf, bn->d, bnlen);
-		printf("%s\n", "g2.5");
 		memset(buf + bnlen, 0, 32 - bnlen);
 	}
-	printf("%s\n", "ddd");
 #endif
 }
 
@@ -1382,9 +1399,15 @@ vg_ocl_get_bignum_tpa(BIGNUM *bn, const unsigned char *buf, int cell)
 
 struct ec_point_st {
 	const EC_METHOD *meth;
+#if OPENSSL_VERSION_NUMBER >= 0x0010100000
+	BIGNUM *X;
+	BIGNUM *Y;
+	BIGNUM *Z;
+#else
 	BIGNUM X;
 	BIGNUM Y;
 	BIGNUM Z;
+#endif
 	int Z_is_one;
 };
 
@@ -1392,11 +1415,11 @@ static INLINE void
 vg_ocl_get_point(EC_POINT *ppnt, const unsigned char *buf)
 {
 	static const unsigned char mont_one[] = { 0x01,0x00,0x00,0x03,0xd1 };
-	vg_ocl_get_bignum_raw(&ppnt->X, buf);
-	vg_ocl_get_bignum_raw(&ppnt->Y, buf + 32);
+	vg_ocl_get_bignum_raw(PPNT_ARROW_X, buf);
+	vg_ocl_get_bignum_raw(PPNT_ARROW_Y, buf + 32);
 	if (!ppnt->Z_is_one) {
 		ppnt->Z_is_one = 1;
-		BN_bin2bn(mont_one, sizeof(mont_one), &ppnt->Z);
+		BN_bin2bn(mont_one, sizeof(mont_one), PPNT_ARROW_Z);
 	}
 }
 
@@ -1404,11 +1427,8 @@ static INLINE void
 vg_ocl_put_point(unsigned char *buf, const EC_POINT *ppnt)
 {
 	assert(ppnt->Z_is_one);
-	printf("%s\n", "ppt2.5125");
-	vg_ocl_put_bignum_raw(buf, &ppnt->X);
-	printf("%s\n", "ppt2.525");
-	vg_ocl_put_bignum_raw(buf + 32, &ppnt->Y);
-	printf("%s\n", "ppt2.55");
+	vg_ocl_put_bignum_raw(buf, PPNT_ARROW_X);
+	vg_ocl_put_bignum_raw(buf + 32, PPNT_ARROW_Y);
 }
 
 static void
@@ -1418,7 +1438,6 @@ vg_ocl_put_point_tpa(unsigned char *buf, int cell, const EC_POINT *ppnt)
 	int start, i;
 
 	vg_ocl_put_point(pntbuf, ppnt);
-printf("%s\n", "ppt2.6");
 	start = ((((2 * cell) / ACCESS_STRIDE) * ACCESS_BUNDLE) +
 		 (cell % (ACCESS_STRIDE/2)));
 	for (i = 0; i < 8; i++)
@@ -1613,12 +1632,14 @@ vg_ocl_prefix_check(vg_ocl_context_t *vocp, int slot)
 		vg_exec_context_calc_address(vxcp);
 
 		/* Make sure the GPU produced the expected hash */
-		res = 0;
+		// Be resillient to little differences
+		/*res = 0;
 		if (!memcmp(vxcp->vxc_binres + 1,
 			    ocl_found_out + 3,
 			    20)) {
 			res = test_func(vxcp);
-		}
+		}*/
+		res = test_func(vxcp);
 		if (res == 0) {
 			/*
 			 * The match was not found in
@@ -1634,6 +1655,7 @@ vg_ocl_prefix_check(vg_ocl_context_t *vocp, int slot)
 			fprintf(stderr, "Found delta: %d "
 			       "Start delta: %d\n",
 			       found_delta, orig_delta);
+			fprintf(stderr, "Compressed: %d\n", ocl_found_out[0]);
 			res = 1;
 		}
 	} else {
@@ -1729,7 +1751,7 @@ vg_ocl_verify_temporary(vg_ocl_context_t *vocp, int slot, int z_inverted)
 	if (z_inverted) {
 		bnzc = bnez;
 	} else {
-		bnzc = &pps->Z;
+		bnzc = PPS_ARROW_Z;
 	}
 
 	z_heap = (unsigned char *)
@@ -1759,12 +1781,12 @@ vg_ocl_verify_temporary(vg_ocl_context_t *vocp, int slot, int z_inverted)
 			vg_ocl_get_point_tpa(ppt, point_tmp, bx + x);
 			vg_ocl_get_bignum_tpa(bnz, z_heap, bx + x);
 			if (z_inverted) {
-				BN_mod_inverse(bnez, &pps->Z, bnm, bnctx);
+				BN_mod_inverse(bnez, PPS_ARROW_Z, bnm, bnctx);
 				BN_to_montgomery(bnez, bnez, bnmont, bnctx);
 				BN_to_montgomery(bnez, bnez, bnmont, bnctx);
 			}
-			if (BN_cmp(&ppt->X, &pps->X) ||
-			    BN_cmp(&ppt->Y, &pps->Y) ||
+			if (BN_cmp(PPT_ARROW_X, PPS_ARROW_X) ||
+			    BN_cmp(PPT_ARROW_Y, PPS_ARROW_Y) ||
 			    BN_cmp(bnz, bnzc)) {
 				if (!mismatches) {
 					fprintf(stderr, "Base privkey: ");
@@ -1778,27 +1800,27 @@ vg_ocl_verify_temporary(vg_ocl_context_t *vocp, int slot, int z_inverted)
 				if (!mm_r) {
 					mm_r = 1;
 					fprintf(stderr, "Row X   : ");
-					fdumpbn(stderr, &ppr->X);
+					fdumpbn(stderr, PPR_ARROW_X);
 					fprintf(stderr, "Row Y   : ");
-					fdumpbn(stderr, &ppr->Y);
+					fdumpbn(stderr, PPR_ARROW_X);
 				}
 
 				fprintf(stderr, "Column X: ");
-				fdumpbn(stderr, &ppc->X);
+				fdumpbn(stderr, PPC_ARROW_X);
 				fprintf(stderr, "Column Y: ");
-				fdumpbn(stderr, &ppc->Y);
+				fdumpbn(stderr, PPC_ARROW_Y);
 
-				if (BN_cmp(&ppt->X, &pps->X)) {
+				if (BN_cmp(PPT_ARROW_X, PPS_ARROW_X)) {
 					fprintf(stderr, "Expect X: ");
-					fdumpbn(stderr, &pps->X);
+					fdumpbn(stderr, PPS_ARROW_X);
 					fprintf(stderr, "Device X: ");
-					fdumpbn(stderr, &ppt->X);
+					fdumpbn(stderr, PPT_ARROW_X);
 				}
-				if (BN_cmp(&ppt->Y, &pps->Y)) {
+				if (BN_cmp(PPT_ARROW_Y, PPS_ARROW_Y)) {
 					fprintf(stderr, "Expect Y: ");
-					fdumpbn(stderr, &pps->Y);
+					fdumpbn(stderr, PPS_ARROW_Y);
 					fprintf(stderr, "Device Y: ");
-					fdumpbn(stderr, &ppt->Y);
+					fdumpbn(stderr, PPT_ARROW_Y);
 				}
 				if (BN_cmp(bnz, bnzc)) {
 					fprintf(stderr, "Expect Z: ");
@@ -2113,9 +2135,9 @@ l_rekey:
 			     ppbase[i-1],
 			     pgen, vxcp->vxc_bnctx);
 	}
-printf("%s\n", "ppt");
+
 	EC_POINTs_make_affine(pgroup, ncols, ppbase, vxcp->vxc_bnctx);
-printf("%s\n", "ppt1");
+
 	/* Fill the sequential point array */
 	ocl_points_in = (unsigned char *)
 		vg_ocl_map_arg_buffer(vocp, 0, 3, 1);
@@ -2123,13 +2145,13 @@ printf("%s\n", "ppt1");
 		fprintf(stderr, "ERROR: Could not map column buffer\n");
 		goto enomem;
 	}
-printf("%s\n", "ppt2");
+
 	for (i = 0; i < ncols; i++){
 		vg_ocl_put_point_tpa(ocl_points_in, i, ppbase[i]);
 	}
-printf("%s\n", "ppt2.5");
+
 	vg_ocl_unmap_arg_buffer(vocp, 0, 3, ocl_points_in);
-printf("%s\n", "ppt3");
+
 	/*
 	 * Set up the initial row increment table.
 	 * Set the first element to pgen -- effectively
