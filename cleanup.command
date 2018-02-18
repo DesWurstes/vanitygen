@@ -7,3 +7,4 @@ find . -type f -name \*.oclbin -delete
 rm -rf vanitygen.dSYM
 rm -rf keyconv.dSYM
 rm -rf oclvanitygen.dSYM
+rm -rf oclvanityminer.dSYM

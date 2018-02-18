@@ -174,13 +174,13 @@ vg_exec_context_init(vg_context_t *vcp, vg_exec_context_t *vxcp)
 
 	vxcp->vxc_vc = vcp;
 
-	BN_init(&vxcp->vxc_bntarg);
-	BN_init(&vxcp->vxc_bnbase);
-	BN_init(&vxcp->vxc_bntmp);
-	BN_init(&vxcp->vxc_bntmp2);
+  vxcp->vxc_bntarg = BN_new();
+  vxcp->vxc_bnbase = BN_new();
+  vxcp->vxc_bntmp = BN_new();
+  vxcp->vxc_bntmp2 = BN_new();
 
 	//BN_set_word(&vxcp->vxc_bnbase, 58);
-	BN_set_word(&vxcp->vxc_bnbase, 32);
+	BN_set_word(vxcp->vxc_bnbase, 32);
 
 	vxcp->vxc_bnctx = BN_CTX_new();
 	assert(vxcp->vxc_bnctx);
@@ -220,10 +220,10 @@ vg_exec_context_del(vg_exec_context_t *vxcp)
 	if (tp->vxc_stop)
 		pthread_cond_signal(&vg_thread_upcond);
 
-	BN_clear_free(&vxcp->vxc_bntarg);
-	BN_clear_free(&vxcp->vxc_bnbase);
-	BN_clear_free(&vxcp->vxc_bntmp);
-	BN_clear_free(&vxcp->vxc_bntmp2);
+	BN_clear_free(vxcp->vxc_bntarg);
+	BN_clear_free(vxcp->vxc_bnbase);
+	BN_clear_free(vxcp->vxc_bntmp);
+	BN_clear_free(vxcp->vxc_bntmp2);
 	BN_CTX_free(vxcp->vxc_bnctx);
 	vxcp->vxc_bnctx = NULL;
 	pthread_mutex_unlock(&vg_thread_lock);
@@ -249,12 +249,12 @@ void
 vg_exec_context_consolidate_key(vg_exec_context_t *vxcp)
 {
 	if (vxcp->vxc_delta) {
-		BN_clear(&vxcp->vxc_bntmp);
-		BN_set_word(&vxcp->vxc_bntmp, vxcp->vxc_delta);
-		BN_add(&vxcp->vxc_bntmp2,
+		BN_clear(vxcp->vxc_bntmp);
+		BN_set_word(vxcp->vxc_bntmp, vxcp->vxc_delta);
+		BN_add(vxcp->vxc_bntmp2,
 		       EC_KEY_get0_private_key(vxcp->vxc_key),
-		       &vxcp->vxc_bntmp);
-		vg_set_privkey(&vxcp->vxc_bntmp2, vxcp->vxc_key);
+		       vxcp->vxc_bntmp);
+		vg_set_privkey(vxcp->vxc_bntmp2, vxcp->vxc_key);
 		vxcp->vxc_delta = 0;
 	}
 }
@@ -920,14 +920,6 @@ vg_prefix_add_ranges(avl_root_t *rootp, const char *pattern, BIGNUM **ranges,
 	if (!vp)
 		return NULL;
 
-	if (ranges[2]) {
-		vp2 = vg_prefix_add(rootp, pattern, ranges[2], ranges[3]);
-		if (!vp2) {
-			vg_prefix_delete(rootp, vp);
-			return NULL;
-		}
-	}
-
 	if (!master) {
 		vp->vp_sibling = vp2;
 		if (vp2)
@@ -975,7 +967,7 @@ static const unsigned char b58_case_map[256] = {
 typedef struct _vg_prefix_context_s {
 	vg_context_t		base;
 	avl_root_t		vcp_avlroot;
-	BIGNUM			vcp_difficulty;
+	BIGNUM			*vcp_difficulty;
 } vg_prefix_context_t;
 
 static void
@@ -996,7 +988,7 @@ vg_prefix_context_clear_all_patterns(vg_context_t *vcp)
 	vcpp->base.vc_npatterns = 0;
 	vcpp->base.vc_npatterns_start = 0;
 	vcpp->base.vc_found = 0;
-	BN_clear(&vcpp->vcp_difficulty);
+	BN_clear(vcpp->vcp_difficulty);
 }
 
 static void
@@ -1004,7 +996,7 @@ vg_prefix_context_free(vg_context_t *vcp)
 {
 	vg_prefix_context_t *vcpp = (vg_prefix_context_t *) vcp;
 	vg_prefix_context_clear_all_patterns(vcp);
-	BN_clear_free(&vcpp->vcp_difficulty);
+	BN_clear_free(vcpp->vcp_difficulty);
 	free(vcpp);
 }
 
@@ -1015,7 +1007,7 @@ vg_prefix_context_next_difficulty(vg_prefix_context_t *vcpp,
 	char *dbuf;
 	BN_clear(bntmp);
 	BN_set_bit(bntmp, 200);
-	BN_div(bntmp2, NULL, bntmp, &vcpp->vcp_difficulty, bnctx);
+	BN_div(bntmp2, NULL, bntmp, vcpp->vcp_difficulty, bnctx);
 //BN_print_fp(stderr, &vcpp->vcp_difficulty);
 
 	dbuf = BN_bn2dec(bntmp2);
@@ -1038,7 +1030,7 @@ vg_prefix_context_add_patterns(vg_context_t *vcp,
 	vg_prefix_context_t *vcpp = (vg_prefix_context_t *) vcp;
 	vg_prefix_t *vp;
 	BN_CTX *bnctx;
-	BIGNUM bntmp, bntmp2, bntmp3;
+	BIGNUM *bntmp = BN_new(), *bntmp2 = BN_new(), *bntmp3 = BN_new();
 	BIGNUM *ranges[2];
 	int ret = 0;
 	int i, impossible = 0;
@@ -1046,9 +1038,6 @@ vg_prefix_context_add_patterns(vg_context_t *vcp,
 	char *dbuf;
 
 	bnctx = BN_CTX_new();
-	BN_init(&bntmp);
-	BN_init(&bntmp2);
-	BN_init(&bntmp3);
 
 	npfx = 0;
 	for (i = 0; i < npatterns; i++) {
@@ -1074,16 +1063,16 @@ vg_prefix_context_add_patterns(vg_context_t *vcp,
 		npfx++;
 
 		/* Determine the probability of finding a match */
-		vg_prefix_range_sum(vp, &bntmp, &bntmp2);
-		BN_add(&bntmp2, &vcpp->vcp_difficulty, &bntmp);
-		BN_copy(&vcpp->vcp_difficulty, &bntmp2);
+		vg_prefix_range_sum(vp, bntmp, bntmp2);
+		BN_add(bntmp2, vcpp->vcp_difficulty, bntmp);
+		BN_copy(vcpp->vcp_difficulty, bntmp2);
 
 		if (vcp->vc_verbose > 1) {
-			BN_clear(&bntmp2);
-			BN_set_bit(&bntmp2, 200);
-			BN_div(&bntmp3, NULL, &bntmp2, &bntmp, bnctx);
+			BN_clear(bntmp2);
+			BN_set_bit(bntmp2, 200);
+			BN_div(bntmp3, NULL, bntmp2, bntmp, bnctx);
 
-			dbuf = BN_bn2dec(&bntmp3);
+			dbuf = BN_bn2dec(bntmp3);
 			fprintf(stderr,
 				"Prefix difficulty: %20s %s\n",
 				dbuf, patterns[i]);
@@ -1095,7 +1084,7 @@ vg_prefix_context_add_patterns(vg_context_t *vcp,
 	vcpp->base.vc_npatterns_start += npfx;
 
 	if (!npfx && impossible) {
-		const char *ats = "bitcoin", *bw = "\"1\"";
+		const char *ats = "bitcoin cash", *bw = "\"q\"";
 		switch (vcpp->base.vc_addrtype) {
 		case 5:
 			ats = "bitcoin cash script";
@@ -1113,13 +1102,13 @@ vg_prefix_context_add_patterns(vg_context_t *vcp,
 	}
 
 	if (npfx)
-		vg_prefix_context_next_difficulty(vcpp, &bntmp, &bntmp2, bnctx);
+		vg_prefix_context_next_difficulty(vcpp, bntmp, bntmp2, bnctx);
 
 	ret = (npfx != 0);
 
-	BN_clear_free(&bntmp);
-	BN_clear_free(&bntmp2);
-	BN_clear_free(&bntmp3);
+	BN_clear_free(bntmp);
+	BN_clear_free(bntmp2);
+	BN_clear_free(bntmp3);
 	BN_CTX_free(bnctx);
 	return ret;
 }
@@ -1128,39 +1117,33 @@ double
 vg_prefix_get_difficulty(int addrtype, const char *pattern)
 {
 	BN_CTX *bnctx;
-	BIGNUM result, bntmp;
+	BIGNUM *result = BN_new(), *bntmp = BN_new();
 	BIGNUM *ranges[4];
 	char *dbuf;
 	int ret;
 	double diffret = 0.0;
 
 	bnctx = BN_CTX_new();
-	BN_init(&result);
-	BN_init(&bntmp);
 
 	ret = get_prefix_ranges(addrtype,
 				pattern, ranges, bnctx);
 
 	if (ret == 0) {
-		BN_sub(&bntmp, ranges[1], ranges[0]);
-		BN_add(&result, &result, &bntmp);
-		if (ranges[2]) {
-			BN_sub(&bntmp, ranges[3], ranges[2]);
-			BN_add(&result, &result, &bntmp);
-		}
+		BN_sub(bntmp, ranges[1], ranges[0]);
+		BN_add(result, result, bntmp);
 		free_ranges(ranges);
 
-		BN_clear(&bntmp);
-		BN_set_bit(&bntmp, 200);
-		BN_div(&result, NULL, &bntmp, &result, bnctx);
+		BN_clear(bntmp);
+		BN_set_bit(bntmp, 200);
+		BN_div(result, NULL, bntmp, result, bnctx);
 
-		dbuf = BN_bn2dec(&result);
+		dbuf = BN_bn2dec(result);
 		diffret = strtod(dbuf, NULL);
 		OPENSSL_free(dbuf);
 	}
 
-	BN_clear_free(&result);
-	BN_clear_free(&bntmp);
+	BN_clear_free(result);
+	BN_clear_free(bntmp);
 	BN_CTX_free(bnctx);
 	return diffret;
 }
@@ -1179,10 +1162,10 @@ vg_prefix_test(vg_exec_context_t *vxcp)
 	 * check code.
 	 */
 
-	BN_bin2bn(vxcp->vxc_binres, 26, &vxcp->vxc_bntarg);
+	BN_bin2bn(vxcp->vxc_binres, 26, vxcp->vxc_bntarg);
 
 research:
-	vp = vg_prefix_avl_search(&vcpp->vcp_avlroot, &vxcp->vxc_bntarg);
+	vp = vg_prefix_avl_search(&vcpp->vcp_avlroot, vxcp->vxc_bntarg);
 	if (vp) {
 		if (vg_exec_context_upgrade_lock(vxcp))
 			goto research;
@@ -1200,20 +1183,20 @@ research:
 		if (vcpp->base.vc_remove_on_match) {
 			/* Subtract the range from the difficulty */
 			vg_prefix_range_sum(vp,
-					    &vxcp->vxc_bntarg,
-					    &vxcp->vxc_bntmp);
-			BN_sub(&vxcp->vxc_bntmp,
-			       &vcpp->vcp_difficulty,
-			       &vxcp->vxc_bntarg);
-			BN_copy(&vcpp->vcp_difficulty, &vxcp->vxc_bntmp);
+					    vxcp->vxc_bntarg,
+					    vxcp->vxc_bntmp);
+			BN_sub(vxcp->vxc_bntmp,
+			       vcpp->vcp_difficulty,
+			       vxcp->vxc_bntarg);
+			BN_copy(vcpp->vcp_difficulty, vxcp->vxc_bntmp);
 
-			vg_prefix_delete(&vcpp->vcp_avlroot,vp);
+			vg_prefix_delete(&vcpp->vcp_avlroot, vp);
 			vcpp->base.vc_npatterns--;
 
 			if (!avl_root_empty(&vcpp->vcp_avlroot))
 				vg_prefix_context_next_difficulty(
-					vcpp, &vxcp->vxc_bntmp,
-					&vxcp->vxc_bntmp2,
+					vcpp, vxcp->vxc_bntmp,
+					vxcp->vxc_bntmp2,
 					vxcp->vxc_bnctx);
 			vcpp->base.vc_pattern_generation++;
 		}
@@ -1295,7 +1278,7 @@ vg_prefix_context_new(int addrtype, int privtype, int testnet)
 		vcpp->base.vc_test = vg_prefix_test;
 		vcpp->base.vc_hash160_sort = vg_prefix_hash160_sort;
 		avl_root_init(&vcpp->vcp_avlroot);
-		BN_init(&vcpp->vcp_difficulty);
+    vcpp->vcp_difficulty = BN_new();
 	}
 	return &vcpp->base;
 }
