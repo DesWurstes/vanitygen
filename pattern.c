@@ -1452,53 +1452,11 @@ vg_regex_test(vg_exec_context_t *vxcp)
 {
 	vg_regex_context_t *vcrp = (vg_regex_context_t *) vxcp->vxc_vc;
 
-	//unsigned char hash1[32], hash2[32];
-	int /*zpfx, p,*/ d, re_vec[9];
+	int d, re_vec[9];
 	unsigned int i, nres;
-	//char b58[40];
-	//const char b32[43];
-	//BIGNUM bnrem;
-	//BIGNUM *bn, *bndiv, *bnptmp;
-  //char* cashAddr;
 	int res = 0;
 	pcre *re;
-	/*if (vxcp->vxc_binres[0] == 0) {
-    cashAddr = (CashAddrEncode(1, &vxcp->vxc_binres[1], 0, 0).c_str());
-	} else if (vxcp->vxc_binres[0] == 0x6f) {
-		cashAddr = CashAddrEncode(0, &vxcp->vxc_binres[1], 0, 0).c_str();
-	} else if (vxcp->vxc_binres[0] == 0x05) {
-		cashAddr = CashAddrEncode(1, &vxcp->vxc_binres[1], 1, 0).c_str();
-	} else { // 0xc4
-		cashAddr = CashAddrEncode(0, &vxcp->vxc_binres[1], 1, 0).c_str();
-	}*/
-
-	//BN_init(&bnrem);
-
-	/* Hash the hash and write the four byte check code */
-	/*SHA256(vxcp->vxc_binres, 21, hash1);
-	SHA256(hash1, sizeof(hash1), hash2);
-	memcpy(&vxcp->vxc_binres[21], hash2, 4);
-
-	bn = &vxcp->vxc_bntmp;
-	bndiv = &vxcp->vxc_bntmp2;
-
-	BN_bin2bn(vxcp->vxc_binres, 25, bn);
-
-	// Compute the complete encoded address
-	for (zpfx = 0; zpfx < 25 && vxcp->vxc_binres[zpfx] == 0; zpfx++);
-	p = sizeof(b58) - 1;
-	b58[p] = '\0';
-	while (!BN_is_zero(bn)) {
-		BN_div(bndiv, &bnrem, bn, &vxcp->vxc_bnbase, vxcp->vxc_bnctx);
-		bnptmp = bn;
-		bn = bndiv;
-		bndiv = bnptmp;
-		d = BN_get_word(&bnrem);
-		b58[--p] = vg_b58_alphabet[d];
-	}
-	while (zpfx--) {
-		b58[--p] = vg_b58_alphabet[0];
-	}*/
+  const char *addr = CashAddrEncode(vcrp->base.vc_istestnet, &vxcp->vxc_binres[1], vcrp->base.vc_addrtype, 0).c_str();
 
 	/*
 	 * Run the regular expressions on it
@@ -1513,7 +1471,7 @@ restart_loop:
 	for (i = 0; i < nres; i++) {
 		d = pcre_exec(vcrp->vcr_regex[i],
 			      vcrp->vcr_regex_extra[i],
-            CashAddrEncode(vcrp->base.vc_istestnet, &vxcp->vxc_binres[1], vcrp->base.vc_addrtype, 0).c_str(), 42, 0,
+            addr, 42, 0,
 			      0,
 			      re_vec, sizeof(re_vec)/sizeof(re_vec[0]));
 

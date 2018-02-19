@@ -44,24 +44,16 @@ Windows
 
 - Fix some warnings
 
-- Make it OpenSSL compatible
+- Make it OpenSS 1.1L compatible
 
-- Let Vanitygen and OclVanitygen search for both compressed and uncompressed addresses.
+- Let Vanitygen search for both compressed and uncompressed addresses.
 
 ### TODOs:
 
 - Remove BN_Init for OpenSSL 1.1 ([More info](https://wiki.openssl.org/index.php/Manual:BN_new(3)#REMOVED_FUNCTIONALITY))
 
-- Remove case sensitivity completely
-
 - Allow to choose between compressed and uncompressed addresses
 
 - Allow to choose between "gethash" and "prefix"
-
-- GetHash speedup
-
-- Remove "version byte" completely
-
-- Base58 required the expected prefix number to be converted to a BigNum. Base32 doesn't require this. ([These lines](https://github.com/samr7/vanitygen/blob/master/pattern.c#L1478-L1481))
 
 - Port libsecp256k1 code (long term)

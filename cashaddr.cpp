@@ -1,7 +1,6 @@
 #include <vector>
 #include <cstdint>
 #include <string>
-#include <iostream>
 /*The MIT License (MIT)
 
 Copyright (c) 2009-2015 Bitcoin Developers
