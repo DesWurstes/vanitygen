@@ -441,7 +441,7 @@ vg_output_timing_console(vg_context_t *vcp, double count,
 
 	rem = sizeof(linebuf);
 	// Should do total.c_str?
-	p = snprintf(linebuf, rem, "[%.2f %s][total %lld]",
+	p = snprintf(linebuf, rem, "\x1B[34m[%.2f %s][total %lld]",
 		     targ, unit, total);
 	assert(p > 0);
 	rem -= p;
@@ -490,11 +490,11 @@ vg_output_timing_console(vg_context_t *vcp, double count,
 
 			if (time > 1000000) {
 				p = snprintf(&linebuf[p], rem,
-					     "[%d%% in %e%s]",
+					     "[%d%% in %e%s]\x1B[0m",
 					     (int) (100 * targ), time, unit);
 			} else {
 				p = snprintf(&linebuf[p], rem,
-					     "[%d%% in %.1f%s]",
+					     "[%d%% in %.1f%s]\x1B[0m",
 					     (int) (100 * targ), time, unit);
 			}
 			assert(p > 0);
@@ -575,7 +575,7 @@ vg_output_match_console(vg_context_t *vcp, EC_KEY *pkey, const char *pattern, in
 		vg_encode_privkey(pkey, vcp->vc_privtype, privkey_buf);
 
 	if (!vcp->vc_result_file || (vcp->vc_verbose > 0)) {
-		printf("\r%79s\rPattern: %s\n", "", pattern);
+		printf("\r%79s\rPattern: \x1b[33m%s\x1b[0m\n", "", pattern);
 	}
 
 	if (vcp->vc_verbose > 0) {
@@ -595,11 +595,12 @@ vg_output_match_console(vg_context_t *vcp, EC_KEY *pkey, const char *pattern, in
 	}
 
 	if (!vcp->vc_result_file || (vcp->vc_verbose > 0)) {
-		if (isscript)
-			printf("P2SHAddress: %s\n", addr2_buf);
-		printf("Address: %s\n"
-		       "%s: %s\n",
-		       addr_buf, keytype, privkey_buf);
+		if (isscript) {
+      printf("P2SHAddress: \x1b[32m%s\x1b[0m\n", addr2_buf);
+    } else {
+      printf("Address: \x1b[32m%s\x1b[0m\n", addr_buf);
+    }
+    printf("%s: \x1b[34m%s\x1b[0m\n", keytype, privkey_buf);
 	}
 
 	if (vcp->vc_result_file) {
@@ -1014,10 +1015,10 @@ vg_prefix_context_next_difficulty(vg_prefix_context_t *vcpp,
 	if (vcpp->base.vc_verbose > 0) {
 		if (vcpp->base.vc_npatterns > 1)
 			fprintf(stderr,
-				"Next match difficulty: %s (%ld prefixes)\n",
+				"Next match difficulty: \x1B[36m%s\x1B[0m (%ld prefixes)\n",
 				dbuf, vcpp->base.vc_npatterns);
 		else
-			fprintf(stderr, "Difficulty: %s\n", dbuf);
+			fprintf(stderr, "Difficulty: \x1B[36m%s\x1B[0m\n", dbuf);
 	}
 	vcpp->base.vc_chance = atof(dbuf);
 	OPENSSL_free(dbuf);
