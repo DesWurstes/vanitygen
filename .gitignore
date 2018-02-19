@@ -1,6 +1,10 @@
 *.oclbin
 *.o
 keyconv
+keyconv.dSYM/
 oclvanitygen
+oclvanitygen.dSYM/
 oclvanityminer
+oclvanityminer.dSYM/
 vanitygen
+vanitygen.dSYM/
