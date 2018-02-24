@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Vanitygen, vanity bitcoin address generator
  * Copyright (C) 2011 <samr7@cs.washington.edu>
  *
@@ -16,11 +16,21 @@
  * along with Vanitygen.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+// These are needed, causes problems
+// on Windows. Either way, they'll be
+// included, however, this way compiles
+// on Windows.
+#include <stdint.h>
+#include <cstdint>
+
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
 #include <assert.h>
 
+#if defined(_WIN32) && !defined(HAVE_STRUCT_TIMESPEC)
+#define HAVE_STRUCT_TIMESPEC
+#endif
 #include <pthread.h>
 #include <thread>
 
@@ -313,34 +323,20 @@ out:
 	return NULL;
 }
 
-
+#if !defined(_WIN32) || (_MSC_FULL_VER > 189999999)
 unsigned int
-count_processors(void)
-{
-#if (__GNUC__ > 3 && __GNUC_MINOR__ > 7) || __GNUC__ > 4
+count_processors(void) {
+#if ((__GNUC__ > 3 && __GNUC_MINOR__ > 7) || __GNUC__ > 4) || (_MSC_FULL_VER > 189999999) || (__clang_major__ > 3 || (__clang_major__ > 2 || __clang_major__ > 2))
 	// C++11
-	return (int) std::thread::hardware_concurrency();
+	return std::thread::hardware_concurrency();
 #else
-#if !defined(_WIN32)
-	return sysconf( _SC_NPROCESSORS_ONLN );
-#else
-	FILE *fp;
-	char buf[512];
-	unsigned int count = 0;
-
-	fp = fopen("/proc/cpuinfo", "r");
-	if (!fp)
+	int i = sysconf( _SC_NPROCESSORS_ONLN );
+	if (i == -1)
 		return 0;
-
-	while (fgets(buf, sizeof(buf), fp)) {
-		if (!strncmp(buf, "processor\t", 10))
-			count += 1;
-	}
-	fclose(fp);
-	return count;
-#endif
+	return (unsigned) i;
 #endif
 }
+#endif
 
 int
 start_threads(vg_context_t *vcp, int nthreads)
@@ -385,7 +381,7 @@ usage(const char *name)
 "\n"
 "Options:\n"
 "-v            Verbose output\n"
-"-c            Print conditions for a valid address prefix (e.g. alpahbet) and quit\n"
+"-c            Print conditions for a valid address prefix (e.g. alphabet) and quit\n"
 "-q            Quiet output\n"
 "-n            Simulate\n"
 "-r            Use regular expression match instead of prefix\n"

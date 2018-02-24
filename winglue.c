@@ -18,10 +18,15 @@
 
 #include <windows.h>
 #include <stdio.h>
+
+#if defined(_WIN32) && !defined(HAVE_STRUCT_TIMESPEC)
+#define HAVE_STRUCT_TIMESPEC
+#endif
 #include <pthread.h> 
 #include "winglue.h"
 
-int
+#if (_MSC_FULL_VER < 190000000)
+unsigned int
 count_processors(void)
 {
 	typedef BOOL (WINAPI *LPFN_GLPI)(
@@ -33,7 +38,7 @@ count_processors(void)
 	glpi = (LPFN_GLPI) GetProcAddress(GetModuleHandle(TEXT("kernel32")),
 					  "GetLogicalProcessorInformation");
 	if (!glpi)
-		return -1;
+		return 0;
 
 	while (1) {
 		ret = glpi(buffer, &size);
@@ -42,10 +47,10 @@ count_processors(void)
 		if (buffer)
 			free(buffer);
 		if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
-			return -1;
+			return 0;
 		buffer = (PSYSTEM_LOGICAL_PROCESSOR_INFORMATION) malloc(size);
 		if (!buffer)
-			return -1;
+			return 0;
 	}
 
 	for (ptr = buffer;
@@ -65,9 +70,11 @@ count_processors(void)
 
 	if (buffer)
 		free(buffer);
-	return count;
+	if (count == -1)
+		return 0;
+	return (unsigned int) count;
 }
-
+#endif
 
 /*
  * struct timeval compatibility for Win32

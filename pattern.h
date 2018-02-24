@@ -24,6 +24,9 @@
 
 #include <string>
 
+#if defined(_WIN32) && !defined(HAVE_STRUCT_TIMESPEC)
+#define HAVE_STRUCT_TIMESPEC
+#endif
 #include <pthread.h>
 #include "cashaddr.h"
 

@@ -39,7 +39,9 @@ extern int optind;
 
 extern int getopt(int argc, TCHAR *argv[], TCHAR *optstring);
 
-extern int count_processors(void);
+#if (_MSC_FULL_VER < 190000000)
+extern unsigned int count_processors(void);
+#endif
 
 #define PRSIZET "I"
 

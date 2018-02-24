@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Vanitygen, vanity bitcoin address generator
  * Copyright (C) 2011 <samr7@cs.washington.edu>
  *
@@ -53,7 +53,7 @@ usage(const char *name)
 "\n"
 "Options:\n"
 "-v            Verbose output\n"
-"-c            Print conditions for a valid address prefix (e.g. alpahbet) and quit\n"
+"-c            Print conditions for a valid address prefix (e.g. alphabet) and quit\n"
 "-q            Quiet output\n"
 "-k            Keep pattern and continue search after finding a match\n"
 "-1            Stop after first match\n"

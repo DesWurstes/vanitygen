@@ -1,0 +1,30 @@
+Can you see the oclVanitygenCash.exe (or VanitygenCash.exe)
+in this directory?
+
+If not, you've downloaded the wrong thing. Please visit
+https://github.com/cashaddress/vanitygen-cash/releases
+and download from there.
+
+If yes, you're on the correct path to run it! Here are the instructions:
+
+1) Press "Windows Button" and "R" at the same time
+   "Run" window should open
+
+2) Type "cmd" without quotes and press enter
+   "Command Prompt" should open
+
+3) Drag N Drop the oclVanitygenCash to the "Command Prompt" window
+   and press enter
+
+4) Now it should be showing the arguments! Press the "up arrow" button
+   to recall the command. It should look like
+   "C:/blahblah/oclVanitygenCash.exe"
+
+5) Add the pattern after the space (like
+   "C:/blahblah/oclVanitygenCash.exe qqsquare")
+
+6) It should be working now! You could also add arguments, like
+   "C:/blahblah/oclVanitygenCash.exe -T qqsquare" for testnet.
+
+Legal P.S.: "This product includes cryptographic software written by
+Eric Young (eay@cryptsoft.com)"

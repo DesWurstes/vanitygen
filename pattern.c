@@ -16,11 +16,21 @@
  * along with Vanitygen.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+// These are needed, causes problems
+// on Windows. Either way, they'll be
+// included, however, this way compiles
+// on Windows.
+#include <stdint.h>
+#include <cstdint>
+
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
 #include <assert.h>
 
+#if defined(_WIN32) && !defined(HAVE_STRUCT_TIMESPEC)
+#define HAVE_STRUCT_TIMESPEC
+#endif
 #include <pthread.h>
 
 #ifndef SHA256_ASM

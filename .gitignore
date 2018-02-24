@@ -1,5 +1,8 @@
 *.oclbin
 *.o
+*.pdb
+*.obj
+*.exe
 keyconv
 keyconv.dSYM/
 oclvanitygen

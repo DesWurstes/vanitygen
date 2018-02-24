@@ -2,12 +2,12 @@ Linux/OSX with GNU make:
 make
 
 Windows:
-Tools: Microsoft Visual Studio 2010, Visual C++
+Tools: Microsoft Visual Studio Buid Tools (preferred) or Express (Not community edition!!!)
 Prerequisites:
-  - OpenSSL 1.0.0d: http://www.slproweb.com/products/Win32OpenSSL.html
-  - pthreads-Win32: http://sourceware.org/pthreads-win32/
-  - PCRE: http://www.psyon.org/projects/pcre-win32/
-  - AMD APP SDK -or- NVIDIA CUDA SDK
+  - OpenSSL 1.1 (32 bit): http://www.slproweb.com/products/Win32OpenSSL.html
+  - pthreads-Win32: http://sourceware.org/pthreads-win32/ (which leads to ftp://sourceware.org/pub/pthreads-win32/prebuilt-dll-2-9-1-release/)
+  - PCRE (7.9 DLL): http://www.psyon.org/projects/pcre-win32/
+  - AMD APP SDK (preferred: https://developer.amd.com/amd-accelerated-parallel-processing-app-sdk/ , version 3.0) -or- NVIDIA CUDA SDK
 
 Once you have set up these components, edit the following variables
 in Makefile.Win32 to reflect the paths where these components were
@@ -28,6 +28,8 @@ library, some other changes must be done.  You must edit the Makefile,
 and remove "/MD" from the CFLAGS.  Then, build with: "nmake VC-static"
 
 After dependencies have been prepared, open a Visual Studio command
-prompt window, and run:
+prompt window (preferably
+"C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Visual Studio 2017\Visual Studio Tools\Developer Command Prompt for VS 2017.lnk",
+if you've installed Build Tools), and run after cd:
 
 nmake /fMakefile.Win32 vanitygen.exe oclvanitygen.exe

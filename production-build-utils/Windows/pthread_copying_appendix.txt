@@ -1,0 +1,1 @@
+To comply with LGPL, I have to disclose the source of pthreads. The exact source code can be acquired from ftp://sourceware.org/pub/pthreads-win32/prebuilt-dll-2-9-1-release/

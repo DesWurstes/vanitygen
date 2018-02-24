@@ -16,11 +16,11 @@
  * along with Vanitygen.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if !defined (__VG_UTIL_H__)
+#ifndef __VG_UTIL_H__
 #define __VG_UTIL_H__
 
-#include <stdio.h>
 #include <stdint.h>
+#include <stdio.h>
 
 #include <openssl/bn.h>
 #include <openssl/ec.h>
