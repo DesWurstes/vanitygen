@@ -5,9 +5,9 @@
 *.exe
 keyconv
 keyconv.dSYM/
-oclvanitygen
-oclvanitygen.dSYM/
+oclvanitygen-cash
+oclvanitygen-cash.dSYM/
 oclvanityminer
 oclvanityminer.dSYM/
-vanitygen
-vanitygen.dSYM/
+vanitygen-cash
+vanitygen-cash.dSYM/

@@ -2,17 +2,11 @@
 
 Vanitygen for Bitcoin Cash! Crafted by the creators of [CashAddress.Github.io](https://cashaddress.github.io/)
 
-```
-$ '/Users/Mevanitygen/oclvanitygen' -d 2 qrelay2
-Difficulty: 130150524
-Pattern: qrelay2
-Address: bitcoincash:qrelay2wpzd34hgurjrf8hfke9xcg0mthgx4sgfwuy
-Privkey: 5KUNEbYAEL6W1TowXuXkIEasTEreGGWorkRSaCBm2JhJFN5tFhHZNAJvvK
-```
+![Vanitygen Cash on Hyper](https://user-images.githubusercontent.com/23437045/36631365-a126c57e-1987-11e8-9121-5a3da032d85d.png)
 
 ## Download
 
-The compiled binaries can be found at [releases](https://github.com/cashaddress/vanitygen-cash/releases)
+The compiled binaries for Windows, Mac and Linux can be found at [releases](https://github.com/cashaddress/vanitygen-cash/releases).
 
 ## Tips
 
@@ -20,13 +14,13 @@ Alphabet: `023456789acdefghjklmnpqrstuvwxyz`
 
 - The first character should be `q`
 
-- The second character should be either `q`, `p`, `z`, or `r`, however, you can type any other character, it will put a `q` behind it (e.g. `qh0dl` => `qqh0dl`)
+- The second character should be either `q`, `p`, `z`, or `r`.
 
 ## To build:
 
-Mac (compiles the latest gcc, 50+ minutes)
+Mac
 
-    brew install gcc openssl@1.1 pcre
+    brew install openssl@1.1 pcre
     make
 
 Linux
@@ -49,8 +43,6 @@ Windows
 - Let Vanitygen search for both compressed and uncompressed addresses.
 
 ### TODOs:
-
-- Remove BN_Init for OpenSSL 1.1 ([More info](https://wiki.openssl.org/index.php/Manual:BN_new(3)#REMOVED_FUNCTIONALITY))
 
 - Allow to choose between compressed and uncompressed addresses
 

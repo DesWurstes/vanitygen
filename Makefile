@@ -35,6 +35,9 @@ ifeq ($(PLATFORM),Darwin)
 	# Below 2 lines add support for MacPorts
 	LIBS+=-L/opt/local/lib
 	CFLAGS+=-I/opt/local/include
+else ifeq ($(PLATFORM),NetBSD)
+	LIBS+=`pcre-config --libs`
+	CFLAGS+=`pcre-config --cflags`
 else
 	CC=g++-7
 	CXX=g++-7
@@ -46,10 +49,10 @@ most: vanitygen
 all: $(PROGS)
 
 vanitygen: vanitygen.o pattern.o util.o cashaddr.o
-	$(CC) $^ -o $@ $(CFLAGS) $(LIBS)
+	$(CC) $^ -o $@-cash $(CFLAGS) $(LIBS)
 
 oclvanitygen: oclvanitygen.o oclengine.o pattern.o util.o cashaddr.o
-	$(CC) $^ -o $@ $(CFLAGS) $(LIBS) $(OPENCL_LIBS)
+	$(CC) $^ -o $@-cash $(CFLAGS) $(LIBS) $(OPENCL_LIBS)
 
 oclvanityminer: oclvanityminer.o oclengine.o pattern.o util.o cashaddr.o
 	$(CC) $^ -o $@ $(CFLAGS) $(LIBS) $(OPENCL_LIBS) -lcurl
