@@ -61,7 +61,6 @@ struct _vg_exec_context_s {
 	BIGNUM				*vxc_bnbase;
 	BIGNUM				*vxc_bntmp;
 	BIGNUM				*vxc_bntmp2;
-	int				vxc_isoutputcompressed;
 
 	vg_exec_context_threadfunc_t	vxc_threadfunc;
 	pthread_t			vxc_pthread;
@@ -79,7 +78,7 @@ typedef int (*vg_add_pattern_func_t)(vg_context_t *,
 				     const char ** const patterns,
 				     int npatterns);
 typedef void (*vg_clear_all_patterns_func_t)(vg_context_t *);
-typedef int (*vg_test_func_t)(vg_exec_context_t *);
+typedef int (*vg_test_func_t)(vg_exec_context_t *, const int isaddresscompressed);
 typedef int (*vg_hash160_sort_func_t)(vg_context_t *vcp, void *buf);
 typedef void (*vg_output_error_func_t)(vg_context_t *vcp, const char *info);
 typedef void (*vg_output_match_func_t)(vg_context_t *vcp, EC_KEY *pkey,

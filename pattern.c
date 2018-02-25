@@ -270,7 +270,7 @@ vg_exec_context_consolidate_key(vg_exec_context_t *vxcp)
 }
 
 void
-vg_exec_context_calc_address(vg_exec_context_t *vxcp)
+vg_exec_context_calc_address(vg_exec_context_t *vxcp, const int isaddresscompressed)
 {
 	EC_POINT *pubkey;
 	const EC_GROUP *pgroup;
@@ -290,7 +290,7 @@ vg_exec_context_calc_address(vg_exec_context_t *vxcp)
 	}
 	len = EC_POINT_point2oct(pgroup,
 				 pubkey,
-				 vxcp->vxc_isoutputcompressed ? POINT_CONVERSION_COMPRESSED : POINT_CONVERSION_UNCOMPRESSED,
+				 isaddresscompressed ? POINT_CONVERSION_COMPRESSED : POINT_CONVERSION_UNCOMPRESSED,
 				 eckey_buf,
 				 sizeof(eckey_buf),
 				 vxcp->vxc_bnctx);
@@ -1161,7 +1161,7 @@ vg_prefix_get_difficulty(int addrtype, const char *pattern)
 
 
 static int
-vg_prefix_test(vg_exec_context_t *vxcp)
+vg_prefix_test(vg_exec_context_t *vxcp, const int isaddresscompressed)
 {
 	vg_prefix_context_t *vcpp = (vg_prefix_context_t *) vxcp->vxc_vc;
 	vg_prefix_t *vp;
@@ -1183,7 +1183,7 @@ research:
 
 		vg_exec_context_consolidate_key(vxcp);
 		vcpp->base.vc_output_match(&vcpp->base, vxcp->vxc_key,
-					   vp->vp_pattern, vxcp->vxc_isoutputcompressed);
+					   vp->vp_pattern, isaddresscompressed);
 
 		vcpp->base.vc_found++;
 
@@ -1459,7 +1459,7 @@ bool ConvertBits(O &out, I it, I end) {
 }
 
 static int
-vg_regex_test(vg_exec_context_t *vxcp)
+vg_regex_test(vg_exec_context_t *vxcp, const int isaddresscompressed)
 {
 	vg_regex_context_t *vcrp = (vg_regex_context_t *) vxcp->vxc_vc;
 
@@ -1504,7 +1504,7 @@ restart_loop:
 
 		vg_exec_context_consolidate_key(vxcp);
 		vcrp->base.vc_output_match(&vcrp->base, vxcp->vxc_key,
-					   vcrp->vcr_regex_pat[i], vxcp->vxc_isoutputcompressed);
+					   vcrp->vcr_regex_pat[i], isaddresscompressed);
 		vcrp->base.vc_found++;
 
 		if (vcrp->base.vc_only_one) {

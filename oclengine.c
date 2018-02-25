@@ -1521,7 +1521,7 @@ vg_ocl_gethash_check(vg_ocl_context_t *vocp, int slot)
 		memcpy(&vxcp->vxc_binres[1],
 		       ocl_hashes_out + (20*i),
 		       20);
-		res = test_func(vxcp);
+		res = test_func(vxcp, 0);
 		if (res)
 			break;
 	}
@@ -1631,7 +1631,7 @@ vg_ocl_prefix_check(vg_ocl_context_t *vocp, int slot)
 		/* GPU code claims match, verify with CPU version */
 		orig_delta = vxcp->vxc_delta;
 		vxcp->vxc_delta += found_delta;
-		vg_exec_context_calc_address(vxcp);
+		vg_exec_context_calc_address(vxcp, 0);
 
 		/* Make sure the GPU produced the expected hash */
 		// Be resillient to little differences
@@ -1641,7 +1641,7 @@ vg_ocl_prefix_check(vg_ocl_context_t *vocp, int slot)
 			    20)) {
 			res = test_func(vxcp);
 		}*/
-		res = test_func(vxcp);
+		res = test_func(vxcp, 0);
 		if (res == 0) {
 			/*
 			 * The match was not found in

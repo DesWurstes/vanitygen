@@ -236,7 +236,7 @@ vg_thread_loop(void *arg)
 
 				SHA256(hash_buf, 69, hash1);
 				RIPEMD160(hash1, sizeof(hash1), &vxcp->vxc_binres[1]);
-				switch (test_func(vxcp)) {
+				switch (test_func(vxcp, 0)) {
 				case 1:
 					npoints = 0;
 					rekey_at = 0;
@@ -261,8 +261,7 @@ vg_thread_loop(void *arg)
 
 				SHA256(hash_buf, 65, hash1);
 				RIPEMD160(hash1, sizeof(hash1), &vxcp->vxc_binres[1]);
-				vxcp->vxc_isoutputcompressed = 0;
-				switch (test_func(vxcp)) {
+				switch (test_func(vxcp, 0)) {
 				case 1:
 					npoints = 0;
 					rekey_at = 0;
@@ -284,8 +283,7 @@ vg_thread_loop(void *arg)
 
 				SHA256(hash_buf, 33, hash1);
 				RIPEMD160(hash1, sizeof(hash1), &vxcp->vxc_binres[1]);
-				vxcp->vxc_isoutputcompressed = 1;
-				switch (test_func(vxcp)) {
+				switch (test_func(vxcp, 1)) {
 				case 1:
 					npoints = 0;
 					rekey_at = 0;
