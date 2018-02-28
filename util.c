@@ -258,7 +258,7 @@ vg_encode_compressed_address(const EC_POINT *ppoint, const EC_GROUP *pgroup,
 	SHA256(eckey_buf, pend - eckey_buf, hash1);
 	//RIPEMD160(hash1, sizeof(hash1), &binres[1]);
 	RIPEMD160(hash1, sizeof(hash1), binres);
-	strcpy(result, CashAddrEncode(testnet, binres, 0, 1).c_str());
+	strcpy(result, CashAddrEncode(testnet, binres, 0, 1));
 	//vg_b58_encode_check(binres, sizeof(binres), result);
 }
 
@@ -284,7 +284,7 @@ vg_encode_address(const EC_POINT *ppoint, const EC_GROUP *pgroup,
 	SHA256(eckey_buf, pend - eckey_buf, hash1);
 	//RIPEMD160(hash1, sizeof(hash1), &binres[1]);
 	RIPEMD160(hash1, sizeof(hash1), binres);
-	strcpy(result, CashAddrEncode(testnet, binres, 0, 1).c_str());
+	strcpy(result, CashAddrEncode(testnet, binres, 0, 1));
 	//vg_b58_encode_check(binres, sizeof(binres), result);
 }
 
@@ -314,7 +314,7 @@ vg_encode_script_address(const EC_POINT *ppoint, const EC_GROUP *pgroup,
 	SHA256(script_buf, 69, hash1);
 	//RIPEMD160(hash1, sizeof(hash1), &binres[1]);
 	RIPEMD160(hash1, sizeof(hash1), binres);
-	strcpy(result, CashAddrEncode(testnet, binres, 1, 1).c_str());
+	strcpy(result, CashAddrEncode(testnet, binres, 1, 1));
 	//vg_b58_encode_check(binres, sizeof(binres), result);
 }
 

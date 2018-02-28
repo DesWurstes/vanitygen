@@ -436,7 +436,7 @@ main(int argc, char **argv)
 			"• The alphabet is 023456789acdefghjklmnpqrstuvwxyz\n"
 			"• The first character must be 'q' for standard addresses or 'p' for P2SH\n"
 			"• The second character must be either 'p', 'q', 'r' or 'z'.\n"
-			"• The prefix must be lowercase and written without the prefix (e.g. \"bitcoincash:\")\n");
+			"• The prefix must be lowercase and typed without the CashAddr prefix (e.g. no \"bitcoincash:\")\n");
 			return 1;
 		case 'v':
 			verbose = 2;

@@ -5,15 +5,13 @@
 
 #ifndef CASHADDR_H
 #define CASHADDR_H
-#include <string>
-#include <vector>
 
 extern const char *CHARSET;
 
-extern const signed char CHARSET_REV[256];
+extern const signed char CHARSET_REV[128];
 
 /**
- * Encode a cashaddr string. Returns the empty string in case of failure.
+ * Encode a cashaddr string.
  */
-extern std::string CashAddrEncode(const int isTestNet, const unsigned char *payload, const unsigned int type, const unsigned int withPrefix);
+extern char* CashAddrEncode(const int isTestNet, const unsigned char* payload, const unsigned int type, const unsigned int withPrefix);
 #endif

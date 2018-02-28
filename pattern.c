@@ -53,21 +53,14 @@
 #include "avl.h"
 #include "cashaddr.h"
 
-const signed char CHARSET_REV[256] = {
+const signed char CHARSET_REV[128] = {
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 15, -1, 10, 17, 21, 20, 26, 30, 7,
     5,  -1, -1, -1, -1, -1, -1, -1, 29, -1, 24, 13, 25, 9,  8,  23, -1, 18, 22,
     31, 27, 19, -1, 1,  0,  3,  16, 11, 28, 12, 14, 6,  4,  2,  -1, -1, -1, -1,
     -1, -1, 29, -1, 24, 13, 25, 9,  8,  23, -1, 18, 22, 31, 27, 19, -1, 1,  0,
-    3, 16, 11, 28, 12, 14, 6, 4, 2, -1, -1, -1, -1, -1,
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
+    3, 16, 11, 28, 12, 14, 6, 4, 2, -1, -1, -1, -1, -1};
 
 /*
  * Common code for execution helper
@@ -450,8 +443,7 @@ vg_output_timing_console(vg_context_t *vcp, double count,
 	}
 
 	rem = sizeof(linebuf);
-	// Should do total.c_str?
-	p = snprintf(linebuf, rem, "\x1B[34m[%.2f %s][total %lld]",
+	p = snprintf(linebuf, rem, "\x1B[34m[%.2f %s][total %lld]\x1B[0m",
 		     targ, unit, total);
 	assert(p > 0);
 	rem -= p;
@@ -462,7 +454,7 @@ vg_output_timing_console(vg_context_t *vcp, double count,
 		prob = 1.0f - exp(-count/vcp->vc_chance);
 
 		if (prob <= 0.999) {
-			p = snprintf(&linebuf[p], rem, "[Prob %.1f%%]",
+			p = snprintf(&linebuf[p], rem, "\x1B[34m[Prob %.1f%%]\x1B[0m",
 				     prob * 100);
 			assert(p > 0);
 			rem -= p;
@@ -500,11 +492,11 @@ vg_output_timing_console(vg_context_t *vcp, double count,
 
 			if (time > 1000000) {
 				p = snprintf(&linebuf[p], rem,
-					     "[%d%% in %e%s]\x1B[0m",
+					     "\x1B[34m[%d%% in %e%s]\x1B[0m",
 					     (int) (100 * targ), time, unit);
 			} else {
 				p = snprintf(&linebuf[p], rem,
-					     "[%d%% in %.1f%s]\x1B[0m",
+					     "\x1B[34m[%d%% in %.1f%s]\x1B[0m",
 					     (int) (100 * targ), time, unit);
 			}
 			assert(p > 0);
@@ -517,10 +509,10 @@ vg_output_timing_console(vg_context_t *vcp, double count,
 
 	if (vcp->vc_found) {
 		if (vcp->vc_remove_on_match)
-			p = snprintf(&linebuf[p], rem, "[Found %lld/%ld]",
+			p = snprintf(&linebuf[p], rem, "\x1B[34m[Found %lld/%ld]\x1B[0m",
 				     vcp->vc_found, vcp->vc_npatterns_start);
 		else
-			p = snprintf(&linebuf[p], rem, "[Found %lld]",
+			p = snprintf(&linebuf[p], rem, "\x1B[34m[Found %lld]\x1B[0m",
 				     vcp->vc_found);
 		assert(p > 0);
 		rem -= p;
@@ -1467,7 +1459,7 @@ vg_regex_test(vg_exec_context_t *vxcp, const int isaddresscompressed)
 	unsigned int i, nres;
 	int res = 0;
 	pcre *re;
-  const char *addr = CashAddrEncode(vcrp->base.vc_istestnet, &vxcp->vxc_binres[1], vcrp->base.vc_addrtype, 0).c_str();
+  const char *addr = CashAddrEncode(vcrp->base.vc_istestnet, &vxcp->vxc_binres[1], vcrp->base.vc_addrtype, 0);
 
 	/*
 	 * Run the regular expressions on it
