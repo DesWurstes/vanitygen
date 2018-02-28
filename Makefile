@@ -8,19 +8,15 @@ PROGS=vanitygen keyconv oclvanitygen oclvanityminer
 # -Ofast = aggressive optimization
 # -Os = small file size
 CFLAGS+=-O0
-CXXFLAGS+=-O0
 
 PLATFORM=$(shell uname -s)
 ifeq ($(PLATFORM),Darwin)
 	ifneq ($(wildcard /usr/local/Cellar/gcc/7.3.0/bin/*),)
 		CC=/usr/local/Cellar/gcc/7.3.0/bin/g++-7
-		CXX=/usr/local/Cellar/gcc/7.3.0/bin/g++-7
 	else
 		# support for Xcode/clang
 		CC=g++
-		CXX=g++
 		CFLAGS+=-std=c++14
-		CXXFLAGS+=-std=c++14
 	endif
 	ifneq ($(wildcard /usr/local/opt/openssl@1.1/lib/*),)
 		LIBS+=-L/usr/local/opt/openssl@1.1/lib
@@ -40,7 +36,6 @@ else ifeq ($(PLATFORM),NetBSD)
 	CFLAGS+=`pcre-config --cflags`
 else
 	CC=g++-7
-	CXX=g++-7
 	OPENCL_LIBS=-lOpenCL
 endif
 
