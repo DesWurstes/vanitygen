@@ -8,8 +8,8 @@ OPENCL_INCLUDE = /I$(OPENCL_DIR)\include
 OPENCL_LIBS = $(OPENCL_DIR)\lib\x86\OpenCL.lib
 CURL_INCLUDE = /I$(CURL_DIR)\include /DCURL_STATICLIB
 CURL_LIBS = $(CURL_DIR)\lib\libcurl_a.lib
-CFLAGS_BASE = /D_WIN32 /DPTW32_STATIC_LIB /DPCRE_STATIC /I$(OPENSSL_DIR)\include /I$(PTHREADS_DIR)\include /I$(PCRE_DIR) /Ox /Zi
-CFLAGS = $(CFLAGS_BASE) /GL /EHsc
+CFLAGS_BASE = /EHsc /D_WIN32 /DPTW32_STATIC_LIB /DPCRE_STATIC /I$(OPENSSL_DIR)\include /I$(PTHREADS_DIR)\include /I$(PCRE_DIR) /Ox /Zi
+CFLAGS = $(CFLAGS_BASE) /GL
 LIBS = $(OPENSSL_DIR)\lib\libcrypto.lib $(PTHREADS_DIR)\lib\x86\pthreadVC2.lib $(PCRE_DIR)\pcre.lib ws2_32.lib user32.lib advapi32.lib gdi32.lib /LTCG /DEBUG
 OBJS = vanitygen.obj oclvanitygen.obj oclengine.obj oclvanityminer.obj keyconv.obj pattern.obj util.obj winglue.obj cashaddr.obj
 

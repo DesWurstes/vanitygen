@@ -744,7 +744,7 @@ void
 usage(const char *name)
 {
 	fprintf(stderr,
-"\x1B[44moclVanityMinerCash %s\x1B[0m %s (" OPENSSL_VERSION_TEXT ")\n"
+"\x1B[44moclVanityMinerCash %s\x1B[0m (" OPENSSL_VERSION_TEXT ")\n"
 "Usage: %s -u <URL> -a <credit address>\n"
 "Organized vanity address mining client using OpenCL.  Contacts the specified\n"
 "bounty pool server, downloads a list of active bounties, and attempts to\n"

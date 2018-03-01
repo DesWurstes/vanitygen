@@ -1,0 +1,17 @@
+Can you see the oclVanitygen-cash (or Vanitygen-cash)
+in this directory?
+
+If not, you've downloaded the wrong thing. Please visit
+https://github.com/cashaddress/vanitygen-cash/releases
+and download from there.
+
+If yes, you're on the correct path to run it!
+
+It seems you're trying to run this on Linux. Probably you know
+how to use the Terminal and don't need this manual.
+
+If you need help, the steps are the same of Mac steps:
+https://github.com/cashaddress/vanitygen-cash/blob/master/production-build-utils/Mac/HOW-TO-USE.txt
+
+Legal P.S.: "This product includes cryptographic software written by
+Eric Young (eay@cryptsoft.com)"

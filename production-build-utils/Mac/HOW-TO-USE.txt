@@ -1,4 +1,4 @@
-Can you see the oclVanitygen-cash.exe (or Vanitygen-cash.exe)
+Can you see the oclVanitygen-cash (or Vanitygen-cash)
 in this directory?
 
 If not, you've downloaded the wrong thing. Please visit
@@ -7,8 +7,8 @@ and download from there.
 
 If yes, you're on the correct path to run it! Here are the instructions:
 
-0) Do these instructions for oclVanitygen-cash.exe, it's faster than
-   Vanitygen-cash.exe. You might need the appropriate `d` argument, like
+0) Do these instructions for oclVanitygen, it's faster than
+   Vanitygen-cash. You might need the appropriate `d` argument, like
    `-d 1`, to choose your GPU.
 
 1) Press "Windows Button" and "R" at the same time
@@ -22,13 +22,13 @@ If yes, you're on the correct path to run it! Here are the instructions:
 
 4) Now it should be showing the arguments! Press the "up arrow" button
    to recall the command. It should look like
-   "C:/blahblah/oclVanitygen-cash.exe"
+   "/Users/blahblahpath/oclVanitygen-cash"
 
 5) Add the pattern after the space (like
-   "C:/blahblah/oclVanitygen-cash.exe qqsquare")
+   "/Users/blahblahpath/oclVanitygen-cash qqsquare")
 
 6) It should be working now! You could also add arguments, like
-   "C:/blahblah/oclVanitygen-cash.exe -T qqsquare" for testnet.
+   "/Users/blahblahpath/oclVanitygen-cash -T qqsquare" for testnet.
 
 Legal P.S.: "This product includes cryptographic software written by
 Eric Young (eay@cryptsoft.com)"

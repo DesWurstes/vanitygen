@@ -369,7 +369,7 @@ void
 usage(const char *name)
 {
 	fprintf(stderr,
-"\x1B[44mVanitygen Cash %s\x1B[0m (" OPENSSL_VERSION_TEXT ")\n"
+"\x1B[44mVanitygen Cash %s\x1B[0m(" OPENSSL_VERSION_TEXT ")\n"
 "Usage: %s [-vcqnrk1T] [-t <threads>] [-f <filename>|-] [<pattern>...]\n"
 "Generates a bitcoin receiving address matching <pattern>, and outputs the\n"
 "address and associated private key.  The private key may be stored in a safe\n"

@@ -38,7 +38,7 @@ void
 usage(const char *name)
 {
 	fprintf(stderr,
-"\x1B[44moclVanitygen Cash %s\x1B[0m (" OPENSSL_VERSION_TEXT ")\n"
+"\x1B[44moclVanitygen Cash %s\x1B[0m(" OPENSSL_VERSION_TEXT ")\n"
 "Usage: %s [-vcqk1NTS] [-d <device>] [-f <filename>|-] [<pattern>...]\n"
 "Generates a bitcoin receiving address matching <pattern>, and outputs the\n"
 "address and associated private key.  The private key may be stored in a safe\n"
@@ -127,7 +127,7 @@ main(int argc, char **argv)
 			"• The alphabet is 023456789acdefghjklmnpqrstuvwxyz\n"
 			"• The first character must be 'q' for standard addresses or 'p' for P2SH\n"
 			"• The second character must be either 'p', 'q', 'r' or 'z'.\n"
-			"• The prefix must be lowercase and typed without the CashAddr prefix (e.g. no \"bitcoincash:\")\n"););
+			"• The prefix must be lowercase and typed without the CashAddr prefix (e.g. no \"bitcoincash:\")\n");
 			return 1;
 		case 'q':
 			verbose = 0;

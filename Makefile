@@ -7,7 +7,7 @@ PROGS=vanitygen keyconv oclvanitygen oclvanityminer
 # -O3 = good optimization
 # -Ofast = aggressive optimization
 # -Os = small file size
-CFLAGS+=-O0
+CFLAGS+=-Ofast
 
 PLATFORM=$(shell uname -s)
 ifeq ($(PLATFORM),Darwin)

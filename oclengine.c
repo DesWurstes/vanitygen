@@ -348,11 +348,11 @@ vg_ocl_dump_info(vg_ocl_context_t *vocp)
 	//fprintf(stderr, "Global memory: %ld\n",
 	// This is long long unsigned on Mac and long unsigned on Linux
 	fprintf(stderr, "Global memory: %llu\n",
-	       vg_ocl_device_getulong(did, (unsigned long long) CL_DEVICE_GLOBAL_MEM_SIZE));
+	       (unsigned long long) vg_ocl_device_getulong(did, CL_DEVICE_GLOBAL_MEM_SIZE));
 	//fprintf(stderr, "Max allocation: %ld\n",
 	// This is long long unsigned on Mac and long unsigned on Linux
 	fprintf(stderr, "Max allocation: %llu\n",
-	       vg_ocl_device_getulong(did, (unsigned long long) CL_DEVICE_MAX_MEM_ALLOC_SIZE));
+	       (unsigned long long) vg_ocl_device_getulong(did, (unsigned long long) CL_DEVICE_MAX_MEM_ALLOC_SIZE));
 	vocp->voc_dump_done = 1;
 }
 

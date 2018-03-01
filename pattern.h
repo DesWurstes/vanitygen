@@ -168,7 +168,7 @@ extern void vg_context_thread_exit(vg_context_t *vcp);
 extern int vg_exec_context_init(vg_context_t *vcp, vg_exec_context_t *vxcp);
 extern void vg_exec_context_del(vg_exec_context_t *vxcp);
 extern void vg_exec_context_consolidate_key(vg_exec_context_t *vxcp);
-extern void vg_exec_context_calc_address(vg_exec_context_t *vxcp);
+extern void vg_exec_context_calc_address(vg_exec_context_t *vxcp, const int isaddresscompressed);
 extern EC_KEY *vg_exec_context_new_key(void);
 
 /* Internal execution context lock handling functions */
