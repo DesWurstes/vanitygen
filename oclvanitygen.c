@@ -128,7 +128,7 @@ main(int argc, char **argv)
 			"• The first character must be 'q' for standard addresses or 'p' for P2SH\n"
 			"• The second character must be either 'p', 'q', 'r' or 'z'.\n"
 			"• The prefix must be lowercase and typed without the CashAddr prefix (e.g. no \"bitcoincash:\")\n");
-			return 1;
+			return 0;
 		case 'q':
 			verbose = 0;
 			break;

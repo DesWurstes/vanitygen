@@ -437,7 +437,7 @@ main(int argc, char **argv)
 			"• The first character must be 'q' for standard addresses or 'p' for P2SH\n"
 			"• The second character must be either 'p', 'q', 'r' or 'z'.\n"
 			"• The prefix must be lowercase and typed without the CashAddr prefix (e.g. no \"bitcoincash:\")\n");
-			return 1;
+			return 0;
 		case 'v':
 			verbose = 2;
 			break;
@@ -466,11 +466,13 @@ main(int argc, char **argv)
 			if (!strcmp(optarg, "script"))
 				format = VCF_SCRIPT;
 			else
-			if (strcmp(optarg, "pubkey")) {
-				fprintf(stderr,
-					"Invalid format '%s'\n", optarg);
-				return 1;
-			}
+				if (!strcmp(optarg, "pubkey")) {
+					format = VCF_PUBKEY;
+				} else {
+					fprintf(stderr,
+						"Invalid format '%s'\n", optarg);
+					return 1;
+				}
 			break;
 		case 'P': {
 			if (pubkey_base != NULL) {

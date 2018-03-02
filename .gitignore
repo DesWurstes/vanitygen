@@ -4,6 +4,7 @@
 *.pdb
 *.obj
 *.exe
+*.plist
 keyconv
 keyconv.dSYM/
 oclvanitygen-cash

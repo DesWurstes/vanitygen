@@ -1086,23 +1086,9 @@ vg_prefix_context_add_patterns(vg_context_t *vcp,
 	vcpp->base.vc_npatterns += npfx;
 	vcpp->base.vc_npatterns_start += npfx;
 
-	if (!npfx && impossible) {
-		const char *ats = "bitcoin cash", *bw = "\"q\"";
-		switch (vcpp->base.vc_addrtype) {
-		case 5:
-			ats = "bitcoin cash script";
-			bw = "\"3\"";
-			break;
-		case 111:
-			ats = "testnet";
-			bw = "\"m\" or \"n\"";
-			break;
-		default:
-			break;
-		}
+	if (!npfx && impossible)
 		fprintf(stderr,
-			"Hint: valid %s addresses begin with %s\n", ats, bw);
-	}
+			"Hint: run with the -c argument to see the conditions.");
 
 	if (npfx)
 		vg_prefix_context_next_difficulty(vcpp, bntmp, bntmp2, bnctx);
@@ -1396,58 +1382,6 @@ vg_regex_context_free(vg_context_t *vcp)
 	if (vcrp->vcr_nalloc)
 		free(vcrp->vcr_regex);
 	free(vcrp);
-}
-
-/*The MIT License (MIT)
-
-Copyright (c) 2009-2015 Bitcoin Developers
-Copyright (c) 2009-2017 The Bitcoin Core developers
-Copyright (c) 2017 The Bitcoin ABC developers
-
-Permission is hereby granted, free of unsigned charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.*/
-// Copyright (c) 2017 Pieter Wuille
-// Copyright (c) 2017 The Bitcoin developers
-// Distributed under the MIT software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
-template <int frombits, int tobits, bool pad, typename O, typename I>
-bool ConvertBits(O &out, I it, I end) {
-    size_t acc = 0;
-    size_t bits = 0;
-    constexpr size_t maxv = (1 << tobits) - 1;
-    constexpr size_t max_acc = (1 << (frombits + tobits - 1)) - 1;
-    while (it != end) {
-        acc = ((acc << frombits) | *it) & max_acc;
-        bits += frombits;
-        while (bits >= tobits) {
-            bits -= tobits;
-            out.push_back((acc >> bits) & maxv);
-        }
-        ++it;
-    }
-    if (!pad && bits) {
-        return false;
-    }
-    if (pad && bits) {
-        out.push_back((acc << (tobits - bits)) & maxv);
-    }
-    return true;
 }
 
 static int
