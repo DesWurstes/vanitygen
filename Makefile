@@ -41,7 +41,7 @@ endif
 
 most: vanitygen
 
-all: $(PROGS)
+all: vanitygen oclvanitygen
 
 vanitygen: vanitygen.o pattern.o util.o cashaddr.o
 	$(CC) $^ -o $@-cash $(CFLAGS) $(LIBS)
@@ -56,4 +56,10 @@ keyconv: keyconv.o util.o cashaddr.o
 	$(CC) $^ -o $@ $(CFLAGS) $(LIBS)
 
 clean:
-	./cleanup.command
+# DON'T RUN IF YOU DO `make -f` or `--file`
+	find . -type f -name \*.o -delete
+	find . -type f -name \*vanitygen-cash -delete
+	find . -type f -name keyconv -delete
+	find . -type f -name \*.oclbin -delete
+	find . -type f -name \*miner -delete
+	rm -rf vanitygen-cash.dSYM keyconv.dSYM oclvanitygen-cash.dSYM oclvanityminer.dSYM

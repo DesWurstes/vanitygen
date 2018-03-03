@@ -1,4 +1,4 @@
-Can you see the oclVanitygen-cash (or Vanitygen-cash)
+Can you see the oclvanitygen-cash (or vanitygen-cash)
 in this directory?
 
 If not, you've downloaded the wrong thing. Please visit
@@ -7,28 +7,25 @@ and download from there.
 
 If yes, you're on the correct path to run it! Here are the instructions:
 
-0) Do these instructions for oclVanitygen, it's faster than
-   Vanitygen-cash. You might need the appropriate `d` argument, like
+0) Do these instructions for oclvanitygen-cash, it's faster than
+   vanitygen-cash. You might need the appropriate `d` argument, like
    `-d 1`, to choose your GPU.
 
-1) Press "Windows Button" and "R" at the same time
-   "Run" window should open
+1) Use Spotlight to find and run "Terminal"
 
-2) Type "cmd" without quotes and press enter
-   "Command Prompt" should open
+2) Type "cd " (with space), then Drag Drop the oclvanitygen-cash to the
+   "Command Prompt" window. Remove the last part of the path. Example:
+   "cd /Users/blahblah/oclvanitygen-cash" to "cd /Users/blahblah/" Press enter.
 
-3) Drag N Drop the oclVanitygen-cash to the "Command Prompt" window
-   and press enter
+3) Run Vanitygen Cash by typing "./oclvanitygen-cash". Press enter.
 
-4) Now it should be showing the arguments! Press the "up arrow" button
-   to recall the command. It should look like
-   "/Users/blahblahpath/oclVanitygen-cash"
+4) Now it should be showing the arguments! Add the pattern after leaving a
+   space ("./oclvanitygen-cash qqsquare")
 
-5) Add the pattern after the space (like
-   "/Users/blahblahpath/oclVanitygen-cash qqsquare")
+5) It should be working now! You could also add arguments, like
+   "/Users/blahblahpath/oclvanitygen-cash -T qqsquare" for testnet.
 
-6) It should be working now! You could also add arguments, like
-   "/Users/blahblahpath/oclVanitygen-cash -T qqsquare" for testnet.
+Please make sure to keep the Vanitygen Cash executables in this folder, or move `calc_addrs.cl` wherever you move Vanitygen Cash.
 
 Legal P.S.: "This product includes cryptographic software written by
 Eric Young (eay@cryptsoft.com)"

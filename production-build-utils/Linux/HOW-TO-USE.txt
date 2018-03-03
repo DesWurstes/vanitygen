@@ -1,4 +1,4 @@
-Can you see the oclVanitygen-cash (or Vanitygen-cash)
+Can you see the oclvanitygen-cash (or vanitygen-cash)
 in this directory?
 
 If not, you've downloaded the wrong thing. Please visit
@@ -12,6 +12,8 @@ how to use the Terminal and don't need this manual.
 
 If you need help, the steps are the same of Mac steps:
 https://github.com/cashaddress/vanitygen-cash/blob/master/production-build-utils/Mac/HOW-TO-USE.txt
+
+Please make sure to keep the Vanitygen Cash executables in this folder, or move `calc_addrs.cl` wherever you move Vanitygen Cash.
 
 Legal P.S.: "This product includes cryptographic software written by
 Eric Young (eay@cryptsoft.com)"
