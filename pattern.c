@@ -443,7 +443,7 @@ vg_output_timing_console(vg_context_t *vcp, double count,
 	}
 
 	rem = sizeof(linebuf);
-	p = snprintf(linebuf, rem, "\x1B[34m[%.2f %s][total %lld]\x1B[0m",
+	p = snprintf(linebuf, rem, "\x1B[34m[%.2f %s][total %lld]\x1B[0m ",
 		     targ, unit, total);
 	assert(p > 0);
 	rem -= p;
@@ -454,7 +454,7 @@ vg_output_timing_console(vg_context_t *vcp, double count,
 		prob = 1.0f - exp(-count/vcp->vc_chance);
 
 		if (prob <= 0.999) {
-			p = snprintf(&linebuf[p], rem, "\x1B[34m[Prob %.1f%%]\x1B[0m",
+			p = snprintf(&linebuf[p], rem, "\x1B[34m[Prob %.1f%%]\x1B[0m ",
 				     prob * 100);
 			assert(p > 0);
 			rem -= p;
@@ -617,10 +617,10 @@ vg_output_match_console(vg_context_t *vcp, EC_KEY *pkey, const char *pattern, in
 				, pattern);
 			if (isscript)
 				fprintf(fp, "P2SHAddress: %s\n", addr2_buf);
-			fprintf(fp,
-				"Address: %s\n"
-				"%s: %s\n",
-				addr_buf, keytype, privkey_buf);
+      else
+				fprintf(fp,
+					"Address: %s\n", addr_buf,);
+      fprintf(fp, "%s: %s\n", keytype, privkey_buf);
 			fclose(fp);
 		}
 	}
