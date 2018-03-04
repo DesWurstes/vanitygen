@@ -578,7 +578,7 @@ vg_output_match_console(vg_context_t *vcp, EC_KEY *pkey, const char *pattern, in
 		vg_encode_privkey(pkey, vcp->vc_privtype, privkey_buf);
 
 	if (vcp->vc_verbose > 0 || !vcp->vc_result_file || !vcp->vc_result_file_csv) {
-		printf("\r%79s\rPattern: \x1b[33m%s\x1b[0m\n", "", pattern);
+		printf("\r%79s\r\x1b[0mPattern: \x1b[33m%s\x1b[0m\n", "", pattern);
 	}
 
 	if (vcp->vc_verbose > 1) {
@@ -614,7 +614,7 @@ vg_output_match_console(vg_context_t *vcp, EC_KEY *pkey, const char *pattern, in
 			if (isscript)
 				fprintf(fp, "%s\t", addr2_buf);
       else
-				fprintf(fp, "%s\n", addr_buf);
+				fprintf(fp, "%s\t", addr_buf);
       fprintf(fp, "%s\n", privkey_buf);
 			fclose(fp);
 		}
@@ -630,7 +630,7 @@ vg_output_match_console(vg_context_t *vcp, EC_KEY *pkey, const char *pattern, in
 			if (isscript)
 				fprintf(fp, "%s,", addr2_buf);
       else
-				fprintf(fp, "%s\n", addr_buf);
+				fprintf(fp, "%s,", addr_buf);
       fprintf(fp, "%s\n", privkey_buf);
 			fclose(fp);
 		}

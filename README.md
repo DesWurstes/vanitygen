@@ -14,7 +14,7 @@ Alphabet: `023456789acdefghjklmnpqrstuvwxyz`
 
 - The first character should be `q`
 
-- The second character should be either `q`, `p`, `z`, or `r`.
+- The second character should be either `p`, `q`, `r`, or `z`.
 
 ## To build:
 
@@ -41,6 +41,8 @@ Windows
 - Make it OpenSS 1.1L compatible
 
 - Let Vanitygen search for both compressed and uncompressed addresses.
+
+- Output in TSV and CSV formats
 
 ### TODOs:
 

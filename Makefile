@@ -1,5 +1,5 @@
 LIBS=-lpcre -lcrypto -lm -lpthread
-CFLAGS=-ggdb -Wall
+CFLAGS=-Wall
 OBJS=vanitygen.o oclvanitygen.o oclvanityminer.o oclengine.o keyconv.o pattern.o util.o cashaddr.o
 PROGS=vanitygen keyconv oclvanitygen oclvanityminer
 # OPTIMIZE
@@ -7,6 +7,7 @@ PROGS=vanitygen keyconv oclvanitygen oclvanityminer
 # -O3 = good optimization
 # -Ofast = aggressive optimization
 # -Os = small file size
+# -Og -g -ggdb debugging
 CFLAGS+=-Ofast
 
 PLATFORM=$(shell uname -s)
