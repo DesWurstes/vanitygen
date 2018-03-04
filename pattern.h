@@ -41,6 +41,22 @@
 #include <unistd.h>
 #endif
 
+#ifndef _WIN32
+#define COLOR44 "\x1B[44m"
+#define COLOR36 "\x1B[36m"
+#define COLOR34 "\x1B[34m"
+#define COLOR33 "\x1B[33m"
+#define COLOR32 "\x1B[32m"
+#define COLOR0 "\x1B[0m"
+#else
+#define COLOR44 ""
+#define COLOR36 ""
+#define COLOR34 ""
+#define COLOR33 ""
+#define COLOR32 ""
+#define COLOR0 ""
+#endif
+
 #define VANITYGEN_VERSION "0.24"
 
 typedef struct _vg_context_s vg_context_t;

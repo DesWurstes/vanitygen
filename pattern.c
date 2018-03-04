@@ -443,7 +443,7 @@ vg_output_timing_console(vg_context_t *vcp, double count,
 	}
 
 	rem = sizeof(linebuf);
-	p = snprintf(linebuf, rem, "\x1B[34m[%.2f %s][total %lld]\x1B[0m ",
+	p = snprintf(linebuf, rem, COLOR34 "[%.2f %s][total %lld]" COLOR0 " ",
 		     targ, unit, total);
 	assert(p > 0);
 	rem -= p;
@@ -454,7 +454,7 @@ vg_output_timing_console(vg_context_t *vcp, double count,
 		prob = 1.0f - exp(-count/vcp->vc_chance);
 
 		if (prob <= 0.999) {
-			p = snprintf(&linebuf[p], rem, "\x1B[34m[Prob %.1f%%]\x1B[0m ",
+			p = snprintf(&linebuf[p], rem, COLOR34 "[Prob %.1f%%]" COLOR0 " ",
 				     prob * 100);
 			assert(p > 0);
 			rem -= p;
@@ -492,11 +492,11 @@ vg_output_timing_console(vg_context_t *vcp, double count,
 
 			if (time > 1000000) {
 				p = snprintf(&linebuf[p], rem,
-					     "\x1B[34m[%d%% in %e%s]",
+					     COLOR34 "[%d%% in %e%s]",
 					     (int) (100 * targ), time, unit);
 			} else {
 				p = snprintf(&linebuf[p], rem,
-					     "\x1B[34m[%d%% in %.1f%s]",
+					     COLOR34 "[%d%% in %.1f%s]",
 					     (int) (100 * targ), time, unit);
 			}
 			assert(p > 0);
@@ -520,7 +520,7 @@ vg_output_timing_console(vg_context_t *vcp, double count,
 			rem = 0;
 	}
   p = snprintf(&linebuf[p], rem,
-         "\x1B[0m ");
+        COLOR0 " ");
 	if (rem) {
 		memset(&linebuf[sizeof(linebuf)-rem], 0x20, rem);
 		linebuf[sizeof(linebuf)-1] = '\0';
@@ -578,7 +578,7 @@ vg_output_match_console(vg_context_t *vcp, EC_KEY *pkey, const char *pattern, in
 		vg_encode_privkey(pkey, vcp->vc_privtype, privkey_buf);
 
 	if (vcp->vc_verbose > 0 || !vcp->vc_result_file || !vcp->vc_result_file_csv) {
-		printf("\r%79s\r\x1b[0mPattern: \x1b[33m%s\x1b[0m\n", "", pattern);
+		printf("\r%79s\r" COLOR0 "Pattern: " COLOR33 "%s" COLOR0 "\n", "", pattern);
 	}
 
 	if (vcp->vc_verbose > 1) {
@@ -596,11 +596,11 @@ vg_output_match_console(vg_context_t *vcp, EC_KEY *pkey, const char *pattern, in
 
 	if (vcp->vc_verbose > 0 || !vcp->vc_result_file || !vcp->vc_result_file_csv) {
 		if (isscript) {
-      printf("P2SHAddress: \x1b[32m%s\x1b[0m\n", addr2_buf);
+      printf("P2SHAddress: " COLOR32 "%s" COLOR0 "\n", addr2_buf);
     } else {
-      printf("Address: \x1b[32m%s\x1b[0m\n", addr_buf);
+      printf("Address: " COLOR32 "%s" COLOR0 "\n", addr_buf);
     }
-    printf("%s: \x1b[34m%s\x1b[0m\n", keytype, privkey_buf);
+    printf("%s: " COLOR34 "%s" COLOR0 "\n", keytype, privkey_buf);
 	}
 
 	if (vcp->vc_result_file) {
@@ -1028,10 +1028,10 @@ vg_prefix_context_next_difficulty(vg_prefix_context_t *vcpp,
 	if (vcpp->base.vc_verbose > 0) {
 		if (vcpp->base.vc_npatterns > 1)
 			fprintf(stderr,
-				"Next match difficulty: \x1B[36m%s\x1B[0m (%ld prefixes)\n",
+				"Next match difficulty: " COLOR36 "%s" COLOR0 " (%ld prefixes)\n",
 				dbuf, vcpp->base.vc_npatterns);
 		else
-			fprintf(stderr, "Difficulty: \x1B[36m%s\x1B[0m\n", dbuf);
+			fprintf(stderr, "Difficulty: " COLOR36 "%s" COLOR0 "\n", dbuf);
 	}
 	vcpp->base.vc_chance = atof(dbuf);
 	OPENSSL_free(dbuf);
