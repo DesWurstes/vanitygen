@@ -266,6 +266,7 @@ vg_thread_loop(void *arg)
 					npoints = 0;
 					rekey_at = 0;
 					i = nbatch;
+					goto outloop;
 					break;
 				case 2:
 					goto out;
@@ -297,7 +298,7 @@ vg_thread_loop(void *arg)
 				}
 			}
 		}
-
+	outloop:
 		c += i << 1;
 		if (c >= output_interval) {
 			output_interval = vg_output_timing(vcp, c, &tvstart);
@@ -369,7 +370,7 @@ void
 usage(const char *name)
 {
 	fprintf(stderr,
-"\x1B[44mVanitygen Cash %s\x1B[0m(" OPENSSL_VERSION_TEXT ")\n"
+"\x1B[44mVanitygen Cash %s\x1B[0m (" OPENSSL_VERSION_TEXT ")\n"
 "Usage: %s [-vcqnrk1T] [-t <threads>] [-f <filename>|-] [<pattern>...]\n"
 "Generates a bitcoin receiving address matching <pattern>, and outputs the\n"
 "address and associated private key.  The private key may be stored in a safe\n"
@@ -387,12 +388,13 @@ usage(const char *name)
 "-k            Keep pattern and continue search after finding a match\n"
 "-1            Stop after first match\n"
 "-T            Generate Bitcoin Cash testnet address\n"
-"-F <format>   Generate address with the given format (pubkey or script)\n"
+"-F <format>   Generate address with the given format (pubkey or script) (EXPERTS ONLY!)\n"
 "-P <pubkey>   Specify base public key for piecewise key generation\n"
 "-t <threads>  Set number of worker threads (Default: number of CPUs)\n"
 "-f <file>     File containing list of patterns, one per line\n"
 "              (Use \"-\" as the file name for stdin)\n"
-"-o <file>     Write pattern matches to <file>\n"
+"-o <file>     Write pattern matches to <file> in TSV format (readable)\n"
+"-O <file>     Write pattern matches to <file> in CSV format (importable e.g. Excel)\n"
 "-s <file>     Seed random number generator from <file>\n",
 version, name);
 }
@@ -409,13 +411,14 @@ main(int argc, char **argv)
 	int pubkeytype;
 	enum vg_format format = VCF_PUBKEY;
 	int regex = 0;
-	int verbose = 1;
+	unsigned int verbose = 1;
 	int simulate = 0;
 	int remove_on_match = 1;
 	int only_one = 0;
 	int opt;
 	char *seedfile = NULL;
 	const char *result_file = NULL;
+	const char *result_file_csv = NULL;
 	char **patterns;
 	int npatterns = 0;
 	int nthreads = 0;
@@ -428,7 +431,7 @@ main(int argc, char **argv)
 
 	unsigned int i;
 
-	while ((opt = getopt(argc, argv, "cvqnrk1P:TF:t:h?f:o:s:")) != -1) {
+	while ((opt = getopt(argc, argv, "cvqnrk1P:TF:t:h?f:o:O:s:")) != -1) {
 		switch (opt) {
 		case 'c':
 			fprintf(stderr, "%s\n",
@@ -528,10 +531,18 @@ main(int argc, char **argv)
 		case 'o':
 			if (result_file) {
 				fprintf(stderr,
-					"Multiple output files specified\n");
+					"Multiple TSV output files specified\n");
 				return 1;
 			}
 			result_file = optarg;
+			break;
+		case 'O':
+			if (result_file_csv) {
+				fprintf(stderr,
+					"Multiple CSV output files specified\n");
+				return 1;
+			}
+			result_file_csv = optarg;
 			break;
 		case 's':
 			if (seedfile != NULL) {
@@ -545,9 +556,6 @@ main(int argc, char **argv)
 			usage(argv[0]);
 			return 1;
 		}
-	}
-	if (verbose == 2) {
-		printf("Built on %s.\n", __DATE__);
 	}
 
 #if OPENSSL_VERSION_NUMBER < 0x10000000L
@@ -606,8 +614,51 @@ main(int argc, char **argv)
 		vcp = vg_prefix_context_new(addrtype, privtype, testnet);
 	}
 
+	if (result_file) {
+		FILE *fp = fopen(result_file, "a");
+		if (!fp) {
+			fprintf(stderr,
+				"ERROR: could not open TSV result file: %s\n",
+				strerror(errno));
+			return 1;
+		} else {
+			fprintf(fp, "Pattern\t");
+			if (format == VCF_PUBKEY)
+				fprintf(fp, "Address\t");
+			else
+				fprintf(fp, "P2SH Address\t");
+			if (pubkey_base == NULL)
+				fprintf(fp, "Private Key\n");
+			else
+				fprintf(fp, "Private Key Part\n");
+			fclose(fp);
+		}
+	}
+
+	if (result_file_csv) {
+		FILE *fp = fopen(result_file_csv, "a");
+		if (!fp) {
+			fprintf(stderr,
+				"ERROR: could not open CSV result file: %s\n",
+				strerror(errno));
+			return 1;
+		} else {
+			fprintf(fp, "Pattern,");
+			if (format == VCF_PUBKEY)
+				fprintf(fp, "Address,");
+			else
+				fprintf(fp, "P2SH Address,");
+			if (pubkey_base == NULL)
+				fprintf(fp, "Private Key\n");
+			else
+				fprintf(fp, "Private Key Part\n");
+			fclose(fp);
+		}
+	}
+
 	vcp->vc_verbose = verbose;
 	vcp->vc_result_file = result_file;
+	vcp->vc_result_file_csv = result_file_csv;
 	vcp->vc_remove_on_match = remove_on_match;
 	vcp->vc_only_one = only_one;
 	vcp->vc_format = format;

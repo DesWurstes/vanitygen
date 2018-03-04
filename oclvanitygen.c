@@ -38,7 +38,7 @@ void
 usage(const char *name)
 {
 	fprintf(stderr,
-"\x1B[44moclVanitygen Cash %s\x1B[0m(" OPENSSL_VERSION_TEXT ")\n"
+"\x1B[44moclVanitygen Cash %s\x1B[0m (" OPENSSL_VERSION_TEXT ")\n"
 "Usage: %s [-vcqk1NTS] [-d <device>] [-f <filename>|-] [<pattern>...]\n"
 "Generates a bitcoin receiving address matching <pattern>, and outputs the\n"
 "address and associated private key.  The private key may be stored in a safe\n"
@@ -72,7 +72,8 @@ usage(const char *name)
 "-V            Enable kernel/OpenCL/hardware verification (SLOW)\n"
 "-f <file>     File containing list of patterns, one per line\n"
 "              (Use \"-\" as the file name for stdin)\n"
-"-o <file>     Write pattern matches to <file>\n"
+"-o <file>     Write pattern matches to <file> in TSV format (readable)\n"
+"-O <file>     Write pattern matches to <file> in CSV format (importable e.g. Excel)\n"
 "-s <file>     Seed random number generator from <file>\n",
 version, name);
 }
@@ -105,6 +106,7 @@ main(int argc, char **argv)
 	vg_ocl_context_t *vocp = NULL;
 	EC_POINT *pubkey_base = NULL;
 	const char *result_file = NULL;
+	const char *result_file_csv = NULL;
 	char *devstrs[MAX_DEVS];
 	int ndevstrs = 0;
 	int opened = 0;
@@ -116,7 +118,7 @@ main(int argc, char **argv)
 	int i;
 
 	while ((opt = getopt(argc, argv,
-			     "vcqk1Tp:P:d:w:t:g:b:VSh?f:o:s:D:")) != -1) {
+			     "vcqk1Tp:P:d:w:t:g:b:VSh?f:o:O:s:D:")) != -1) {
 		switch (opt) {
 		case 'v':
 			verbose = 2;
@@ -253,11 +255,19 @@ main(int argc, char **argv)
 		case 'o':
 			if (result_file) {
 				fprintf(stderr,
-					"Multiple output files specified\n");
+					"Multiple TSV output files specified\n");
 				return 1;
 			}
 			result_file = optarg;
 			break;
+		case 'O':
+			if (result_file_csv) {
+				fprintf(stderr,
+					"Multiple CSV output files specified\n");
+				return 1;
+			}
+			result_file_csv = optarg;
+		break;
 		case 's':
 			if (seedfile != NULL) {
 				fprintf(stderr,
@@ -270,10 +280,6 @@ main(int argc, char **argv)
 			usage(argv[0]);
 			return 1;
 		}
-	}
-
-	if (verbose == 2) {
-		printf("Built on %s.\n", __DATE__);
 	}
 
 #if OPENSSL_VERSION_NUMBER < 0x10000000L
@@ -323,8 +329,43 @@ main(int argc, char **argv)
 		vcp = vg_prefix_context_new(addrtype, privtype, testnet);
 	}
 
+	if (result_file) {
+		FILE *fp = fopen(result_file, "a");
+		if (!fp) {
+			fprintf(stderr,
+				"ERROR: could not open TSV result file: %s\n",
+				strerror(errno));
+			return 1;
+		} else {
+			fprintf(fp, "Pattern\tAddress\t");
+			if (pubkey_base == NULL)
+				fprintf(fp, "Private Key\n");
+			else
+				fprintf(fp, "Private Key Part\n");
+			fclose(fp);
+		}
+	}
+
+	if (result_file_csv) {
+		FILE *fp = fopen(result_file_csv, "a");
+		if (!fp) {
+			fprintf(stderr,
+				"ERROR: could not open CSV result file: %s\n",
+				strerror(errno));
+			return 1;
+		} else {
+			fprintf(fp, "Pattern\tAddress\t");
+			if (pubkey_base == NULL)
+				fprintf(fp, "Private Key\n");
+			else
+				fprintf(fp, "Private Key Part\n");
+			fclose(fp);
+		}
+	}
+
 	vcp->vc_verbose = verbose;
 	vcp->vc_result_file = result_file;
+	vcp->vc_result_file_csv = result_file_csv;
 	vcp->vc_remove_on_match = remove_on_match;
 	vcp->vc_only_one = only_one;
 	vcp->vc_pubkeytype = addrtype;

@@ -103,6 +103,7 @@ struct _vg_context_s {
 	int			vc_pattern_generation;
 	double			vc_chance;
 	const char		*vc_result_file;
+	const char		*vc_result_file_csv;
 	int			vc_remove_on_match;
 	int			vc_only_one;
 	int			vc_verbose;
