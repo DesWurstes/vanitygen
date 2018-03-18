@@ -12,9 +12,9 @@ The compiled binaries for Windows, Mac and Linux can be found at [releases](http
 
 Alphabet: `023456789acdefghjklmnpqrstuvwxyz`
 
-- The first character should be `q`
+- The first character must be `q`
 
-- The second character should be either `p`, `q`, `r`, or `z`.
+- The second character must be either `p`, `q`, `r`, or `z`.
 
 ## To build:
 

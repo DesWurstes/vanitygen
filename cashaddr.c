@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "cashaddr.h"
+
 // Fastest CashAddr encoding library ever. EVER!
 /*
 Copyright (c) 2018 DesWurstes
@@ -40,19 +42,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  * THE SOFTWARE.
  */
 
-/**
- * The cashaddr unsigned character set for encoding.
- */
-const char *CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
-
-const signed char CHARSET_REV[128] = {
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 15, -1, 10, 17, 21, 20, 26, 30, 7,
-    5,  -1, -1, -1, -1, -1, -1, -1, 29, -1, 24, 13, 25, 9,  8,  23, -1, 18, 22,
-    31, 27, 19, -1, 1,  0,  3,  16, 11, 28, 12, 14, 6,  4,  2,  -1, -1, -1, -1,
-    -1, -1, 29, -1, 24, 13, 25, 9,  8,  23, -1, 18, 22, 31, 27, 19, -1, 1,  0,
-    3, 16, 11, 28, 12, 14, 6, 4, 2, -1, -1, -1, -1, -1};
+const char * CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
 
 static void convertBits8to5(char* out, const uint8_t firstByte, const uint8_t* in) {
     uint32_t val = firstByte;
@@ -69,9 +59,7 @@ static void convertBits8to5(char* out, const uint8_t firstByte, const uint8_t* i
             out[outlen++] = (val >> bits) & 0x1f;
         }
     }
-    //if (bits) {
     out[outlen] = (val << (5 - bits)) & 0x1f;
-    //}
 }
 
 uint64_t PolyMod(const char *input, uint64_t startValue = 1) {
@@ -111,19 +99,37 @@ void CreateChecksum(const int isTestNet, const char *payload, char *result) {
     }
 }
 
-char* CashAddrEncode(const int isTestNet, const unsigned char* payload, const unsigned int type, const unsigned int withPrefix) {
+char * CashAddrEncode(const int isTestNet, const unsigned char* payload,
+  const unsigned int type, const unsigned int withPrefix) {
     char convertedPayload[43];
     convertBits8to5(convertedPayload, type << 3, payload);
     CreateChecksum(isTestNet, convertedPayload, convertedPayload + 34);
     char *ret = (char *) malloc(sizeof(char) * 55);
     unsigned int i = 0;
     if (withPrefix) {
+      ret[0] = 'b';
       if (isTestNet) {
-        strcpy(ret, "bchtest:");
+        ret[1] = 'c';
+        ret[2] = 'h';
+        ret[3] = 't';
+        ret[4] = 'e';
+        ret[5] = 's';
+        ret[6] = 't';
+        ret[7] = ':';
         i = 8;
         ret[50] = '\0';
       } else {
-        strcpy(ret, "bitcoincash:");
+        ret[1] = 'i';
+        ret[2] = 't';
+        ret[3] = 'c';
+        ret[4] = 'o';
+        ret[5] = 'i';
+        ret[6] = 'n';
+        ret[7] = 'c';
+        ret[8] = 'a';
+        ret[9] = 's';
+        ret[10] = 'h';
+        ret[11] = ':';
         i = 12;
         ret[54] = '\0';
       }

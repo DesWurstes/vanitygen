@@ -90,7 +90,7 @@ main(int argc, char **argv)
 		dumpbn(EC_KEY_get0_private_key(pkey));
 		vg_encode_address(EC_KEY_get0_public_key(pkey),
 				  EC_KEY_get0_group(pkey),
-				  addrtype, 0, ecprot);
+				  0, ecprot);
 		printf("Address: %s\n", ecprot);
 		vg_encode_privkey(pkey, privtype, ecprot);
 		printf("Privkey: %s\n", ecprot);
@@ -169,7 +169,7 @@ main(int argc, char **argv)
 	else {
 		vg_encode_address(EC_KEY_get0_public_key(pkey),
 				  EC_KEY_get0_group(pkey),
-				  addrtype, 0, ecprot);
+				  0, ecprot);
 		printf("Address: %s\n", ecprot);
 		vg_encode_privkey(pkey, privtype, ecprot);
 		printf("Privkey: %s\n", ecprot);

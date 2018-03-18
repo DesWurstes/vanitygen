@@ -1,5 +1,5 @@
 LIBS=-lpcre -lcrypto -lm -lpthread
-CFLAGS=-Wall
+CFLAGS=-Wall -Wextra
 OBJS=vanitygen.o oclvanitygen.o oclvanityminer.o oclengine.o keyconv.o pattern.o util.o cashaddr.o
 PROGS=vanitygen keyconv oclvanitygen oclvanityminer
 # OPTIMIZE
@@ -12,8 +12,8 @@ CFLAGS+=-Ofast
 
 PLATFORM=$(shell uname -s)
 ifeq ($(PLATFORM),Darwin)
-	ifneq ($(wildcard /usr/local/Cellar/gcc/7.3.0/bin/*),)
-		CC=/usr/local/Cellar/gcc/7.3.0/bin/g++-7
+	ifneq ($(wildcard /usr/local/Cellar/gcc/7.3.0_1/bin/*),)
+		CC=/usr/local/Cellar/gcc/7.3.0_1/bin/g++-7
 	else
 		# support for Xcode/clang
 		CC=g++
@@ -29,6 +29,8 @@ ifeq ($(PLATFORM),Darwin)
 	OPENCL_LIBS=-framework OpenCL
 	LIBS+=-L/usr/local/opt/pcre/lib
 	CFLAGS+=-I/usr/local/opt/pcre/include
+	LIBS+=-L/usr/local/opt/hyperscan/lib
+	CFLAGS+=-I/usr/local/opt/hyperscan/include/hs
 	# Below 2 lines add support for MacPorts
 	LIBS+=-L/opt/local/lib
 	CFLAGS+=-I/opt/local/include

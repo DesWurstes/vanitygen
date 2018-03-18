@@ -53,15 +53,6 @@
 #include "avl.h"
 #include "cashaddr.h"
 
-const signed char CHARSET_REV[128] = {
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 15, -1, 10, 17, 21, 20, 26, 30, 7,
-    5,  -1, -1, -1, -1, -1, -1, -1, 29, -1, 24, 13, 25, 9,  8,  23, -1, 18, 22,
-    31, 27, 19, -1, 1,  0,  3,  16, 11, 28, 12, 14, 6,  4,  2,  -1, -1, -1, -1,
-    -1, -1, 29, -1, 24, 13, 25, 9,  8,  23, -1, 18, 22, 31, 27, 19, -1, 1,  0,
-    3, 16, 11, 28, 12, 14, 6, 4, 2, -1, -1, -1, -1, -1};
-
 /*
  * Common code for execution helper
  */
@@ -443,7 +434,7 @@ vg_output_timing_console(vg_context_t *vcp, double count,
 	}
 
 	rem = sizeof(linebuf);
-	p = snprintf(linebuf, rem, COLOR34 "[%.2f %s][total %lld]" COLOR0 " ",
+	p = snprintf(linebuf, rem, "[%.2f %s][total %lld]",
 		     targ, unit, total);
 	assert(p > 0);
 	rem -= p;
@@ -454,7 +445,7 @@ vg_output_timing_console(vg_context_t *vcp, double count,
 		prob = 1.0f - exp(-count/vcp->vc_chance);
 
 		if (prob <= 0.999) {
-			p = snprintf(&linebuf[p], rem, COLOR34 "[Prob %.1f%%]" COLOR0 " ",
+			p = snprintf(&linebuf[p], rem, "[Prob %.1f%%]",
 				     prob * 100);
 			assert(p > 0);
 			rem -= p;
@@ -492,11 +483,11 @@ vg_output_timing_console(vg_context_t *vcp, double count,
 
 			if (time > 1000000) {
 				p = snprintf(&linebuf[p], rem,
-					     COLOR34 "[%d%% in %e%s]",
+					     "[%d%% in %e%s]",
 					     (int) (100 * targ), time, unit);
 			} else {
 				p = snprintf(&linebuf[p], rem,
-					     COLOR34 "[%d%% in %.1f%s]",
+					     "[%d%% in %.1f%s]",
 					     (int) (100 * targ), time, unit);
 			}
 			assert(p > 0);
@@ -534,7 +525,7 @@ vg_output_match_console(vg_context_t *vcp, EC_KEY *pkey, const char *pattern, in
 {
 	unsigned char key_buf[512], *pend;
 	char addr_buf[64], addr2_buf[64];
-	char privkey_buf[VG_PROTKEY_MAX_B58];
+	char privkey_buf[128];
 	const char *keytype = "Privkey";
 	int len;
 	int isscript = (vcp->vc_format == VCF_SCRIPT);
@@ -559,16 +550,16 @@ vg_output_match_console(vg_context_t *vcp, EC_KEY *pkey, const char *pattern, in
 	if (isscript)
 		vg_encode_script_address(ppnt,
 					 EC_KEY_get0_group(pkey),
-					 vcp->vc_addrtype, vcp->vc_istestnet, addr2_buf);
+					 vcp->vc_istestnet, addr2_buf);
   else {
     if (isaddresscompressed) {
       vg_encode_compressed_address(ppnt,
             EC_KEY_get0_group(pkey),
-            vcp->vc_pubkeytype, vcp->vc_istestnet, addr_buf);
+            vcp->vc_istestnet, addr_buf);
     } else {
       vg_encode_address(ppnt,
             EC_KEY_get0_group(pkey),
-            vcp->vc_pubkeytype, vcp->vc_istestnet, addr_buf);
+            vcp->vc_istestnet, addr_buf);
     }
   }
 
@@ -718,8 +709,7 @@ vg_context_wait_for_completion(vg_context_t *vcp)
  * Find the bignum ranges that produce a given prefix.
  */
 static int
-get_prefix_ranges(int addrtype, const char *pfx, BIGNUM **result,
-		  BN_CTX *bnctx)
+get_prefix_ranges(int addrtype, const char *pfx, BIGNUM **result)
 {
   BIGNUM *low = BN_new(), *high = BN_new();
   BIGNUM *bntmp = BN_new();
@@ -967,17 +957,6 @@ vg_prefix_range_sum(vg_prefix_t *vp, BIGNUM *result, BIGNUM *tmp1)
 	} while (vp && (vp != startp));
 }
 
-static const unsigned char b58_case_map[256] = {
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 0, 1, 1, 2,
-	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0,
-	0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 2, 1, 1, 0,
-	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0,
-};
-
 typedef struct _vg_prefix_context_s {
 	vg_context_t		base;
 	avl_root_t		vcp_avlroot;
@@ -1058,7 +1037,7 @@ vg_prefix_context_add_patterns(vg_context_t *vcp,
 		vp = NULL;
 		ret = get_prefix_ranges(vcpp->base.vc_addrtype,
 					patterns[i],
-					ranges, bnctx);
+					ranges);
 		if (!ret) {
 			vp = vg_prefix_add_ranges(&vcpp->vcp_avlroot,
 						  patterns[i],
@@ -1099,7 +1078,7 @@ vg_prefix_context_add_patterns(vg_context_t *vcp,
 
 	if (!npfx && impossible)
 		fprintf(stderr,
-			"Hint: run with the -c argument to see the conditions.");
+			"Advice: run with the -c argument to see the conditions.\n");
 
 	if (npfx)
 		vg_prefix_context_next_difficulty(vcpp, bntmp, bntmp2, bnctx);
@@ -1126,7 +1105,7 @@ vg_prefix_get_difficulty(int addrtype, const char *pattern)
 	bnctx = BN_CTX_new();
 
 	ret = get_prefix_ranges(addrtype,
-				pattern, ranges, bnctx);
+				pattern, ranges);
 
 	if (ret == 0) {
 		BN_sub(bntmp, ranges[1], ranges[0]);
@@ -1469,7 +1448,6 @@ restart_loop:
 		res = 1;
 	}
 out:
-	//BN_clear_free(&bnrem);
 	return res;
 }
 

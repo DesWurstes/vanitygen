@@ -238,7 +238,7 @@ out:
 
 void
 vg_encode_compressed_address(const EC_POINT *ppoint, const EC_GROUP *pgroup,
-		  int addrtype, int testnet, char *result)
+		  int testnet, char *result)
 {
 	unsigned char eckey_buf[128], *pend;
 	unsigned char binres[20] = {};
@@ -264,7 +264,7 @@ vg_encode_compressed_address(const EC_POINT *ppoint, const EC_GROUP *pgroup,
 
 void
 vg_encode_address(const EC_POINT *ppoint, const EC_GROUP *pgroup,
-		  int addrtype, int testnet, char *result)
+		  int testnet, char *result)
 {
 	unsigned char eckey_buf[128], *pend;
 	unsigned char binres[20] = {};
@@ -290,7 +290,7 @@ vg_encode_address(const EC_POINT *ppoint, const EC_GROUP *pgroup,
 
 void
 vg_encode_script_address(const EC_POINT *ppoint, const EC_GROUP *pgroup,
-			 int addrtype, int testnet, char *result)
+			 int testnet, char *result)
 {
 	unsigned char script_buf[69];
 	unsigned char *eckey_buf = script_buf + 2;
@@ -399,33 +399,6 @@ vg_decode_privkey(const char *b58encoded, EC_KEY *pkey, int *addrtype)
 	*addrtype = ecpriv[0];
 	return 1;
 }
-
-typedef struct {
-	int mode;
-	int iterations;
-	const EVP_MD *(*pbkdf_hash_getter)(void);
-	const EVP_CIPHER *(*cipher_getter)(void);
-} vg_protkey_parameters_t;
-
-static const vg_protkey_parameters_t protkey_parameters[] = {
-	{ 0, 4096,  EVP_sha256, EVP_aes_256_cbc },
-	{ 0, 0, NULL, NULL },
-	{ 0, 0, NULL, NULL },
-	{ 0, 0, NULL, NULL },
-	{ 0, 0, NULL, NULL },
-	{ 0, 0, NULL, NULL },
-	{ 0, 0, NULL, NULL },
-	{ 0, 0, NULL, NULL },
-	{ 0, 0, NULL, NULL },
-	{ 0, 0, NULL, NULL },
-	{ 0, 0, NULL, NULL },
-	{ 0, 0, NULL, NULL },
-	{ 0, 0, NULL, NULL },
-	{ 0, 0, NULL, NULL },
-	{ 0, 0, NULL, NULL },
-	{ 0, 0, NULL, NULL },
-	{ 1, 4096,  EVP_sha256, EVP_aes_256_cbc },
-};
 
 /*
  * Besides the bitcoin-adapted formats, we also support PKCS#8.
