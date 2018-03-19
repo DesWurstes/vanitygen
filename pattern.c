@@ -1383,7 +1383,8 @@ vg_regex_test(vg_exec_context_t *vxcp, const int isaddresscompressed)
 	unsigned int i, nres;
 	int res = 0;
 	pcre *re;
-  const char *addr = CashAddrEncode(vcrp->base.vc_istestnet, &vxcp->vxc_binres[1], vcrp->base.vc_addrtype, 0);
+  char addr[42];
+  CashAddrEncode(vcrp->base.vc_istestnet, &vxcp->vxc_binres[1], vcrp->base.vc_addrtype, 0, addr);
 
 	/*
 	 * Run the regular expressions on it

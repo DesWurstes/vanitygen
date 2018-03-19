@@ -47,7 +47,7 @@ main(int argc, char **argv)
 	const char *pass_in = NULL;
 	const char *key2_in = NULL;
 	EC_KEY *pkey;
-	int privtype, addrtype;
+	int privtype;
 	int pkcs8 = 0;
 	int verbose = 0;
 	int generate = 0;
@@ -80,7 +80,6 @@ main(int argc, char **argv)
 
 	if (generate) {
 		unsigned char *pend = (unsigned char *) pbuf;
-		addrtype = 0;
 		privtype = 128;
 		EC_KEY_generate_key(pkey);
 		res = i2o_ECPublicKey(pkey, &pend);
@@ -138,12 +137,6 @@ main(int argc, char **argv)
 		BN_clear_free(bntmp);
 		BN_clear_free(bntmp2);
 		BN_CTX_free(bnctx);
-	}
-
-	switch (privtype) {
-	case 128: addrtype = 0; break;
-	case 239: addrtype = 111; break;
-	default:  addrtype = 0; break;
 	}
 
 	if (verbose) {

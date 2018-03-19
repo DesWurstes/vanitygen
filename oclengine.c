@@ -127,12 +127,12 @@ struct _vg_ocl_context_s {
 
 /* Thread synchronization stubs */
 void
-vg_exec_downgrade_lock(vg_exec_context_t *vxcp)
+vg_exec_downgrade_lock()
 {
 }
 
 int
-vg_exec_upgrade_lock(vg_exec_context_t *vxcp)
+vg_exec_upgrade_lock()
 {
 	return 0;
 }
@@ -2369,7 +2369,7 @@ get_device_list(cl_platform_id pid, cl_device_id **list_out)
 }
 
 static void
-show_devices(cl_platform_id pid, cl_device_id *ids, int nd, int base)
+show_devices(cl_device_id *ids, int nd, int base)
 {
 	int i;
 	char nbuf[128];
@@ -2535,7 +2535,7 @@ vg_ocl_enumerate_devices(void)
 		if (!nd) {
 			fprintf(stderr, "  -- No devices\n");
 		} else {
-			show_devices(pids[i], dids, nd, 0);
+			show_devices(dids, nd, 0);
 		}
 	}
 }

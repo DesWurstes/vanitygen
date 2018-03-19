@@ -1,25 +1,23 @@
 #include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
 
 #include "cashaddr.h"
 
 // Fastest CashAddr encoding library ever. EVER!
 /*
-Copyright (c) 2018 DesWurstes
-
-Permission to use, copy, modify, and distribute this software for any
-purpose with or without fee is hereby granted, provided that the above
-copyright notice and this permission notice appear in all copies.
-
-THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-*/
+ * Copyright (c) 2018 DesWurstes
+ *
+ * Permission to use, copy, modify, and distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ */
 
 /* Copyright (c) 2017 Pieter Wuille
  *
@@ -45,12 +43,11 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 const char * CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
 
 static void convertBits8to5(char* out, const uint8_t firstByte, const uint8_t* in) {
-    uint32_t val = firstByte;
-    int bits = 0;
-    int outlen = 0;
-    int inlen = 20;
-    bits = 3;
-    out[outlen++] = (val >> bits) & 0x1f;
+    uint32_t val = (uint32_t) firstByte;
+    int bits = 3;
+    int outlen = 1;
+    unsigned int inlen = 20;
+    out[0] = (val >> bits) & 0x1f;
     while (inlen--) {
         val = (val << 8) | *(in++);
         bits += 8;
@@ -62,7 +59,7 @@ static void convertBits8to5(char* out, const uint8_t firstByte, const uint8_t* i
     out[outlen] = (val << (5 - bits)) & 0x1f;
 }
 
-uint64_t PolyMod(const char *input, uint64_t startValue = 1) {
+static uint64_t PolyMod(const char *input, uint64_t startValue = 1) {
     for (unsigned int i = 0; i < 42; i++) {
       uint64_t c0 = startValue >> 35;
       startValue = ((startValue & 0x07ffffffff) << 5) ^ (uint64_t) (input[i]);
@@ -86,7 +83,8 @@ uint64_t PolyMod(const char *input, uint64_t startValue = 1) {
 }
 
 
-void CreateChecksum(const int isTestNet, const char *payload, char *result) {
+static inline void CreateChecksum(const int isTestNet, const char *payload,
+  char * const result) {
     // https://play.golang.org/p/sM_CE4AQ7Vp
     uint64_t mod;
     if (isTestNet == 0) {
@@ -99,45 +97,53 @@ void CreateChecksum(const int isTestNet, const char *payload, char *result) {
     }
 }
 
-char * CashAddrEncode(const int isTestNet, const unsigned char* payload,
-  const unsigned int type, const unsigned int withPrefix) {
-    char convertedPayload[43];
-    convertBits8to5(convertedPayload, type << 3, payload);
-    CreateChecksum(isTestNet, convertedPayload, convertedPayload + 34);
-    char *ret = (char *) malloc(sizeof(char) * 55);
+void CashAddrEncode(const int isTestNet, const unsigned char* payload,
+  const unsigned int type, const unsigned int withPrefix, char * const output) {
     unsigned int i = 0;
     if (withPrefix) {
-      ret[0] = 'b';
+      output[0] = 'b';
       if (isTestNet) {
-        ret[1] = 'c';
-        ret[2] = 'h';
-        ret[3] = 't';
-        ret[4] = 'e';
-        ret[5] = 's';
-        ret[6] = 't';
-        ret[7] = ':';
+        output[1] = 'c';
+        output[2] = 'h';
+        output[3] = 't';
+        output[4] = 'e';
+        output[5] = 's';
+        output[6] = 't';
+        output[7] = ':';
         i = 8;
-        ret[50] = '\0';
+        output[50] = '\0';
       } else {
-        ret[1] = 'i';
-        ret[2] = 't';
-        ret[3] = 'c';
-        ret[4] = 'o';
-        ret[5] = 'i';
-        ret[6] = 'n';
-        ret[7] = 'c';
-        ret[8] = 'a';
-        ret[9] = 's';
-        ret[10] = 'h';
-        ret[11] = ':';
+        output[1] = 'i';
+        output[2] = 't';
+        output[3] = 'c';
+        output[4] = 'o';
+        output[5] = 'i';
+        output[6] = 'n';
+        output[7] = 'c';
+        output[8] = 'a';
+        output[9] = 's';
+        output[10] = 'h';
+        output[11] = ':';
         i = 12;
-        ret[54] = '\0';
+        output[54] = '\0';
       }
     } else {
-      ret[42] = '\0';
+      output[42] = '\0';
     }
-    for (unsigned int k = 42 + i, z = i; i < k; i++) {
-      ret[i] = CHARSET[(int) convertedPayload[i-z]];
+    char *data = output + i;
+    char *checksum = data + 34;
+    // https://stackoverflow.com/a/17444554
+    checksum[0] = 0;
+    checksum[1] = 0;
+    checksum[2] = 0;
+    checksum[3] = 0;
+    checksum[4] = 0;
+    checksum[5] = 0;
+    checksum[6] = 0;
+    checksum[7] = 0;
+    convertBits8to5(data, type << 3, payload);
+    CreateChecksum(isTestNet, data, checksum);
+    for (checksum += 8; data < checksum; data++) {
+      *data = CHARSET[(int) (*data)];
     }
-    return ret;
 }
