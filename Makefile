@@ -58,4 +58,7 @@ keyconv: keyconv.o util.o cashaddr.o
 
 clean:
 # DON'T RUN IF YOU DO `make -f` or `--file`
-	rm -rf vanitygen-cash.dSYM keyconv.dSYM oclvanitygen-cash.dSYM oclvanityminer.dSYM *.o *vanitygen-cash keyconv *.oclbin *miner
+	rm -rf vanitygen-cash.dSYM keyconv.dSYM oclvanitygen-cash.dSYM oclvanityminer.dSYM *.o *vanitygen-cash keyconv *.oclbin *miner *plist
+
+format:
+	clang-format -i -verbose -style=file cashaddr.c cashaddr.h keyconv.c oclengine.c pattern.c pattern.h util.c vanitygen.c avl.h oclengine.h oclvanitygen.c oclvanityminer.c util.h winglue.c winglue.h

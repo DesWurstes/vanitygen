@@ -1,20 +1,20 @@
 /*
- * Vanitygen, vanity bitcoin address generator
- * Copyright (C) 2011 <samr7@cs.washington.edu>
- *
- * Vanitygen is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Vanitygen is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with Vanitygen.  If not, see <http://www.gnu.org/licenses/>.
- */
+	* Vanitygen, vanity bitcoin address generator
+	* Copyright (C) 2011 <samr7@cs.washington.edu>
+	*
+	* Vanitygen is free software: you can redistribute it and/or modify
+	* it under the terms of the GNU Affero General Public License as published by
+	* the Free Software Foundation, either version 3 of the License, or
+	* any later version.
+	*
+	* Vanitygen is distributed in the hope that it will be useful,
+	* but WITHOUT ANY WARRANTY; without even the implied warranty of
+	* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	* GNU Affero General Public License for more details.
+	*
+	* You should have received a copy of the GNU Affero General Public License
+	* along with Vanitygen.  If not, see <http://www.gnu.org/licenses/>.
+	*/
 
 // These are needed, causes problems
 // on Windows. Either way, they'll be
@@ -52,18 +52,16 @@
 #include "pattern.h"
 #include "util.h"
 
-const char *version = VANITYGEN_VERSION;
+const char * version = VANITYGEN_VERSION;
 
 
 /*
- * Address search thread main loop
- */
+	* Address search thread main loop
+	*/
 
-void *
-vg_thread_loop(void *arg)
-{
+void * vg_thread_loop(void * arg) {
 	unsigned char hash_buf[128];
-	unsigned char *eckey_buf;
+	unsigned char * eckey_buf;
 	unsigned char hash1[32];
 
 	int c, len, output_interval;
@@ -72,17 +70,17 @@ vg_thread_loop(void *arg)
 	const BN_ULONG rekey_max = 10000000;
 	BN_ULONG npoints, rekey_at, nbatch;
 
-	vg_context_t *vcp = (vg_context_t *) arg;
-	EC_KEY *pkey = NULL;
-	const EC_GROUP *pgroup;
-	const EC_POINT *pgen;
+	vg_context_t * vcp = (vg_context_t *) arg;
+	EC_KEY * pkey = NULL;
+	const EC_GROUP * pgroup;
+	const EC_POINT * pgen;
 	const int ptarraysize = 256;
-	EC_POINT *ppnt[ptarraysize];
-	EC_POINT *pbatchinc;
+	EC_POINT * ppnt[ptarraysize];
+	EC_POINT * pbatchinc;
 
 	vg_test_func_t test_func = vcp->vc_test;
 	vg_exec_context_t ctx;
-	vg_exec_context_t *vxcp;
+	vg_exec_context_t * vxcp;
 
 	struct timeval tvstart;
 
@@ -110,8 +108,7 @@ vg_thread_loop(void *arg)
 	}
 
 	BN_set_word(vxcp->vxc_bntmp, ptarraysize);
-	EC_POINT_mul(pgroup, pbatchinc, vxcp->vxc_bntmp, NULL, NULL,
-		     vxcp->vxc_bnctx);
+	EC_POINT_mul(pgroup, pbatchinc, vxcp->vxc_bntmp, NULL, NULL, vxcp->vxc_bnctx);
 	EC_POINT_make_affine(pgroup, pbatchinc, vxcp->vxc_bnctx);
 
 	npoints = 0;
@@ -124,11 +121,11 @@ vg_thread_loop(void *arg)
 	gettimeofday(&tvstart, NULL);
 
 	if (vcp->vc_format == VCF_SCRIPT) {
-		hash_buf[ 0] = 0x51;  // OP_1
-		hash_buf[ 1] = 0x41;  // pubkey length
+		hash_buf[0] = 0x51; // OP_1
+		hash_buf[1] = 0x41; // pubkey length
 		// gap for pubkey
-		hash_buf[67] = 0x51;  // OP_1
-		hash_buf[68] = 0xae;  // OP_CHECKMULTISIG
+		hash_buf[67] = 0x51; // OP_1
+		hash_buf[68] = 0xae; // OP_CHECKMULTISIG
 		eckey_buf = hash_buf + 2;
 	} else {
 		eckey_buf = hash_buf;
@@ -142,11 +139,8 @@ vg_thread_loop(void *arg)
 			npoints = 0;
 
 			/* Determine rekey interval */
-			EC_GROUP_get_order(pgroup, vxcp->vxc_bntmp,
-					   vxcp->vxc_bnctx);
-			BN_sub(vxcp->vxc_bntmp2,
-			       vxcp->vxc_bntmp,
-			       EC_KEY_get0_private_key(pkey));
+			EC_GROUP_get_order(pgroup, vxcp->vxc_bntmp, vxcp->vxc_bnctx);
+			BN_sub(vxcp->vxc_bntmp2, vxcp->vxc_bntmp, EC_KEY_get0_private_key(pkey));
 			rekey_at = BN_get_word(vxcp->vxc_bntmp2);
 
 #ifndef BN_MASK2
@@ -176,62 +170,48 @@ vg_thread_loop(void *arg)
 			vxcp->vxc_delta = 0;
 
 			if (vcp->vc_pubkey_base)
-				EC_POINT_add(pgroup,
-					     ppnt[0],
-					     ppnt[0],
-					     vcp->vc_pubkey_base,
-					     vxcp->vxc_bnctx);
+				EC_POINT_add(
+					pgroup, ppnt[0], ppnt[0], vcp->vc_pubkey_base, vxcp->vxc_bnctx);
 
-			for (nbatch = 1;
-			     (nbatch < ptarraysize) && (npoints < rekey_at);
-			     nbatch++, npoints++) {
-				EC_POINT_add(pgroup,
-					     ppnt[nbatch],
-					     ppnt[nbatch-1],
-					     pgen, vxcp->vxc_bnctx);
+			for (nbatch = 1; (nbatch < ptarraysize) && (npoints < rekey_at);
+								nbatch++, npoints++) {
+				EC_POINT_add(pgroup, ppnt[nbatch], ppnt[nbatch - 1], pgen, vxcp->vxc_bnctx);
 			}
 
 		} else {
 			/*
-			 * Common case
-			 *
-			 * EC_POINT_add() can skip a few multiplies if
-			 * one or both inputs are affine (Z_is_one).
-			 * This is the case for every point in ppnt, as
-			 * well as pbatchinc.
-			 */
+				* Common case
+				*
+				* EC_POINT_add() can skip a few multiplies if
+				* one or both inputs are affine (Z_is_one).
+				* This is the case for every point in ppnt, as
+				* well as pbatchinc.
+				*/
 			assert(nbatch == ptarraysize);
-			for (nbatch = 0;
-			     (nbatch < ptarraysize) && (npoints < rekey_at);
-			     nbatch++, npoints++) {
-				EC_POINT_add(pgroup,
-					     ppnt[nbatch],
-					     ppnt[nbatch],
-					     pbatchinc,
-					     vxcp->vxc_bnctx);
+			for (nbatch = 0; (nbatch < ptarraysize) && (npoints < rekey_at);
+								nbatch++, npoints++) {
+				EC_POINT_add(
+					pgroup, ppnt[nbatch], ppnt[nbatch], pbatchinc, vxcp->vxc_bnctx);
 			}
 		}
 
 		/*
-		 * The single most expensive operation performed in this
-		 * loop is modular inversion of ppnt->Z.  There is an
-		 * algorithm implemented in OpenSSL to do batched inversion
-		 * that only does one actual BN_mod_inverse(), and saves
-		 * a _lot_ of time.
-		 *
-		 * To take advantage of this, we batch up a few points,
-		 * and feed them to EC_POINTs_make_affine() below.
-		 */
+			* The single most expensive operation performed in this
+			* loop is modular inversion of ppnt->Z.  There is an
+			* algorithm implemented in OpenSSL to do batched inversion
+			* that only does one actual BN_mod_inverse(), and saves
+			* a _lot_ of time.
+			*
+			* To take advantage of this, we batch up a few points,
+			* and feed them to EC_POINTs_make_affine() below.
+			*/
 
 		EC_POINTs_make_affine(pgroup, nbatch, ppnt, vxcp->vxc_bnctx);
 		if (vcp->vc_format == VCF_SCRIPT) {
 			for (i = 0; i < (unsigned) nbatch; i++, vxcp->vxc_delta++) {
 				/* Hash the public key */
-				len = EC_POINT_point2oct(pgroup, ppnt[i],
-							 POINT_CONVERSION_UNCOMPRESSED,
-							 eckey_buf,
-							 65,
-							 vxcp->vxc_bnctx);
+				len = EC_POINT_point2oct(pgroup, ppnt[i], POINT_CONVERSION_UNCOMPRESSED,
+					eckey_buf, 65, vxcp->vxc_bnctx);
 				assert(len == 65);
 
 				SHA256(hash_buf, 69, hash1);
@@ -252,11 +232,8 @@ vg_thread_loop(void *arg)
 		} else {
 			for (i = 0; i < (unsigned) nbatch; i++, vxcp->vxc_delta++) {
 				/* Hash the public key */
-				len = EC_POINT_point2oct(pgroup, ppnt[i],
-							 POINT_CONVERSION_UNCOMPRESSED,
-							 eckey_buf,
-							 65,
-							 vxcp->vxc_bnctx);
+				len = EC_POINT_point2oct(pgroup, ppnt[i], POINT_CONVERSION_UNCOMPRESSED,
+					eckey_buf, 65, vxcp->vxc_bnctx);
 				assert(len == 65);
 
 				SHA256(hash_buf, 65, hash1);
@@ -275,11 +252,8 @@ vg_thread_loop(void *arg)
 					break;
 				}
 
-				len = EC_POINT_point2oct(pgroup, ppnt[i],
-							 POINT_CONVERSION_COMPRESSED,
-							 eckey_buf,
-							 33,
-							 vxcp->vxc_bnctx);
+				len = EC_POINT_point2oct(pgroup, ppnt[i], POINT_CONVERSION_COMPRESSED,
+					eckey_buf, 33, vxcp->vxc_bnctx);
 				assert(len == 33);
 
 				SHA256(hash_buf, 33, hash1);
@@ -323,13 +297,14 @@ out:
 }
 
 #if !defined(_WIN32) || (_MSC_FULL_VER > 189999999)
-unsigned int
-count_processors(void) {
-#if ((__GNUC__ > 3 && __GNUC_MINOR__ > 7) || __GNUC__ > 4) || (_MSC_FULL_VER > 189999999) || (__clang_major__ > 3 || (__clang_major__ > 2 || __clang_major__ > 2))
+unsigned int count_processors(void) {
+#if ((__GNUC__ > 3 && __GNUC_MINOR__ > 7) || __GNUC__ > 4) || \
+	(_MSC_FULL_VER > 189999999) || \
+	(__clang_major__ > 3 || (__clang_major__ > 2 || __clang_major__ > 2))
 	// C++11
 	return std::thread::hardware_concurrency();
 #else
-	int i = sysconf( _SC_NPROCESSORS_ONLN );
+	int i = sysconf(_SC_NPROCESSORS_ONLN);
 	if (i == -1)
 		return 0;
 	return (unsigned) i;
@@ -337,9 +312,7 @@ count_processors(void) {
 }
 #endif
 
-int
-start_threads(vg_context_t *vcp, int nthreads)
-{
+int start_threads(vg_context_t * vcp, int nthreads) {
 	pthread_t thread;
 
 	while (--nthreads) {
@@ -352,44 +325,46 @@ start_threads(vg_context_t *vcp, int nthreads)
 }
 
 
-void
-usage(const char *name)
-{
+void usage(const char * name) {
 	fprintf(stderr,
-COLOR44 "Vanitygen Cash %s" COLOR0 " (" OPENSSL_VERSION_TEXT ")\n"
-"Usage: %s [-vcqnrk1T] [-t <threads>] [-f <filename>|-] [<pattern>...]\n"
-"Generates a bitcoin receiving address matching <pattern>, and outputs the\n"
-"address and associated private key.  The private key may be stored in a safe\n"
-"location or imported into a bitcoin client to spend any balance received on\n"
-"the address.\n"
-"By default, <pattern> is interpreted as an exact prefix.\n"
-"\n"
-"Options:\n"
-"-v            Verbose output\n"
-"-c            Print conditions for a valid address prefix (e.g. alphabet) and quit\n"
-"-q            Quiet output\n"
-"-n            Simulate\n"
-"-r            Use regular expression match instead of prefix\n"
-"              (Feasibility of expression is not checked)\n"
-"-k            Keep pattern and continue search after finding a match\n"
-"-1            Stop after first match\n"
-"-T            Generate Bitcoin Cash testnet address\n"
-"-F <format>   Generate address with the given format (pubkey or script) (EXPERTS ONLY!)\n"
-"-P <pubkey>   Specify base public key for piecewise key generation\n"
-"-t <threads>  Set number of worker threads (Default: number of CPUs)\n"
-"-f <file>     File containing list of patterns, one per line\n"
-"              (Use \"-\" as the file name for stdin)\n"
-"-o <file>     Write pattern matches to <file> in TSV format (readable)\n"
-"-O <file>     Write pattern matches to <file> in CSV format (importable e.g. Excel)\n"
-"-s <file>     Seed random number generator from <file>\n",
-version, name);
+		COLOR44
+		"Vanitygen Cash %s" COLOR0 " (" OPENSSL_VERSION_TEXT ")\n"
+		"Usage: %s [-vcqnrk1T] [-t <threads>] [-f <filename>|-] [<pattern>...]\n"
+		"Generates a bitcoin receiving address matching <pattern>, and outputs the\n"
+		"address and associated private key.  The private key may be stored in a "
+		"safe\n"
+		"location or imported into a bitcoin client to spend any balance received "
+		"on\n"
+		"the address.\n"
+		"By default, <pattern> is interpreted as an exact prefix.\n"
+		"\n"
+		"Options:\n"
+		"-v            Verbose output\n"
+		"-c            Print conditions for a valid address prefix (e.g. alphabet) "
+		"and quit\n"
+		"-q            Quiet output\n"
+		"-n            Simulate\n"
+		"-r            Use regular expression match instead of prefix\n"
+		"              (Feasibility of expression is not checked)\n"
+		"-k            Keep pattern and continue search after finding a match\n"
+		"-1            Stop after first match\n"
+		"-T            Generate Bitcoin Cash testnet address\n"
+		"-F <format>   Generate address with the given format (pubkey or script) "
+		"(EXPERTS ONLY!)\n"
+		"-P <pubkey>   Specify base public key for piecewise key generation\n"
+		"-t <threads>  Set number of worker threads (Default: number of CPUs)\n"
+		"-f <file>     File containing list of patterns, one per line\n"
+		"              (Use \"-\" as the file name for stdin)\n"
+		"-o <file>     Write pattern matches to <file> in TSV format (readable)\n"
+		"-O <file>     Write pattern matches to <file> in CSV format (importable "
+		"e.g. Excel)\n"
+		"-s <file>     Seed random number generator from <file>\n",
+		version, name);
 }
 
 #define MAX_FILE 4
 
-int
-main(int argc, char **argv)
-{
+int main(int argc, char ** argv) {
 	int testnet = 0;
 	int addrtype = 0;
 	int scriptaddrtype = 8;
@@ -402,14 +377,14 @@ main(int argc, char **argv)
 	int remove_on_match = 1;
 	int only_one = 0;
 	int opt;
-	char *seedfile = NULL;
-	const char *result_file = NULL;
-	const char *result_file_csv = NULL;
-	char **patterns;
+	char * seedfile = NULL;
+	const char * result_file = NULL;
+	const char * result_file_csv = NULL;
+	char ** patterns;
 	int npatterns = 0;
 	int nthreads = 0;
-	vg_context_t *vcp = NULL;
-	EC_POINT *pubkey_base = NULL;
+	vg_context_t * vcp = NULL;
+	EC_POINT * pubkey_base = NULL;
 
 	FILE *pattfp[MAX_FILE], *fp;
 	int npattfp = 0;
@@ -421,11 +396,12 @@ main(int argc, char **argv)
 		switch (opt) {
 		case 'c':
 			fprintf(stderr, "%s\n",
-			"Conditions:\n"
-			"• The alphabet is 023456789acdefghjklmnpqrstuvwxyz\n"
-			"• The first character must be 'q' for standard addresses or 'p' for P2SH\n"
-			"• The second character must be either 'p', 'q', 'r' or 'z'.\n"
-			"• The prefix must be lowercase and typed without the CashAddr prefix (e.g. no \"bitcoincash:\")\n");
+				"Conditions:\n"
+				"• The alphabet is 023456789acdefghjklmnpqrstuvwxyz\n"
+				"• The first character must be 'q' for standard addresses or 'p' for P2SH\n"
+				"• The second character must be either 'p', 'q', 'r' or 'z'.\n"
+				"• The prefix must be lowercase and typed without the CashAddr prefix "
+				"(e.g. no \"bitcoincash:\")\n");
 			return 0;
 		case 'v':
 			verbose = 2;
@@ -446,37 +422,32 @@ main(int argc, char **argv)
 			only_one = 1;
 			break;
 		case 'T':
-			//addrtype = 111;
+			//	addrtype = 111;
 			privtype = 239;
-			//scriptaddrtype = 196;
+			//	scriptaddrtype = 196;
 			testnet = 1;
 			break;
 		case 'F':
 			if (!strcmp(optarg, "script"))
 				format = VCF_SCRIPT;
-			else
-				if (!strcmp(optarg, "pubkey")) {
-					format = VCF_PUBKEY;
-				} else {
-					fprintf(stderr,
-						"Invalid format '%s'\n", optarg);
-					return 1;
-				}
+			else if (!strcmp(optarg, "pubkey")) {
+				format = VCF_PUBKEY;
+			} else {
+				fprintf(stderr, "Invalid format '%s'\n", optarg);
+				return 1;
+			}
 			break;
 		case 'P': {
 			if (pubkey_base != NULL) {
-				fprintf(stderr,
-					"Multiple base pubkeys specified\n");
+				fprintf(stderr, "Multiple base pubkeys specified\n");
 				return 1;
 			}
-			EC_KEY *pkey = vg_exec_context_new_key();
-			pubkey_base = EC_POINT_hex2point(
-				EC_KEY_get0_group(pkey),
-				optarg, NULL, NULL);
+			EC_KEY * pkey = vg_exec_context_new_key();
+			pubkey_base =
+				EC_POINT_hex2point(EC_KEY_get0_group(pkey), optarg, NULL, NULL);
 			EC_KEY_free(pkey);
 			if (pubkey_base == NULL) {
-				fprintf(stderr,
-					"Invalid base pubkey\n");
+				fprintf(stderr, "Invalid base pubkey\n");
 				return 1;
 			}
 			break;
@@ -484,20 +455,19 @@ main(int argc, char **argv)
 		case 't':
 			nthreads = atoi(optarg);
 			if (nthreads == 0) {
-				fprintf(stderr,
-					"Invalid thread count '%s'\n", optarg);
+				fprintf(stderr, "Invalid thread count '%s'\n", optarg);
 				return 1;
 			}
 			break;
 		case 'f':
 			if (npattfp >= MAX_FILE) {
-				fprintf(stderr,
-					"Too many input files specified\n");
+				fprintf(stderr, "Too many input files specified\n");
 				return 1;
 			}
 			if (!strcmp(optarg, "-")) {
 				if (pattstdin) {
-					fprintf(stderr, "ERROR: stdin "
+					fprintf(stderr,
+						"ERROR: stdin "
 						"specified multiple times\n");
 					return 1;
 				}
@@ -505,9 +475,7 @@ main(int argc, char **argv)
 			} else {
 				fp = fopen(optarg, "r");
 				if (!fp) {
-					fprintf(stderr,
-						"Could not open %s: %s\n",
-						optarg, strerror(errno));
+					fprintf(stderr, "Could not open %s: %s\n", optarg, strerror(errno));
 					return 1;
 				}
 			}
@@ -516,24 +484,21 @@ main(int argc, char **argv)
 			break;
 		case 'o':
 			if (result_file) {
-				fprintf(stderr,
-					"Multiple TSV output files specified\n");
+				fprintf(stderr, "Multiple TSV output files specified\n");
 				return 1;
 			}
 			result_file = optarg;
 			break;
 		case 'O':
 			if (result_file_csv) {
-				fprintf(stderr,
-					"Multiple CSV output files specified\n");
+				fprintf(stderr, "Multiple CSV output files specified\n");
 				return 1;
 			}
 			result_file_csv = optarg;
 			break;
 		case 's':
 			if (seedfile != NULL) {
-				fprintf(stderr,
-					"Multiple RNG seeds specified\n");
+				fprintf(stderr, "Multiple RNG seeds specified\n");
 				return 1;
 			}
 			seedfile = optarg;
@@ -545,8 +510,7 @@ main(int argc, char **argv)
 	}
 
 	pubkeytype = addrtype;
-	if (format == VCF_SCRIPT)
-	{
+	if (format == VCF_SCRIPT) {
 		/*if (scriptaddrtype == -1)
 		{
 			fprintf(stderr,
@@ -556,32 +520,30 @@ main(int argc, char **argv)
 		addrtype = scriptaddrtype;
 	}
 #if !defined(_WIN32)
-	if (!seedfile)
-	{
+	if (!seedfile) {
 		struct stat st1;
-		if (stat("/dev/urandom", &st1) == 0)
-		{
-			seedfile = (char*) "/dev/urandom";
+		if (stat("/dev/urandom", &st1) == 0) {
+			seedfile = (char *) "/dev/urandom";
 		}
 	}
 #endif
 	if (seedfile) {
 		opt = -1;
 #if !defined(_WIN32)
-		{	struct stat st;
-			if (!stat(seedfile, &st) &&
-			    (st.st_mode & (S_IFBLK|S_IFCHR))) {
+		{
+			struct stat st;
+			if (!stat(seedfile, &st) && (st.st_mode & (S_IFBLK | S_IFCHR))) {
 				opt = 32;
-		} }
+			}
+		}
 #endif
 		opt = RAND_load_file(seedfile, opt);
 		if (!opt) {
 			fprintf(stderr, "Could not load RNG seed %s\n", optarg);
 			return 1;
 		}
-		if (verbose > 0 && strcmp(seedfile, (char*) "/dev/urandom")) {
-			fprintf(stderr,
-				"Read %d bytes from RNG seed file\n", opt);
+		if (verbose > 0 && strcmp(seedfile, (char *) "/dev/urandom")) {
+			fprintf(stderr, "Read %d bytes from RNG seed file\n", opt);
 		}
 	}
 
@@ -592,11 +554,10 @@ main(int argc, char **argv)
 	}
 
 	if (result_file) {
-		FILE *fp = fopen(result_file, "a");
+		FILE * fp = fopen(result_file, "a");
 		if (!fp) {
-			fprintf(stderr,
-				"ERROR: could not open TSV result file: %s\n",
-				strerror(errno));
+			fprintf(
+				stderr, "ERROR: could not open TSV result file: %s\n", strerror(errno));
 			return 1;
 		} else {
 			fprintf(fp, "Pattern\t");
@@ -613,11 +574,10 @@ main(int argc, char **argv)
 	}
 
 	if (result_file_csv) {
-		FILE *fp = fopen(result_file_csv, "a");
+		FILE * fp = fopen(result_file_csv, "a");
 		if (!fp) {
-			fprintf(stderr,
-				"ERROR: could not open CSV result file: %s\n",
-				strerror(errno));
+			fprintf(
+				stderr, "ERROR: could not open CSV result file: %s\n", strerror(errno));
 			return 1;
 		} else {
 			fprintf(fp, "Pattern,");
@@ -637,8 +597,7 @@ main(int argc, char **argv)
 		/* Determine the number of threads */
 		nthreads = count_processors();
 		if (nthreads == 0) {
-			fprintf(stderr,
-				"ERROR: could not determine processor count\n");
+			fprintf(stderr, "ERROR: could not determine processor count\n");
 			nthreads = 1;
 		}
 	}
@@ -668,10 +627,8 @@ main(int argc, char **argv)
 		patterns = &argv[optind];
 		npatterns = argc - optind;
 
-		if (!vg_context_add_patterns(vcp,
-					     (const char ** const) patterns,
-					     npatterns))
-		return 1;
+		if (!vg_context_add_patterns(vcp, (const char ** const) patterns, npatterns))
+			return 1;
 	}
 
 	for (i = 0; i < (unsigned) npattfp; i++) {
@@ -683,10 +640,8 @@ main(int argc, char **argv)
 		if (fp != stdin)
 			fclose(fp);
 
-		if (!vg_context_add_patterns(vcp,
-					     (const char ** const) patterns,
-					     npatterns))
-		return 1;
+		if (!vg_context_add_patterns(vcp, (const char ** const) patterns, npatterns))
+			return 1;
 	}
 
 	if (!vcp->vc_npatterns) {
@@ -695,8 +650,7 @@ main(int argc, char **argv)
 	}
 
 	if ((verbose > 0) && regex && (vcp->vc_npatterns > 1))
-		fprintf(stderr,
-			"Regular expressions: %ld\n", vcp->vc_npatterns);
+		fprintf(stderr, "Regular expressions: %ld\n", vcp->vc_npatterns);
 
 	if (simulate)
 		return 0;

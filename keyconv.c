@@ -17,36 +17,32 @@
 #include "pattern.h"
 #include "util.h"
 
-const char *version = VANITYGEN_VERSION;
+const char * version = VANITYGEN_VERSION;
 
 
-static void
-usage(const char *progname)
-{
+static void usage(const char * progname) {
 	fprintf(stderr,
-"Vanitygen keyconv %s\n"
-"Usage: %s [-8] [-e|-E <password>] [-c <key>] [<key>]\n"
-"-G            Generate a key pair and output the full public key\n"
-"-8            Output key in PKCS#8 form\n"
-"-c <key>      Combine private key parts to make complete private key\n"
-"-v            Verbose output\n",
+		"Vanitygen keyconv %s\n"
+		"Usage: %s [-8] [-e|-E <password>] [-c <key>] [<key>]\n"
+		"-G            Generate a key pair and output the full public key\n"
+		"-8            Output key in PKCS#8 form\n"
+		"-c <key>      Combine private key parts to make complete private key\n"
+		"-v            Verbose output\n",
 		version, progname);
 }
 
 
-int
-main(int argc, char **argv)
-{
+int main(int argc, char ** argv) {
 	if (argc == 1) {
 		usage(argv[0]);
 		return 0;
 	}
 	char ecprot[128];
 	char pbuf[1024];
-	const char *key_in;
-	const char *pass_in = NULL;
-	const char *key2_in = NULL;
-	EC_KEY *pkey;
+	const char * key_in;
+	const char * pass_in = NULL;
+	const char * key2_in = NULL;
+	EC_KEY * pkey;
 	int privtype;
 	int pkcs8 = 0;
 	int verbose = 0;
@@ -79,17 +75,16 @@ main(int argc, char **argv)
 	pkey = EC_KEY_new_by_curve_name(NID_secp256k1);
 
 	if (generate) {
-		unsigned char *pend = (unsigned char *) pbuf;
+		unsigned char * pend = (unsigned char *) pbuf;
 		privtype = 128;
 		EC_KEY_generate_key(pkey);
 		res = i2o_ECPublicKey(pkey, &pend);
 		fprintf(stderr, "Pubkey (hex): ");
-		dumphex((unsigned char *)pbuf, res);
+		dumphex((unsigned char *) pbuf, res);
 		fprintf(stderr, "Privkey (hex): ");
 		dumpbn(EC_KEY_get0_private_key(pkey));
-		vg_encode_address(EC_KEY_get0_public_key(pkey),
-				  EC_KEY_get0_group(pkey),
-				  0, ecprot);
+		vg_encode_address(
+			EC_KEY_get0_public_key(pkey), EC_KEY_get0_group(pkey), 0, ecprot);
 		printf("Address: %s\n", ecprot);
 		vg_encode_privkey(pkey, privtype, ecprot);
 		printf("Privkey: %s\n", ecprot);
@@ -112,9 +107,9 @@ main(int argc, char **argv)
 	}
 
 	if (key2_in) {
-		BN_CTX *bnctx;
+		BN_CTX * bnctx;
 		BIGNUM *bntmp, *bntmp2;
-		EC_KEY *pkey2;
+		EC_KEY * pkey2;
 
 		pkey2 = EC_KEY_new_by_curve_name(NID_secp256k1);
 		res = vg_decode_privkey_any(pkey2, &privtype, key2_in, NULL);
@@ -127,11 +122,8 @@ main(int argc, char **argv)
 		bntmp2 = BN_new();
 		bnctx = BN_CTX_new();
 		EC_GROUP_get_order(EC_KEY_get0_group(pkey), bntmp2, NULL);
-		BN_mod_add(bntmp,
-			   EC_KEY_get0_private_key(pkey),
-			   EC_KEY_get0_private_key(pkey2),
-			   bntmp2,
-			   bnctx);
+		BN_mod_add(bntmp, EC_KEY_get0_private_key(pkey),
+			EC_KEY_get0_private_key(pkey2), bntmp2, bnctx);
 		vg_set_privkey(bntmp, pkey);
 		EC_KEY_free(pkey2);
 		BN_clear_free(bntmp);
@@ -140,29 +132,26 @@ main(int argc, char **argv)
 	}
 
 	if (verbose) {
-		unsigned char *pend = (unsigned char *) pbuf;
+		unsigned char * pend = (unsigned char *) pbuf;
 		res = i2o_ECPublicKey(pkey, &pend);
 		fprintf(stderr, "Pubkey (hex): ");
-		dumphex((unsigned char *)pbuf, res);
+		dumphex((unsigned char *) pbuf, res);
 		fprintf(stderr, "Privkey (hex): ");
 		dumpbn(EC_KEY_get0_private_key(pkey));
 	}
 
 	if (pkcs8) {
-		res = vg_pkcs8_encode_privkey(pbuf, sizeof(pbuf),
-					      pkey, pass_in);
+		res = vg_pkcs8_encode_privkey(pbuf, sizeof(pbuf), pkey, pass_in);
 		if (!res) {
-			fprintf(stderr,
-				"ERROR: Could not encode private key\n");
+			fprintf(stderr, "ERROR: Could not encode private key\n");
 			return 1;
 		}
 		printf("%s", pbuf);
 	}
 
 	else {
-		vg_encode_address(EC_KEY_get0_public_key(pkey),
-				  EC_KEY_get0_group(pkey),
-				  0, ecprot);
+		vg_encode_address(
+			EC_KEY_get0_public_key(pkey), EC_KEY_get0_group(pkey), 0, ecprot);
 		printf("Address: %s\n", ecprot);
 		vg_encode_privkey(pkey, privtype, ecprot);
 		printf("Privkey: %s\n", ecprot);

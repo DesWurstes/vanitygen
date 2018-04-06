@@ -1,29 +1,29 @@
 /*
- * Vanitygen, vanity bitcoin address generator
- * Copyright (C) 2011 <samr7@cs.washington.edu>
- *
- * Vanitygen is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version. 
- *
- * Vanitygen is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with Vanitygen.  If not, see <http://www.gnu.org/licenses/>.
- */
+	* Vanitygen, vanity bitcoin address generator
+	* Copyright (C) 2011 <samr7@cs.washington.edu>
+	*
+	* Vanitygen is free software: you can redistribute it and/or modify
+	* it under the terms of the GNU Affero General Public License as published by
+	* the Free Software Foundation, either version 3 of the License, or
+	* any later version.
+	*
+	* Vanitygen is distributed in the hope that it will be useful,
+	* but WITHOUT ANY WARRANTY; without even the implied warranty of
+	* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	* GNU Affero General Public License for more details.
+	*
+	* You should have received a copy of the GNU Affero General Public License
+	* along with Vanitygen.  If not, see <http://www.gnu.org/licenses/>.
+	*/
 
-#if !defined (__VG_AVL_H__)
+#if !defined(__VG_AVL_H__)
 #define __VG_AVL_H__
 
 #include <assert.h>
 
 /*
- * AVL tree implementation
- */
+	* AVL tree implementation
+	*/
 
 typedef enum { CENT = 1, LEFT = 0, RIGHT = 2 } avl_balance_t;
 
@@ -36,24 +36,18 @@ typedef struct _avl_item_s {
 } avl_item_t;
 
 typedef struct _avl_root_s {
-	avl_item_t *ar_root;
+	avl_item_t * ar_root;
 } avl_root_t;
 
-static INLINE void
-avl_root_init(avl_root_t *rootp)
-{
+static INLINE void avl_root_init(avl_root_t * rootp) {
 	rootp->ar_root = NULL;
 }
 
-static INLINE int
-avl_root_empty(avl_root_t *rootp)
-{
+static INLINE int avl_root_empty(avl_root_t * rootp) {
 	return (rootp->ar_root == NULL) ? 1 : 0;
 }
 
-static INLINE void
-avl_item_init(avl_item_t *itemp)
-{
+static INLINE void avl_item_init(avl_item_t * itemp) {
 	itemp->ai_left = NULL;
 	itemp->ai_right = NULL;
 	itemp->ai_up = NULL;
@@ -64,18 +58,15 @@ avl_item_init(avl_item_t *itemp)
 }
 
 #define container_of(ptr, type, member) \
-	(((type*) (((unsigned char *)ptr) - \
-		   (size_t)&(((type *)((unsigned char *)0))->member))))
+	(((type *) (((unsigned char *) ptr) - (size_t) & \
+		(((type *) ((unsigned char *) 0))->member))))
 
-#define avl_item_entry(ptr, type, member) \
-	container_of(ptr, type, member)
-
+#define avl_item_entry(ptr, type, member) container_of(ptr, type, member)
 
 
-static INLINE void
-_avl_rotate_ll(avl_root_t *rootp, avl_item_t *itemp)
-{
-	avl_item_t *tmp;
+
+static INLINE void _avl_rotate_ll(avl_root_t * rootp, avl_item_t * itemp) {
+	avl_item_t * tmp;
 	tmp = itemp->ai_left;
 	itemp->ai_left = tmp->ai_right;
 	if (itemp->ai_left)
@@ -96,9 +87,7 @@ _avl_rotate_ll(avl_root_t *rootp, avl_item_t *itemp)
 	itemp->ai_up = tmp;
 }
 
-static INLINE void
-_avl_rotate_lr(avl_root_t *rootp, avl_item_t *itemp)
-{
+static INLINE void _avl_rotate_lr(avl_root_t * rootp, avl_item_t * itemp) {
 	avl_item_t *rcp, *rlcp;
 	rcp = itemp->ai_left;
 	rlcp = rcp->ai_right;
@@ -125,10 +114,8 @@ _avl_rotate_lr(avl_root_t *rootp, avl_item_t *itemp)
 	itemp->ai_up = rlcp;
 }
 
-static INLINE void
-_avl_rotate_rr(avl_root_t *rootp, avl_item_t *itemp)
-{
-	avl_item_t *tmp;
+static INLINE void _avl_rotate_rr(avl_root_t * rootp, avl_item_t * itemp) {
+	avl_item_t * tmp;
 	tmp = itemp->ai_right;
 	itemp->ai_right = tmp->ai_left;
 	if (itemp->ai_right)
@@ -149,9 +136,7 @@ _avl_rotate_rr(avl_root_t *rootp, avl_item_t *itemp)
 	itemp->ai_up = tmp;
 }
 
-static INLINE void
-_avl_rotate_rl(avl_root_t *rootp, avl_item_t *itemp)
-{
+static INLINE void _avl_rotate_rl(avl_root_t * rootp, avl_item_t * itemp) {
 	avl_item_t *rcp, *rlcp;
 	rcp = itemp->ai_right;
 	rlcp = rcp->ai_left;
@@ -178,13 +163,11 @@ _avl_rotate_rl(avl_root_t *rootp, avl_item_t *itemp)
 	itemp->ai_up = rlcp;
 }
 
-static void
-avl_delete_fix(avl_root_t *rootp, avl_item_t *itemp, avl_item_t *parentp)
-{
-	avl_item_t *childp;
+static void avl_delete_fix(
+	avl_root_t * rootp, avl_item_t * itemp, avl_item_t * parentp) {
+	avl_item_t * childp;
 
-	if ((parentp->ai_left == NULL) &&
-	    (parentp->ai_right == NULL)) {
+	if ((parentp->ai_left == NULL) && (parentp->ai_right == NULL)) {
 		assert(itemp == NULL);
 		parentp->ai_balance = CENT;
 		itemp = parentp;
@@ -198,7 +181,7 @@ avl_delete_fix(avl_root_t *rootp, avl_item_t *itemp, avl_item_t *parentp)
 				/* Parent was left-heavy, now worse */
 				if (itemp->ai_balance == LEFT) {
 					/* If left child is also
-					 * left-heavy, LL fixes it. */
+						* left-heavy, LL fixes it. */
 					_avl_rotate_ll(rootp, parentp);
 					itemp->ai_balance = CENT;
 					parentp->ai_balance = CENT;
@@ -266,9 +249,7 @@ avl_delete_fix(avl_root_t *rootp, avl_item_t *itemp, avl_item_t *parentp)
 	}
 }
 
-static void
-avl_insert_fix(avl_root_t *rootp, avl_item_t *itemp)
-{
+static void avl_insert_fix(avl_root_t * rootp, avl_item_t * itemp) {
 	avl_item_t *childp, *parentp = itemp->ai_up;
 	itemp->ai_left = itemp->ai_right = NULL;
 #ifndef NDEBUG
@@ -281,7 +262,7 @@ avl_insert_fix(avl_root_t *rootp, avl_item_t *itemp)
 				/* Parent was left-heavy, now worse */
 				if (itemp->ai_balance == LEFT) {
 					/* If left child is also
-					 * left-heavy, LL fixes it. */
+						* left-heavy, LL fixes it. */
 					_avl_rotate_ll(rootp, parentp);
 					itemp->ai_balance = CENT;
 					parentp->ai_balance = CENT;
@@ -338,10 +319,8 @@ avl_insert_fix(avl_root_t *rootp, avl_item_t *itemp)
 	}
 }
 
-static INLINE avl_item_t *
-avl_first(avl_root_t *rootp)
-{
-	avl_item_t *itemp = rootp->ar_root;
+static INLINE avl_item_t * avl_first(avl_root_t * rootp) {
+	avl_item_t * itemp = rootp->ar_root;
 	if (itemp) {
 		while (itemp->ai_left)
 			itemp = itemp->ai_left;
@@ -349,9 +328,7 @@ avl_first(avl_root_t *rootp)
 	return itemp;
 }
 
-static INLINE avl_item_t *
-avl_next(avl_item_t *itemp)
-{
+static INLINE avl_item_t * avl_next(avl_item_t * itemp) {
 	if (itemp->ai_right) {
 		itemp = itemp->ai_right;
 		while (itemp->ai_left)
@@ -368,9 +345,7 @@ avl_next(avl_item_t *itemp)
 	return itemp->ai_up;
 }
 
-static void
-avl_remove(avl_root_t *rootp, avl_item_t *itemp)
-{
+static void avl_remove(avl_root_t * rootp, avl_item_t * itemp) {
 	avl_item_t *relocp, *replacep, *parentp = NULL;
 #ifndef NDEBUG
 	assert(itemp->ai_indexed);
@@ -398,9 +373,9 @@ avl_remove(avl_root_t *rootp, avl_item_t *itemp)
 	}
 
 	/*
-	 * Otherwise we do an indirect replacement with
-	 * the item's leftmost right descendant.
-	 */
+		* Otherwise we do an indirect replacement with
+		* the item's leftmost right descendant.
+		*/
 	relocp = avl_next(itemp);
 	assert(relocp);
 	assert(relocp->ai_up != NULL);

@@ -1,20 +1,20 @@
 /*
- * Vanitygen, vanity bitcoin address generator
- * Copyright (C) 2011 <samr7@cs.washington.edu>
- *
- * Vanitygen is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Vanitygen is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with Vanitygen.  If not, see <http://www.gnu.org/licenses/>.
- */
+	* Vanitygen, vanity bitcoin address generator
+	* Copyright (C) 2011 <samr7@cs.washington.edu>
+	*
+	* Vanitygen is free software: you can redistribute it and/or modify
+	* it under the terms of the GNU Affero General Public License as published by
+	* the Free Software Foundation, either version 3 of the License, or
+	* any later version.
+	*
+	* Vanitygen is distributed in the hope that it will be useful,
+	* but WITHOUT ANY WARRANTY; without even the implied warranty of
+	* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	* GNU Affero General Public License for more details.
+	*
+	* You should have received a copy of the GNU Affero General Public License
+	* along with Vanitygen.  If not, see <http://www.gnu.org/licenses/>.
+	*/
 
 #if defined(_WIN32)
 #define _USE_MATH_DEFINES
@@ -47,9 +47,10 @@
 #include "util.h"
 #include "cashaddr.h"
 
-const char *vg_b58_alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+const char * vg_b58_alphabet =
+	"123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 
-const signed char vg_b58_reverse_map[256] = {
+const signed char vg_b58_reverse_map[128] = {
 	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -57,19 +58,10 @@ const signed char vg_b58_reverse_map[256] = {
 	-1,  9, 10, 11, 12, 13, 14, 15, 16, -1, 17, 18, 19, 20, 21, -1,
 	22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, -1, -1, -1, -1, -1,
 	-1, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, -1, 44, 45, 46,
-	47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, -1, -1, -1, -1, -1,
-	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
+	47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, -1, -1, -1, -1, -1
 };
 
-void
-fdumphex(FILE *fp, const unsigned char *src, size_t len)
-{
+void fdumphex(FILE * fp, const unsigned char * src, size_t len) {
 	size_t i;
 	for (i = 0; i < len; i++) {
 		fprintf(fp, "%02x", src[i]);
@@ -77,44 +69,36 @@ fdumphex(FILE *fp, const unsigned char *src, size_t len)
 	printf("\n");
 }
 
-void
-fdumpbn(FILE *fp, const BIGNUM *bn)
-{
-	char *buf;
+void fdumpbn(FILE * fp, const BIGNUM * bn) {
+	char * buf;
 	buf = BN_bn2hex(bn);
 	fprintf(fp, "%s\n", buf ? buf : "0");
 	if (buf)
 		OPENSSL_free(buf);
 }
 
-void
-dumphex(const unsigned char *src, size_t len)
-{
+void dumphex(const unsigned char * src, size_t len) {
 	fdumphex(stdout, src, len);
 }
 
-void
-dumpbn(const BIGNUM *bn)
-{
+void dumpbn(const BIGNUM * bn) {
 	fdumpbn(stdout, bn);
 }
 
 /*
- * Key format encode/decode
- */
+	* Key format encode/decode
+	*/
 
-void
-vg_b58_encode_check(void *buf, size_t len, char *result)
-{
+void vg_b58_encode_check(void * buf, size_t len, char * result) {
 	unsigned char hash1[32];
 	unsigned char hash2[32];
 
 	int d, p;
 
-	BN_CTX *bnctx;
+	BN_CTX * bnctx;
 	BIGNUM *bn, *bndiv, *bntmp;
 	BIGNUM *bna = BN_new(), *bnb = BN_new(), *bnbase = BN_new(), *bnrem = BN_new();
-	unsigned char *binres;
+	unsigned char * binres;
 	unsigned int brlen, zpfx;
 
 	bnctx = BN_CTX_new();
@@ -124,7 +108,7 @@ vg_b58_encode_check(void *buf, size_t len, char *result)
 	bndiv = bnb;
 
 	brlen = (2 * len) + 4;
-	binres = (unsigned char*) malloc(brlen);
+	binres = (unsigned char *) malloc(brlen);
 	memcpy(binres, buf, len);
 
 	SHA256(binres, len, hash1);
@@ -133,7 +117,8 @@ vg_b58_encode_check(void *buf, size_t len, char *result)
 
 	BN_bin2bn(binres, len + 4, bn);
 
-	for (zpfx = 0; zpfx < (len + 4) && binres[zpfx] == 0; zpfx++);
+	for (zpfx = 0; zpfx < (len + 4) && binres[zpfx] == 0; zpfx++)
+		;
 
 	p = brlen;
 	while (!BN_is_zero(bn)) {
@@ -163,13 +148,11 @@ vg_b58_encode_check(void *buf, size_t len, char *result)
 #define skip_char(c) \
 	(((c) == '\r') || ((c) == '\n') || ((c) == ' ') || ((c) == '\t'))
 
-int
-vg_b58_decode_check(const char *input, void *buf, size_t len)
-{
+int vg_b58_decode_check(const char * input, void * buf, size_t len) {
 	int i, l, c;
-	unsigned char *xbuf = NULL;
+	unsigned char * xbuf = NULL;
 	BIGNUM *bn = BN_new(), *bnw = BN_new(), *bnbase = BN_new();
-	BN_CTX *bnctx;
+	BN_CTX * bnctx;
 	unsigned char hash1[32], hash2[32];
 	int zpfx;
 	int res = 0;
@@ -182,7 +165,7 @@ vg_b58_decode_check(const char *input, void *buf, size_t len)
 	for (i = 0; i < l; i++) {
 		if (skip_char(input[i]))
 			continue;
-		c = vg_b58_reverse_map[(int)input[i]];
+		c = vg_b58_reverse_map[(int) input[i]];
 		if (c < 0)
 			goto out;
 		BN_clear(bnw);
@@ -236,93 +219,74 @@ out:
 	return res;
 }
 
-void
-vg_encode_compressed_address(const EC_POINT *ppoint, const EC_GROUP *pgroup,
-		  int testnet, char *result)
-{
+void vg_encode_compressed_address(
+	const EC_POINT * ppoint, const EC_GROUP * pgroup, int testnet, char * result) {
 	unsigned char eckey_buf[128], *pend;
 	unsigned char binres[20] = {};
-	//unsigned char binres[21] = {0,};
+	//	unsigned char binres[21] = {0,};
 	unsigned char hash1[32];
 
 	pend = eckey_buf;
 
-	EC_POINT_point2oct(pgroup,
-			   ppoint,
-			   POINT_CONVERSION_COMPRESSED,
-			   eckey_buf,
-			   sizeof(eckey_buf),
-			   NULL);
+	EC_POINT_point2oct(pgroup, ppoint, POINT_CONVERSION_COMPRESSED, eckey_buf,
+		sizeof(eckey_buf), NULL);
 	pend = eckey_buf + 0x21;
-	//binres[0] = addrtype;
+	//	binres[0] = addrtype;
 	SHA256(eckey_buf, pend - eckey_buf, hash1);
-	//RIPEMD160(hash1, sizeof(hash1), &binres[1]);
+	//	RIPEMD160(hash1, sizeof(hash1), &binres[1]);
 	RIPEMD160(hash1, sizeof(hash1), binres);
 	CashAddrEncode(testnet, binres, 0, 1, result);
-	//vg_b58_encode_check(binres, sizeof(binres), result);
+	//	vg_b58_encode_check(binres, sizeof(binres), result);
 }
 
-void
-vg_encode_address(const EC_POINT *ppoint, const EC_GROUP *pgroup,
-		  int testnet, char *result)
-{
+void vg_encode_address(
+	const EC_POINT * ppoint, const EC_GROUP * pgroup, int testnet, char * result) {
 	unsigned char eckey_buf[128], *pend;
 	unsigned char binres[20] = {};
-	//unsigned char binres[21] = {0,};
+	//	unsigned char binres[21] = {0,};
 	unsigned char hash1[32];
 
 	pend = eckey_buf;
 
-	EC_POINT_point2oct(pgroup,
-			   ppoint,
-			   POINT_CONVERSION_UNCOMPRESSED,
-			   eckey_buf,
-			   sizeof(eckey_buf),
-			   NULL);
+	EC_POINT_point2oct(pgroup, ppoint, POINT_CONVERSION_UNCOMPRESSED, eckey_buf,
+		sizeof(eckey_buf), NULL);
 	pend = eckey_buf + 0x41;
-	//binres[0] = addrtype;
+	//	binres[0] = addrtype;
 	SHA256(eckey_buf, pend - eckey_buf, hash1);
-	//RIPEMD160(hash1, sizeof(hash1), &binres[1]);
+	//	RIPEMD160(hash1, sizeof(hash1), &binres[1]);
 	RIPEMD160(hash1, sizeof(hash1), binres);
 	CashAddrEncode(testnet, binres, 0, 1, result);
-	//vg_b58_encode_check(binres, sizeof(binres), result);
+	//	vg_b58_encode_check(binres, sizeof(binres), result);
 }
 
-void
-vg_encode_script_address(const EC_POINT *ppoint, const EC_GROUP *pgroup,
-			 int testnet, char *result)
-{
+void vg_encode_script_address(
+	const EC_POINT * ppoint, const EC_GROUP * pgroup, int testnet, char * result) {
 	unsigned char script_buf[69];
-	unsigned char *eckey_buf = script_buf + 2;
-	//unsigned char binres[21] = {0,};
+	unsigned char * eckey_buf = script_buf + 2;
+	//	unsigned char binres[21] = {0,};
 	unsigned char binres[20] = {};
 	unsigned char hash1[32];
 
-	script_buf[ 0] = 0x51;  // OP_1
-	script_buf[ 1] = 0x41;  // pubkey length
+	script_buf[0] = 0x51; // OP_1
+	script_buf[1] = 0x41; // pubkey length
 	// gap for pubkey
-	script_buf[67] = 0x51;  // OP_1
-	script_buf[68] = 0xae;  // OP_CHECKMULTISIG
+	script_buf[67] = 0x51; // OP_1
+	script_buf[68] = 0xae; // OP_CHECKMULTISIG
 
-	EC_POINT_point2oct(pgroup,
-			   ppoint,
-			   POINT_CONVERSION_UNCOMPRESSED,
-			   eckey_buf,
-			   65,
-			   NULL);
-	//binres[0] = addrtype;
+	EC_POINT_point2oct(
+		pgroup, ppoint, POINT_CONVERSION_UNCOMPRESSED, eckey_buf, 65, NULL);
+	//	binres[0] = addrtype;
 	SHA256(script_buf, 69, hash1);
-	//RIPEMD160(hash1, sizeof(hash1), &binres[1]);
+	//	RIPEMD160(hash1, sizeof(hash1), &binres[1]);
 	RIPEMD160(hash1, sizeof(hash1), binres);
 	CashAddrEncode(testnet, binres, 0, 1, result);
-	//vg_b58_encode_check(binres, sizeof(binres), result);
+	//	vg_b58_encode_check(binres, sizeof(binres), result);
 }
 
-void
-vg_encode_privkey_compressed(const EC_KEY *pkey, int addrtype, char *result)
-{
+void vg_encode_privkey_compressed(
+	const EC_KEY * pkey, int addrtype, char * result) {
 	unsigned char eckey_buf[128];
-	const BIGNUM *bn;
+	const BIGNUM * bn;
 	int nbytes;
 
 	bn = EC_KEY_get0_private_key(pkey);
@@ -337,11 +301,9 @@ vg_encode_privkey_compressed(const EC_KEY *pkey, int addrtype, char *result)
 	vg_b58_encode_check(eckey_buf, 34, result);
 }
 
-void
-vg_encode_privkey(const EC_KEY *pkey, int addrtype, char *result)
-{
+void vg_encode_privkey(const EC_KEY * pkey, int addrtype, char * result) {
 	unsigned char eckey_buf[128];
-	const BIGNUM *bn;
+	const BIGNUM * bn;
 	int nbytes;
 
 	bn = EC_KEY_get0_private_key(pkey);
@@ -356,20 +318,17 @@ vg_encode_privkey(const EC_KEY *pkey, int addrtype, char *result)
 	vg_b58_encode_check(eckey_buf, 33, result);
 }
 
-int
-vg_set_privkey(const BIGNUM *bnpriv, EC_KEY *pkey)
-{
-	const EC_GROUP *pgroup;
-	EC_POINT *ppnt;
+int vg_set_privkey(const BIGNUM * bnpriv, EC_KEY * pkey) {
+	const EC_GROUP * pgroup;
+	EC_POINT * ppnt;
 	int res;
 
 	pgroup = EC_KEY_get0_group(pkey);
 	ppnt = EC_POINT_new(pgroup);
 
-	res = (ppnt &&
-	       EC_KEY_set_private_key(pkey, bnpriv) &&
-	       EC_POINT_mul(pgroup, ppnt, bnpriv, NULL, NULL, NULL) &&
-	       EC_KEY_set_public_key(pkey, ppnt));
+	res = (ppnt && EC_KEY_set_private_key(pkey, bnpriv) &&
+		EC_POINT_mul(pgroup, ppnt, bnpriv, NULL, NULL, NULL) &&
+		EC_KEY_set_public_key(pkey, ppnt));
 
 	if (ppnt)
 		EC_POINT_free(ppnt);
@@ -381,10 +340,8 @@ vg_set_privkey(const BIGNUM *bnpriv, EC_KEY *pkey)
 	return 1;
 }
 
-int
-vg_decode_privkey(const char *b58encoded, EC_KEY *pkey, int *addrtype)
-{
-	BIGNUM *bnpriv;
+int vg_decode_privkey(const char * b58encoded, EC_KEY * pkey, int * addrtype) {
+	BIGNUM * bnpriv;
 	unsigned char ecpriv[48];
 	int res;
 
@@ -401,18 +358,16 @@ vg_decode_privkey(const char *b58encoded, EC_KEY *pkey, int *addrtype)
 }
 
 /*
- * Besides the bitcoin-adapted formats, we also support PKCS#8.
- */
-int
-vg_pkcs8_encode_privkey(char *out, int outlen,
-			const EC_KEY *pkey, const char *pass)
-{
-	EC_KEY *pkey_copy = NULL;
-	EVP_PKEY *evp_key = NULL;
-	PKCS8_PRIV_KEY_INFO *pkcs8 = NULL;
-	X509_SIG *pkcs8_enc = NULL;
-	BUF_MEM *memptr;
-	BIO *bio = NULL;
+	* Besides the bitcoin-adapted formats, we also support PKCS#8.
+	*/
+int vg_pkcs8_encode_privkey(
+	char * out, int outlen, const EC_KEY * pkey, const char * pass) {
+	EC_KEY * pkey_copy = NULL;
+	EVP_PKEY * evp_key = NULL;
+	PKCS8_PRIV_KEY_INFO * pkcs8 = NULL;
+	X509_SIG * pkcs8_enc = NULL;
+	BUF_MEM * memptr;
+	BIO * bio = NULL;
 	int res = 0;
 
 	pkey_copy = EC_KEY_dup(pkey);
@@ -433,12 +388,8 @@ vg_pkcs8_encode_privkey(char *out, int outlen,
 		res = PEM_write_bio_PKCS8_PRIV_KEY_INFO(bio, pkcs8);
 
 	} else {
-		pkcs8_enc = PKCS8_encrypt(-1,
-					  EVP_aes_256_cbc(),
-					  pass, strlen(pass),
-					  NULL, 0,
-					  4096,
-					  pkcs8);
+		pkcs8_enc = PKCS8_encrypt(
+			-1, EVP_aes_256_cbc(), pass, strlen(pass), NULL, 0, 4096, pkcs8);
 		if (!pkcs8_enc)
 			goto out;
 		res = PEM_write_bio_PKCS8(bio, pkcs8_enc);
@@ -451,7 +402,7 @@ vg_pkcs8_encode_privkey(char *out, int outlen,
 		out[res] = '\0';
 	} else {
 		memcpy(out, memptr->data, outlen - 1);
-		out[outlen-1] = '\0';
+		out[outlen - 1] = '\0';
 	}
 
 out:
@@ -468,18 +419,17 @@ out:
 	return res;
 }
 
-int
-vg_pkcs8_decode_privkey(EC_KEY *pkey, const char *pem_in, const char *pass)
-{
-	EC_KEY *pkey_in = NULL;
-	EC_KEY *test_key = NULL;
-	EVP_PKEY *evp_key = NULL;
-	PKCS8_PRIV_KEY_INFO *pkcs8 = NULL;
-	X509_SIG *pkcs8_enc = NULL;
-	BIO *bio = NULL;
+int vg_pkcs8_decode_privkey(
+	EC_KEY * pkey, const char * pem_in, const char * pass) {
+	EC_KEY * pkey_in = NULL;
+	EC_KEY * test_key = NULL;
+	EVP_PKEY * evp_key = NULL;
+	PKCS8_PRIV_KEY_INFO * pkcs8 = NULL;
+	X509_SIG * pkcs8_enc = NULL;
+	BIO * bio = NULL;
 	int res = 0;
 
-	bio = BIO_new_mem_buf((char *)pem_in, strlen(pem_in));
+	bio = BIO_new_mem_buf((char *) pem_in, strlen(pem_in));
 	if (!bio)
 		goto out;
 
@@ -506,9 +456,7 @@ vg_pkcs8_decode_privkey(EC_KEY *pkey, const char *pem_in, const char *pass)
 	/* Expect a specific curve */
 	test_key = EC_KEY_new_by_curve_name(NID_secp256k1);
 	if (!test_key ||
-	    EC_GROUP_cmp(EC_KEY_get0_group(pkey_in),
-			 EC_KEY_get0_group(test_key),
-			 NULL))
+		EC_GROUP_cmp(EC_KEY_get0_group(pkey_in), EC_KEY_get0_group(test_key), NULL))
 		goto out;
 
 	if (!EC_KEY_copy(pkey, pkey_in))
@@ -531,10 +479,8 @@ out:
 }
 
 
-int
-vg_decode_privkey_any(EC_KEY *pkey, int *addrtype, const char *input,
-		      const char *pass)
-{
+int vg_decode_privkey_any(
+	EC_KEY * pkey, int * addrtype, const char * input, const char * pass) {
 	int res;
 
 	if (vg_decode_privkey(input, pkey, addrtype))
@@ -548,23 +494,21 @@ vg_decode_privkey_any(EC_KEY *pkey, int *addrtype, const char *input,
 }
 
 /*
- * Pattern file reader
- * Absolutely disgusting, unable to free the pattern list when it's done
- */
+	* Pattern file reader
+	* Absolutely disgusting, unable to free the pattern list when it's done
+	*/
 
-int
-vg_read_file(FILE *fp, char ***result, int *rescount)
-{
+int vg_read_file(FILE * fp, char *** result, int * rescount) {
 	int ret = 1;
 
-	char **patterns;
+	char ** patterns;
 	char *buf = NULL, *obuf, *pat;
-	const int blksize = 16*1024;
+	const int blksize = 16 * 1024;
 	int nalloc = 16;
 	int npatterns = 0;
 	int count, pos;
 
-	patterns = (char**) malloc(sizeof(char*) * nalloc);
+	patterns = (char **) malloc(sizeof(char *) * nalloc);
 	count = 0;
 	pos = 0;
 
@@ -581,8 +525,7 @@ vg_read_file(FILE *fp, char ***result, int *rescount)
 		pos = count - pos;
 		count = fread(&buf[pos], 1, blksize - pos, fp);
 		if (count < 0) {
-			fprintf(stderr,
-				"Error reading file: %s\n", strerror(errno));
+			fprintf(stderr, "Error reading file: %s\n", strerror(errno));
 			ret = 0;
 		}
 		if (count <= 0)
@@ -596,17 +539,13 @@ vg_read_file(FILE *fp, char ***result, int *rescount)
 				if (pat) {
 					if (npatterns == nalloc) {
 						nalloc *= 2;
-						patterns = (char**)
-							realloc(patterns,
-								sizeof(char*) *
-								nalloc);
+						patterns = (char **) realloc(patterns, sizeof(char *) * nalloc);
 					}
 					patterns[npatterns] = pat;
 					npatterns++;
 					pat = NULL;
 				}
-			}
-			else if (!pat) {
+			} else if (!pat) {
 				pat = &buf[pos];
 			}
 			pos++;
