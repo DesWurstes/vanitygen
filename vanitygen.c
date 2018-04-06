@@ -342,20 +342,6 @@ start_threads(vg_context_t *vcp, int nthreads)
 {
 	pthread_t thread;
 
-	if (nthreads <= 0) {
-		/* Determine the number of threads */
-		nthreads = count_processors();
-		if (nthreads == 0) {
-			fprintf(stderr,
-				"ERROR: could not determine processor count\n");
-			nthreads = 1;
-		}
-	}
-
-	if (vcp->vc_verbose > 1) {
-		fprintf(stderr, "Using %d worker thread(s)\n", nthreads);
-	}
-
 	while (--nthreads) {
 		if (pthread_create(&thread, NULL, vg_thread_loop, vcp))
 			return 0;
@@ -558,15 +544,6 @@ main(int argc, char **argv)
 		}
 	}
 
-#if OPENSSL_VERSION_NUMBER < 0x10000000L
-	/* Complain about older versions of OpenSSL */
-	if (verbose > 0) {
-		fprintf(stderr,
-			"WARNING: Built with " OPENSSL_VERSION_TEXT "\n"
-			"WARNING: Use OpenSSL 1.0.0d+ for best performance\n");
-	}
-#endif
-
 	pubkeytype = addrtype;
 	if (format == VCF_SCRIPT)
 	{
@@ -656,6 +633,21 @@ main(int argc, char **argv)
 		}
 	}
 
+	if (nthreads <= 0) {
+		/* Determine the number of threads */
+		nthreads = count_processors();
+		if (nthreads == 0) {
+			fprintf(stderr,
+				"ERROR: could not determine processor count\n");
+			nthreads = 1;
+		}
+	}
+
+	if (verbose > 1) {
+		fprintf(stderr, "Using %d worker thread(s)\n", nthreads);
+	}
+
+
 	vcp->vc_verbose = verbose;
 	vcp->vc_result_file = result_file;
 	vcp->vc_result_file_csv = result_file_csv;
@@ -708,6 +700,10 @@ main(int argc, char **argv)
 
 	if (simulate)
 		return 0;
+
+	if (regex) {
+		vg_regex_context_prep_scratch(vcp);
+	}
 
 	if (!start_threads(vcp, nthreads))
 		return 1;

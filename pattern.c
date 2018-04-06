@@ -46,7 +46,7 @@
 #include <openssl/ec.h>
 #include <openssl/obj_mac.h>
 
-#include <pcre.h>
+#include <hs/hs.h>
 
 #include "pattern.h"
 #include "util.h"
@@ -173,7 +173,6 @@ vg_exec_context_init(vg_context_t *vcp, vg_exec_context_t *vxcp)
   vxcp->vxc_bntmp = BN_new();
   vxcp->vxc_bntmp2 = BN_new();
 
-	//BN_set_word(&vxcp->vxc_bnbase, 58);
 	BN_set_word(vxcp->vxc_bnbase, 32);
 
 	vxcp->vxc_bnctx = BN_CTX_new();
@@ -184,6 +183,8 @@ vg_exec_context_init(vg_context_t *vcp, vg_exec_context_t *vxcp)
 
 	vxcp->vxc_lockmode = 0;
 	vxcp->vxc_stop = 0;
+
+	vcp->vc_prep(vcp, vxcp);
 
 	vxcp->vxc_next = vcp->vc_threads;
 	vcp->vc_threads = vxcp;
@@ -1001,7 +1002,6 @@ vg_prefix_context_next_difficulty(vg_prefix_context_t *vcpp,
 	BN_clear(bntmp);
 	BN_set_bit(bntmp, 200);
 	BN_div(bntmp2, NULL, bntmp, vcpp->vcp_difficulty, bnctx);
-//BN_print_fp(stderr, &vcpp->vcp_difficulty);
 
 	dbuf = BN_bn2dec(bntmp2);
 	if (vcpp->base.vc_verbose > 0) {
@@ -1235,6 +1235,12 @@ vg_prefix_hash160_sort(vg_context_t *vcp, void *buf)
 	return npfx;
 }
 
+inline static void
+vg_prefix_context_exec_prep(vg_context_t *vcp, vg_exec_context_t *vxcp) {
+	(void) vcp;
+	(void) vxcp;
+}
+
 vg_context_t *
 vg_prefix_context_new(int addrtype, int privtype, int testnet)
 {
@@ -1250,6 +1256,7 @@ vg_prefix_context_new(int addrtype, int privtype, int testnet)
 		vcpp->base.vc_npatterns_start = 0;
 		vcpp->base.vc_found = 0;
 		vcpp->base.vc_chance = 0.0;
+		vcpp->base.vc_prep = vg_prefix_context_exec_prep;
 		vcpp->base.vc_free = vg_prefix_context_free;
 		vcpp->base.vc_add_patterns = vg_prefix_context_add_patterns;
 		vcpp->base.vc_clear_all_patterns =
@@ -1267,111 +1274,159 @@ vg_prefix_context_new(int addrtype, int privtype, int testnet)
 
 typedef struct _vg_regex_context_s {
 	vg_context_t		base;
-	pcre 			**vcr_regex;
-	pcre_extra		**vcr_regex_extra;
+	hs_database_t *vcr_db;
 	const char		**vcr_regex_pat;
-	unsigned long		vcr_nalloc;
+  hs_scratch_t  *vcr_sample_scratch;
+	int vcr_sync;
 } vg_regex_context_t;
 
-static int
-vg_regex_context_add_patterns(vg_context_t *vcp,
-			      const char ** const patterns, int npatterns)
+void
+vg_regex_context_prep_scratch(vg_context_t *vcp)
 {
-	vg_regex_context_t *vcrp = (vg_regex_context_t *) vcp;
-	const char *pcre_errptr;
-	int pcre_erroffset;
-	unsigned long i, nres, count;
-	void **mem;
-
-	if (!npatterns)
-		return 1;
-
-	if (npatterns > (signed) (vcrp->vcr_nalloc - vcrp->base.vc_npatterns)) {
-		count = npatterns + vcrp->base.vc_npatterns;
-		if (count < (2 * vcrp->vcr_nalloc)) {
-			count = (2 * vcrp->vcr_nalloc);
-		}
-		if (count < 16) {
-			count = 16;
-		}
-		mem = (void **) malloc(3 * count * sizeof(void*));
-		if (!mem)
-			return 0;
-
-		for (i = 0; i < vcrp->base.vc_npatterns; i++) {
-			mem[i] = vcrp->vcr_regex[i];
-			mem[count + i] = vcrp->vcr_regex_extra[i];
-			mem[(2 * count) + i] = (void *) vcrp->vcr_regex_pat[i];
-		}
-
-		if (vcrp->vcr_nalloc)
-			free(vcrp->vcr_regex);
-		vcrp->vcr_regex = (pcre **) mem;
-		vcrp->vcr_regex_extra = (pcre_extra **) &mem[count];
-		vcrp->vcr_regex_pat = (const char **) &mem[2 * count];
-		vcrp->vcr_nalloc = count;
-	}
-
-	nres = vcrp->base.vc_npatterns;
-	for (i = 0; i < (unsigned) npatterns; i++) {
-		vcrp->vcr_regex[nres] =
-			pcre_compile(patterns[i], 0,
-				     &pcre_errptr, &pcre_erroffset, NULL);
-		if (!vcrp->vcr_regex[nres]) {
-			const char *spaces = "                ";
-			fprintf(stderr, "%s\n", patterns[i]);
-			while (pcre_erroffset > 16) {
-				fprintf(stderr, "%s", spaces);
-				pcre_erroffset -= 16;
-			}
-			if (pcre_erroffset > 0)
-				fprintf(stderr,
-					"%s", &spaces[16 - pcre_erroffset]);
-			fprintf(stderr, "^\nRegex error: %s\n", pcre_errptr);
-			continue;
-		}
-		vcrp->vcr_regex_extra[nres] =
-			pcre_study(vcrp->vcr_regex[nres], 0, &pcre_errptr);
-		if (pcre_errptr) {
-			fprintf(stderr, "Regex error: %s\n", pcre_errptr);
-			pcre_free(vcrp->vcr_regex[nres]);
-			continue;
-		}
-		vcrp->vcr_regex_pat[nres] = patterns[i];
-		nres += 1;
-	}
-
-	if (nres == vcrp->base.vc_npatterns)
-		return 0;
-
-	vcrp->base.vc_npatterns_start += (nres - vcrp->base.vc_npatterns);
-	vcrp->base.vc_npatterns = nres;
-	return 1;
+  vg_regex_context_t *vcrp = (vg_regex_context_t *) vcp;
+	// Just in case
+	vcrp->vcr_sample_scratch = NULL;
+  // Memory leak, assumed to be run once.
+  int i = hs_alloc_scratch(vcrp->vcr_db, &vcrp->vcr_sample_scratch);
+  if (i == HS_NOMEM) {
+      fprintf(stderr, "Not enough RAM!\n");
+      assert(0);
+  }
+  assert(!i);
 }
 
 static void
 vg_regex_context_clear_all_patterns(vg_context_t *vcp)
 {
 	vg_regex_context_t *vcrp = (vg_regex_context_t *) vcp;
-	unsigned int i;
-	for (i = 0; i < vcrp->base.vc_npatterns; i++) {
-		if (vcrp->vcr_regex_extra[i])
-			pcre_free(vcrp->vcr_regex_extra[i]);
-		pcre_free(vcrp->vcr_regex[i]);
+	hs_error_t stat;
+	if (vcrp->vcr_db) {
+		stat = hs_free_database(vcrp->vcr_db);
+		if (stat)
+			fprintf(stderr, "An error occured while cleaning database!\n"
+				"Error code: %d\n", stat);
 	}
+	if (vcrp->vcr_sample_scratch) {
+		stat = hs_free_scratch(vcrp->vcr_sample_scratch);
+		if (stat)
+			fprintf(stderr, "An error occured while cleaning scratch!\n"
+				"Error code: %d\n", stat);;
+	}
+	vcrp->vcr_db = NULL;
+	vcrp->vcr_sample_scratch = NULL;
+
+	if (vcrp->vcr_regex_pat)
+		free(vcrp->vcr_regex_pat);
 	vcrp->base.vc_npatterns = 0;
 	vcrp->base.vc_npatterns_start = 0;
 	vcrp->base.vc_found = 0;
 }
 
+static int
+vg_regex_compile_patterns(const char ** const patterns, unsigned int npatterns,
+	hs_database_t **db, hs_compile_error_t **compile_error) {
+	unsigned int ids[npatterns];
+	unsigned int flags[npatterns];
+	for (unsigned int i = 0; i < (unsigned) npatterns; i++) {
+		ids[i] = i;
+		flags[i] = HS_FLAG_SINGLEMATCH | HS_FLAG_PREFILTER \
+			| HS_FLAG_CASELESS | HS_FLAG_DOTALL;
+	}
+	return hs_compile_multi(patterns, flags, ids, npatterns, HS_MODE_BLOCK,
+		NULL, db, compile_error);
+}
+
+static int
+vg_regex_context_add_patterns(vg_context_t *vcp,
+			      const char ** const patterns, int npatterns)
+{
+	if (!npatterns)
+    return 1;
+	vg_regex_context_t *vcrp = (vg_regex_context_t *) vcp;
+	const char **old_patterns = vcrp->vcr_regex_pat;
+	vcrp->vcr_regex_pat = (const char**) malloc((npatterns + vcrp->base.vc_npatterns) * sizeof(char *));
+	memcpy(vcrp->vcr_regex_pat, patterns, npatterns * sizeof(char *));
+	memcpy(&vcrp->vcr_regex_pat[npatterns], old_patterns, vcrp->base.vc_npatterns * sizeof(char *));
+	free(old_patterns);
+
+	hs_compile_error_t *compile_error;
+  if (vg_regex_compile_patterns(vcrp->vcr_regex_pat, npatterns + vcrp->base.vc_npatterns, &vcrp->vcr_db, &compile_error) != HS_SUCCESS) {
+		printf("An error occured while compiling patterns: %s\n", compile_error->message);
+    hs_free_compile_error(compile_error);
+    assert(0);
+  }
+  vcrp->base.vc_npatterns += npatterns;
+  vcrp->base.vc_npatterns_start += npatterns;
+  return 1;
+}
+
 static void
 vg_regex_context_free(vg_context_t *vcp)
 {
-	vg_regex_context_t *vcrp = (vg_regex_context_t *) vcp;
 	vg_regex_context_clear_all_patterns(vcp);
-	if (vcrp->vcr_nalloc)
-		free(vcrp->vcr_regex);
+  vg_regex_context_t *vcrp = (vg_regex_context_t *) vcp;
 	free(vcrp);
+}
+
+typedef struct _vg_regex_scan_result_s {
+	char state;
+	int isaddresscompressed;
+	vg_exec_context_t *vxcp;
+} vg_regex_scan_result_t;
+
+static int
+vg_regex_match_handler(unsigned int id, unsigned long long from, unsigned long long to, unsigned int flags, void *context) {
+		(void)from;
+		(void)to;
+		(void)flags;
+		vg_regex_scan_result_t *rct = (vg_regex_scan_result_t *) context;
+		vg_exec_context_t *vxcp = (vg_exec_context_t *) rct->vxcp;
+		vg_regex_context_t *vcrp = (vg_regex_context_t *) vxcp->vxc_vc;
+		rct->state = 1;
+		// Should this be && or ||
+		if (vg_exec_context_upgrade_lock(vxcp) && vxcp->vxc_regex_sync != vcrp->vcr_sync) {
+			// Should this be done before a match occures?
+			vxcp->vxc_regex_sync = vcrp->vcr_sync;
+			hs_scratch_t *temp_scratch = NULL;
+	    if (hs_clone_scratch(vcrp->vcr_sample_scratch, &temp_scratch) == HS_NOMEM) {
+	        fprintf(stderr, "Not enough RAM!\n");
+	        hs_free_scratch(vcrp->vcr_sample_scratch);
+	        rct->state = 2;
+					return 0;
+	    }
+			hs_scratch_t *old_scratch = vxcp->vxc_scratch;
+	    vxcp->vxc_scratch = temp_scratch;
+			hs_free_scratch(old_scratch);
+			rct->state = 3;
+			return 0;
+		}
+		vg_exec_context_consolidate_key(vxcp);
+		vcrp->base.vc_output_match(&vcrp->base, vxcp->vxc_key,
+						 vcrp->vcr_regex_pat[id], rct->isaddresscompressed);
+		vcrp->base.vc_found++;
+		if (vcrp->base.vc_only_one || !vcrp->base.vc_npatterns) {
+			rct->state = 2;
+			return 0;
+		}
+		if (vcrp->base.vc_remove_on_match) {
+			// TODO: Is there a race condition?
+			vcrp->vcr_regex_pat[id] = vcrp->vcr_regex_pat[--vcrp->base.vc_npatterns];
+			if (!vcrp->base.vc_npatterns) {
+				rct->state = 2;
+				return 0;
+			}
+			vcrp->vcr_sync++;
+			vxcp->vxc_regex_sync++;
+			hs_compile_error_t *compile_error;
+			if (vg_regex_compile_patterns(vcrp->vcr_regex_pat, vcrp->base.vc_npatterns, &vcrp->vcr_db, &compile_error) != HS_SUCCESS) {
+				printf("An error occured while re-compiling patterns: %s\n", compile_error->message);
+				hs_free_compile_error(compile_error);
+				rct->state = 2;
+				return 0;
+			}
+			vcrp->base.vc_pattern_generation++;
+		}
+    return 0;
 }
 
 static int
@@ -1379,77 +1434,50 @@ vg_regex_test(vg_exec_context_t *vxcp, const int isaddresscompressed)
 {
 	vg_regex_context_t *vcrp = (vg_regex_context_t *) vxcp->vxc_vc;
 
-	int d, re_vec[9];
-	unsigned int i, nres;
-	int res = 0;
-	pcre *re;
-  char addr[42];
-  CashAddrEncode(vcrp->base.vc_istestnet, &vxcp->vxc_binres[1], vcrp->base.vc_addrtype, 0, addr);
+	char addr[42];
+	CashAddrEncode(vcrp->base.vc_istestnet, &vxcp->vxc_binres[1],
+		vcrp->base.vc_addrtype, 0, addr);
 
 	/*
 	 * Run the regular expressions on it
-	 * SLOW, runs in linear time with the number of REs
+	 * FAST, too fast!
 	 */
 restart_loop:
-	nres = (unsigned) vcrp->base.vc_npatterns;
-	if (!nres) {
-		res = 2;
-		goto out;
+	if (!vcrp->base.vc_npatterns) {
+		return 2;
 	}
-	for (i = 0; i < nres; i++) {
-		d = pcre_exec(vcrp->vcr_regex[i],
-			      vcrp->vcr_regex_extra[i],
-            addr, 42, 0,
-			      0,
-			      re_vec, sizeof(re_vec)/sizeof(re_vec[0]));
-
-		if (d <= 0) {
-			if (d != PCRE_ERROR_NOMATCH) {
-				fprintf(stderr, "PCRE error: %d\n", d);
-				res = 2;
-				goto out;
-			}
-			continue;
-		}
-
-		re = vcrp->vcr_regex[i];
-
-		if (vg_exec_context_upgrade_lock(vxcp) &&
-		    ((i >= vcrp->base.vc_npatterns) ||
-		     (vcrp->vcr_regex[i] != re)))
-			goto restart_loop;
-
-		vg_exec_context_consolidate_key(vxcp);
-		vcrp->base.vc_output_match(&vcrp->base, vxcp->vxc_key,
-					   vcrp->vcr_regex_pat[i], isaddresscompressed);
-		vcrp->base.vc_found++;
-
-		if (vcrp->base.vc_only_one) {
-			res = 2;
-			goto out;
-		}
-
-		if (vcrp->base.vc_remove_on_match) {
-			pcre_free(vcrp->vcr_regex[i]);
-			if (vcrp->vcr_regex_extra[i])
-				pcre_free(vcrp->vcr_regex_extra[i]);
-			nres -= 1;
-			vcrp->base.vc_npatterns = nres;
-			if (!nres) {
-				res = 2;
-				goto out;
-			}
-			vcrp->vcr_regex[i] = vcrp->vcr_regex[nres];
-			vcrp->vcr_regex_extra[i] =
-				vcrp->vcr_regex_extra[nres];
-			vcrp->vcr_regex_pat[i] = vcrp->vcr_regex_pat[nres];
-			vcrp->base.vc_npatterns = nres;
-			vcrp->base.vc_pattern_generation++;
-		}
-		res = 1;
+	vg_regex_scan_result_t result_input;
+	result_input.isaddresscompressed = isaddresscompressed;
+	result_input.vxcp = vxcp;
+	result_input.state = 0;
+	int scan = hs_scan(vcrp->vcr_db, addr, 42, 0, vxcp->vxc_scratch,
+		vg_regex_match_handler, &result_input);
+	if (scan != HS_SUCCESS) {
+	  fprintf(stderr, "ERROR: Unable to scan for regex. Error code: %d.\n", scan);
+	  hs_free_scratch(vxcp->vxc_scratch);
+	  hs_free_database(vcrp->vcr_db);
+	  return 2;
 	}
-out:
-	return res;
+	switch (result_input.state) {
+	case 1:
+		return 1;
+	case 2:
+		return 2;
+	case 3:
+		goto restart_loop;
+	default:
+		return 0;
+	}
+}
+
+static void
+vg_regex_context_exec_prep(vg_context_t *vcp, vg_exec_context_t *vxcp) {
+	vg_regex_context_t *vcrp = (vg_regex_context_t *) vcp;
+	if (hs_clone_scratch(vcrp->vcr_sample_scratch, &vxcp->vxc_scratch) == HS_NOMEM) {
+			fprintf(stderr, "Not enough RAM!\n");
+			hs_free_scratch(vcrp->vcr_sample_scratch);
+			assert(0);
+	}
 }
 
 vg_context_t *
@@ -1467,14 +1495,15 @@ vg_regex_context_new(int addrtype, int privtype, int testnet)
 		vcrp->base.vc_npatterns_start = 0;
 		vcrp->base.vc_found = 0;
 		vcrp->base.vc_chance = 0.0;
+		vcrp->base.vc_prep = vg_regex_context_exec_prep;
 		vcrp->base.vc_free = vg_regex_context_free;
 		vcrp->base.vc_add_patterns = vg_regex_context_add_patterns;
 		vcrp->base.vc_clear_all_patterns =
 			vg_regex_context_clear_all_patterns;
 		vcrp->base.vc_test = vg_regex_test;
 		vcrp->base.vc_hash160_sort = NULL;
-		vcrp->vcr_regex = NULL;
-		vcrp->vcr_nalloc = 0;
+		vcrp->vcr_db = NULL;
+		vcrp->vcr_sample_scratch = NULL;
 	}
 	return &vcrp->base;
 }

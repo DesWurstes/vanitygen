@@ -59,7 +59,8 @@ static void convertBits8to5(char* out, const uint8_t firstByte, const uint8_t* i
     out[outlen] = (val << (5 - bits)) & 0x1f;
 }
 
-static uint64_t PolyMod(const char *input, uint64_t startValue = 1) {
+// startValue should be 1 if the prefix is a part of the input.
+static uint64_t PolyMod(const char *input, uint64_t startValue) {
     for (unsigned int i = 0; i < 42; i++) {
       uint64_t c0 = startValue >> 35;
       startValue = ((startValue & 0x07ffffffff) << 5) ^ (uint64_t) (input[i]);

@@ -20,12 +20,12 @@ Alphabet: `023456789acdefghjklmnpqrstuvwxyz`
 
 Mac
 
-    brew install openssl@1.1 pcre
+    brew install openssl@1.1 hyperscan
     make
 
 Linux
 
-    sudo apt-get install libpcre3-dev g++-7 ocl-icd-opencl-dev
+    sudo apt-get install libhyperscan-dev g++-7 ocl-icd-opencl-dev
     make
 
 Windows

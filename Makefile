@@ -1,5 +1,5 @@
-LIBS=-lpcre -lcrypto -lm -lpthread
-CFLAGS=-Wall -Wextra
+LIBS=-lpcre -lcrypto -lm -lpthread -lhs
+CFLAGS=-Wall -Wextra #-Wno-unused-variable
 OBJS=vanitygen.o oclvanitygen.o oclvanityminer.o oclengine.o keyconv.o pattern.o util.o cashaddr.o
 PROGS=vanitygen keyconv oclvanitygen oclvanityminer
 # OPTIMIZE
@@ -8,12 +8,12 @@ PROGS=vanitygen keyconv oclvanitygen oclvanityminer
 # -Ofast = aggressive optimization
 # -Os = small file size
 # -Og -g -ggdb debugging
-CFLAGS+=-Ofast
+CFLAGS+=-O0 -g -ggdb
 
 PLATFORM=$(shell uname -s)
 ifeq ($(PLATFORM),Darwin)
-	ifneq ($(wildcard /usr/local/Cellar/gcc/7.3.0_1/bin/*),)
-		CC=/usr/local/Cellar/gcc/7.3.0_1/bin/g++-7
+	ifneq ($(wildcard /usr/local/opt/gcc/bin/*),)
+		CC=/usr/local/opt/gcc/bin/g++-7
 	else
 		# support for Xcode/clang
 		CC=g++
@@ -27,10 +27,8 @@ ifeq ($(PLATFORM),Darwin)
 		CFLAGS+=-I/usr/local/opt/openssl/include
 	endif
 	OPENCL_LIBS=-framework OpenCL
-	LIBS+=-L/usr/local/opt/pcre/lib
-	CFLAGS+=-I/usr/local/opt/pcre/include
 	LIBS+=-L/usr/local/opt/hyperscan/lib
-	CFLAGS+=-I/usr/local/opt/hyperscan/include/hs
+	CFLAGS+=-I/usr/local/opt/hyperscan/include
 	# Below 2 lines add support for MacPorts
 	LIBS+=-L/opt/local/lib
 	CFLAGS+=-I/opt/local/include
@@ -60,9 +58,4 @@ keyconv: keyconv.o util.o cashaddr.o
 
 clean:
 # DON'T RUN IF YOU DO `make -f` or `--file`
-	find . -type f -name \*.o -delete
-	find . -type f -name \*vanitygen-cash -delete
-	find . -type f -name keyconv -delete
-	find . -type f -name \*.oclbin -delete
-	find . -type f -name \*miner -delete
-	rm -rf vanitygen-cash.dSYM keyconv.dSYM oclvanitygen-cash.dSYM oclvanityminer.dSYM
+	rm -rf vanitygen-cash.dSYM keyconv.dSYM oclvanitygen-cash.dSYM oclvanityminer.dSYM *.o *vanitygen-cash keyconv *.oclbin *miner

@@ -35,6 +35,9 @@
 #else
 #define INLINE inline
 #define PRSIZET "z"
+
+#include <hs/hs.h>
+
 #include <sys/time.h>
 #include <sys/stat.h>
 #include <errno.h>
@@ -81,14 +84,17 @@ struct _vg_exec_context_s {
 	vg_exec_context_threadfunc_t	vxc_threadfunc;
 	pthread_t			vxc_pthread;
 	int				vxc_thread_active;
+	hs_scratch_t				*vxc_scratch;
 
 	/* Thread synchronization */
 	struct _vg_exec_context_s	*vxc_next;
-	int				vxc_lockmode;
-	int				vxc_stop;
+	int	vxc_lockmode;
+	int	vxc_stop;
+	int vxc_regex_sync;
 };
 
 
+typedef void (*vg_exec_prep_func_t)(vg_context_t *, vg_exec_context_t *);
 typedef void (*vg_free_func_t)(vg_context_t *);
 typedef int (*vg_add_pattern_func_t)(vg_context_t *,
 				     const char ** const patterns,
@@ -132,6 +138,7 @@ struct _vg_context_s {
 	int			vc_thread_excl;
 
 	/* Internal methods */
+	vg_exec_prep_func_t vc_prep;
 	vg_free_func_t			vc_free;
 	vg_add_pattern_func_t		vc_add_patterns;
 	vg_clear_all_patterns_func_t	vc_clear_all_patterns;
@@ -165,6 +172,7 @@ vg_context_t *vg_prefix_context_new(int addrtype, int privtype, int testnet);
 double vg_prefix_get_difficulty(int addrtype, const char *pattern);
 
 /* Regex context methods */
+void vg_regex_context_prep_scratch(vg_context_t *vcp);
 vg_context_t *vg_regex_context_new(int addrtype, int privtype, int testnet);
 
 /* Utility functions */
