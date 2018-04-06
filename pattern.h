@@ -171,7 +171,7 @@ vg_context_t * vg_prefix_context_new(int addrtype, int privtype, int testnet);
 double vg_prefix_get_difficulty(int addrtype, const char * pattern);
 
 /* Regex context methods */
-void vg_regex_context_prep_scratch(vg_context_t * vcp);
+int vg_regex_context_prep_scratch(vg_context_t * vcp);
 vg_context_t * vg_regex_context_new(int addrtype, int privtype, int testnet);
 
 /* Utility functions */

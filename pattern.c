@@ -1140,7 +1140,7 @@ typedef struct _vg_regex_context_s {
 	int vcr_sync;
 } vg_regex_context_t;
 
-void vg_regex_context_prep_scratch(vg_context_t * vcp) {
+int vg_regex_context_prep_scratch(vg_context_t * vcp) {
 	vg_regex_context_t * vcrp = (vg_regex_context_t *) vcp;
 	// Just in case
 	vcrp->vcr_sample_scratch = NULL;
@@ -1148,9 +1148,8 @@ void vg_regex_context_prep_scratch(vg_context_t * vcp) {
 	int i = hs_alloc_scratch(vcrp->vcr_db, &vcrp->vcr_sample_scratch);
 	if (i == HS_NOMEM) {
 		fprintf(stderr, "Not enough RAM!\n");
-		assert(0);
 	}
-	assert(!i);
+	return i == HS_SUCCESS;
 }
 
 static void vg_regex_context_clear_all_patterns(vg_context_t * vcp) {
@@ -1217,7 +1216,7 @@ static int vg_regex_context_add_patterns(
 		printf(
 			"An error occured while compiling patterns: %s\n", compile_error->message);
 		hs_free_compile_error(compile_error);
-		assert(0);
+		return 0;
 	}
 	vcrp->base.vc_npatterns += npatterns;
 	vcrp->base.vc_npatterns_start += npatterns;

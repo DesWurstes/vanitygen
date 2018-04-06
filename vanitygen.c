@@ -652,12 +652,12 @@ int main(int argc, char ** argv) {
 	if ((verbose > 0) && regex && (vcp->vc_npatterns > 1))
 		fprintf(stderr, "Regular expressions: %ld\n", vcp->vc_npatterns);
 
+	if (regex && !vg_regex_context_prep_scratch(vcp)) {
+		return 1;
+	}
+
 	if (simulate)
 		return 0;
-
-	if (regex) {
-		vg_regex_context_prep_scratch(vcp);
-	}
 
 	if (!start_threads(vcp, nthreads))
 		return 1;
