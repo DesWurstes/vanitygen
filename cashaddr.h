@@ -6,8 +6,9 @@
 #ifndef CASHADDR_H
 #define CASHADDR_H
 
-extern const char * CHARSET;
+extern const char *CHARSET;
 
+// clang-format off
 const signed char CHARSET_REV[128] = {
 	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -18,10 +19,12 @@ const signed char CHARSET_REV[128] = {
 	-1, 29, -1, 24, 13, 25,  9,  8, 23, -1, 18, 22, 31, 27, 19, -1,
 	 1,  0,  3, 16, 11, 28, 12, 14,  6,  4,  2, -1, -1, -1, -1, -1
 };
+// clang-format on
 
 /**
-	* Encode a cashaddr string. Output will be at most 55 chars, including '\0'
-	*/
-void CashAddrEncode(const int isTestNet, const unsigned char * payload,
-	const unsigned int type, const unsigned int withPrefix, char * const output);
+ * Encode a cashaddr string. Output will be at most 55 chars, including '\0'
+ */
+void CashAddrEncode(const int isTestNet, const unsigned char *payload,
+		    const unsigned int type, const unsigned int withPrefix,
+		    char *const output);
 #endif
