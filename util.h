@@ -37,29 +37,28 @@ void vg_b58_encode_check(void *buf, size_t len, char *result);
 int vg_b58_decode_check(const char *input, void *buf, size_t len);
 
 void vg_encode_compressed_address(const EC_POINT *ppoint,
-				  const EC_GROUP *pgroup, int testnet,
-				  char *result);
+	const EC_GROUP *pgroup, int testnet, char *result);
 void vg_encode_address(const EC_POINT *ppoint, const EC_GROUP *pgroup,
-		       int testnet, char *result);
+	int testnet, char *result);
 void vg_encode_script_address(const EC_POINT *ppoint, const EC_GROUP *pgroup,
-			      int testnet, char *result);
-void vg_encode_privkey_compressed(const EC_KEY *pkey, int addrtype,
-				  char *result);
+	int testnet, char *result);
+void vg_encode_privkey_compressed(
+	const EC_KEY *pkey, int addrtype, char *result);
 void vg_encode_privkey(const EC_KEY *pkey, int addrtype, char *result);
 int vg_set_privkey(const BIGNUM *bnpriv, EC_KEY *pkey);
 int vg_decode_privkey(const char *b58encoded, EC_KEY *pkey, int *addrtype);
 
 int vg_protect_encode_privkey(char *out, const EC_KEY *pkey, int keytype,
-			      int parameter_group, const char *pass);
-int vg_protect_decode_privkey(EC_KEY *pkey, int *keytype, const char *encoded,
-			      const char *pass);
+	int parameter_group, const char *pass);
+int vg_protect_decode_privkey(
+	EC_KEY *pkey, int *keytype, const char *encoded, const char *pass);
 
-int vg_pkcs8_encode_privkey(char *out, int outlen, const EC_KEY *pkey,
-			    const char *pass);
+int vg_pkcs8_encode_privkey(
+	char *out, int outlen, const EC_KEY *pkey, const char *pass);
 int vg_pkcs8_decode_privkey(EC_KEY *pkey, const char *pem_in, const char *pass);
 
-int vg_decode_privkey_any(EC_KEY *pkey, int *addrtype, const char *input,
-			  const char *pass);
+int vg_decode_privkey_any(
+	EC_KEY *pkey, int *addrtype, const char *input, const char *pass);
 
 int vg_read_file(FILE *fp, char ***result, int *rescount);
 

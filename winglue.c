@@ -27,40 +27,40 @@
 
 #if (_MSC_FULL_VER < 190000000)
 unsigned int count_processors(void) {
-  typedef BOOL(WINAPI * LPFN_GLPI)(PSYSTEM_LOGICAL_PROCESSOR_INFORMATION,
-				   PDWORD);
-  LPFN_GLPI glpi;
-  PSYSTEM_LOGICAL_PROCESSOR_INFORMATION buffer = NULL, ptr;
-  DWORD size = 0, count = 0, pos = 0, i, ret;
+	typedef BOOL(WINAPI * LPFN_GLPI)(
+		PSYSTEM_LOGICAL_PROCESSOR_INFORMATION, PDWORD);
+	LPFN_GLPI glpi;
+	PSYSTEM_LOGICAL_PROCESSOR_INFORMATION buffer = NULL, ptr;
+	DWORD size = 0, count = 0, pos = 0, i, ret;
 
-  glpi = (LPFN_GLPI)GetProcAddress(GetModuleHandle(TEXT("kernel32")),
-				   "GetLogicalProcessorInformation");
-  if (!glpi) return 0;
+	glpi = (LPFN_GLPI) GetProcAddress(GetModuleHandle(TEXT("kernel32")),
+		"GetLogicalProcessorInformation");
+	if (!glpi) return 0;
 
-  while (1) {
-    ret = glpi(buffer, &size);
-    if (ret) break;
-    if (buffer) free(buffer);
-    if (GetLastError() != ERROR_INSUFFICIENT_BUFFER) return 0;
-    buffer = (PSYSTEM_LOGICAL_PROCESSOR_INFORMATION)malloc(size);
-    if (!buffer) return 0;
-  }
-
-  for (ptr = buffer; (pos + sizeof(*ptr)) <= size; ptr++, pos += sizeof(*ptr)) {
-    switch (ptr->Relationship) {
-      case RelationProcessorCore:
-	for (i = ptr->ProcessorMask; i != 0; i >>= 1) {
-	  if (i & 1) count++;
+	while (1) {
+		ret = glpi(buffer, &size);
+		if (ret) break;
+		if (buffer) free(buffer);
+		if (GetLastError() != ERROR_INSUFFICIENT_BUFFER) return 0;
+		buffer = (PSYSTEM_LOGICAL_PROCESSOR_INFORMATION) malloc(size);
+		if (!buffer) return 0;
 	}
-	break;
-      default:
-	break;
-    }
-  }
 
-  if (buffer) free(buffer);
-  if (count == -1) return 0;
-  return (unsigned int)count;
+	for (ptr = buffer; (pos + sizeof(*ptr)) <= size;
+		ptr++, pos += sizeof(*ptr)) {
+		switch (ptr->Relationship) {
+		case RelationProcessorCore:
+			for (i = ptr->ProcessorMask; i != 0; i >>= 1) {
+				if (i & 1) count++;
+			}
+			break;
+		default: break;
+		}
+	}
+
+	if (buffer) free(buffer);
+	if (count == -1) return 0;
+	return (unsigned int) count;
 }
 #endif
 
@@ -69,43 +69,45 @@ unsigned int count_processors(void) {
  */
 
 #define TIMESPEC_TO_FILETIME_OFFSET \
-  (((unsigned __int64)27111902 << 32) + (unsigned __int64)3577643008)
+	(((unsigned __int64) 27111902 << 32) + (unsigned __int64) 3577643008)
 
 int gettimeofday(struct timeval *tv, struct timezone *tz) {
-  FILETIME ft;
-  unsigned __int64 tmpres = 0;
+	FILETIME ft;
+	unsigned __int64 tmpres = 0;
 
-  if (NULL != tv) {
-    GetSystemTimeAsFileTime(&ft);
+	if (NULL != tv) {
+		GetSystemTimeAsFileTime(&ft);
 
-    tv->tv_sec =
-	(int)((*(unsigned __int64 *)&ft - TIMESPEC_TO_FILETIME_OFFSET) /
-	      10000000);
-    tv->tv_usec =
-	(int)((*(unsigned __int64 *)&ft - TIMESPEC_TO_FILETIME_OFFSET -
-	       ((unsigned __int64)tv->tv_sec * (unsigned __int64)10000000)) /
-	      10);
-  }
+		tv->tv_sec = (int) ((*(unsigned __int64 *) &ft -
+					    TIMESPEC_TO_FILETIME_OFFSET) /
+			10000000);
+		tv->tv_usec =
+			(int) ((*(unsigned __int64 *) &ft -
+				       TIMESPEC_TO_FILETIME_OFFSET -
+				       ((unsigned __int64) tv->tv_sec *
+					       (unsigned __int64) 10000000)) /
+				10);
+	}
 
-  return 0;
+	return 0;
 }
 
 void timeradd(struct timeval *a, struct timeval *b, struct timeval *result) {
-  result->tv_sec = a->tv_sec + b->tv_sec;
-  result->tv_usec = a->tv_usec + b->tv_usec;
-  if (result->tv_usec > 10000000) {
-    result->tv_sec++;
-    result->tv_usec -= 1000000;
-  }
+	result->tv_sec = a->tv_sec + b->tv_sec;
+	result->tv_usec = a->tv_usec + b->tv_usec;
+	if (result->tv_usec > 10000000) {
+		result->tv_sec++;
+		result->tv_usec -= 1000000;
+	}
 }
 
 void timersub(struct timeval *a, struct timeval *b, struct timeval *result) {
-  result->tv_sec = a->tv_sec - b->tv_sec;
-  result->tv_usec = a->tv_usec - b->tv_usec;
-  if (result->tv_usec < 0) {
-    result->tv_sec--;
-    result->tv_usec += 1000000;
-  }
+	result->tv_sec = a->tv_sec - b->tv_sec;
+	result->tv_usec = a->tv_usec - b->tv_usec;
+	if (result->tv_usec < 0) {
+		result->tv_sec--;
+		result->tv_usec += 1000000;
+	}
 }
 
 /*
@@ -116,55 +118,55 @@ TCHAR *optarg = NULL;
 int optind = 0;
 
 int getopt(int argc, TCHAR *argv[], TCHAR *optstring) {
-  static TCHAR *next = NULL;
-  TCHAR c;
-  TCHAR *cp;
+	static TCHAR *next = NULL;
+	TCHAR c;
+	TCHAR *cp;
 
-  if (optind == 0) next = NULL;
+	if (optind == 0) next = NULL;
 
-  optarg = NULL;
+	optarg = NULL;
 
-  if (next == NULL || *next == _T('\0')) {
-    if (optind == 0) optind++;
+	if (next == NULL || *next == _T('\0')) {
+		if (optind == 0) optind++;
 
-    if (optind >= argc || argv[optind][0] != _T('-') ||
-	argv[optind][1] == _T('\0')) {
-      optarg = NULL;
-      if (optind < argc) optarg = argv[optind];
-      return EOF;
-    }
+		if (optind >= argc || argv[optind][0] != _T('-') ||
+			argv[optind][1] == _T('\0')) {
+			optarg = NULL;
+			if (optind < argc) optarg = argv[optind];
+			return EOF;
+		}
 
-    if (_tcscmp(argv[optind], _T("--")) == 0) {
-      optind++;
-      optarg = NULL;
-      if (optind < argc) optarg = argv[optind];
-      return EOF;
-    }
+		if (_tcscmp(argv[optind], _T("--")) == 0) {
+			optind++;
+			optarg = NULL;
+			if (optind < argc) optarg = argv[optind];
+			return EOF;
+		}
 
-    next = argv[optind];
-    next++;  // skip past -
-    optind++;
-  }
+		next = argv[optind];
+		next++; // skip past -
+		optind++;
+	}
 
-  c = *next++;
-  cp = _tcschr(optstring, c);
+	c = *next++;
+	cp = _tcschr(optstring, c);
 
-  if (cp == NULL || c == _T(':')) return _T('?');
+	if (cp == NULL || c == _T(':')) return _T('?');
 
-  cp++;
-  if (*cp == _T(':')) {
-    if (*next != _T('\0')) {
-      optarg = next;
-      next = NULL;
-    } else if (optind < argc) {
-      optarg = argv[optind];
-      optind++;
-    } else {
-      return _T('?');
-    }
-  }
+	cp++;
+	if (*cp == _T(':')) {
+		if (*next != _T('\0')) {
+			optarg = next;
+			next = NULL;
+		} else if (optind < argc) {
+			optarg = argv[optind];
+			optind++;
+		} else {
+			return _T('?');
+		}
+	}
 
-  return c;
+	return c;
 }
 
 /*
@@ -177,8 +179,8 @@ int __cdecl __initptw32(void);
 
 #if defined(_MSC_VER)
 class __constructme {
- public:
-  __constructme() { __initptw32(); }
+       public:
+	__constructme() { __initptw32(); }
 } __vg_pinit;
 #define CONSTRUCTOR_TYPE __cdecl
 #elif defined(__GNUC__)
@@ -188,7 +190,7 @@ class __constructme {
 #endif
 
 int CONSTRUCTOR_TYPE __initptw32(void) {
-  pthread_win32_process_attach_np();
-  return 0;
+	pthread_win32_process_attach_np();
+	return 0;
 }
 #endif /* defined(PTW32_STATIC_LIB) */

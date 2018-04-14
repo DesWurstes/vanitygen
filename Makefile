@@ -1,19 +1,19 @@
-LIBS=-lpcre -lcrypto -lm -lpthread -lhs
+LIBS=-lcrypto -lm -lpthread -lhs
 CFLAGS=-Wall -Wextra #-Wno-unused-variable
 OBJS=vanitygen.o oclvanitygen.o oclvanityminer.o oclengine.o keyconv.o pattern.o util.o cashaddr.o
 PROGS=vanitygen keyconv oclvanitygen oclvanityminer
 # OPTIMIZE
 # -O0 = no optimization
 # -O3 = good optimization
-# -Ofast = aggressive optimization
+# -Ofast -march=native = aggressive optimization
 # -Os = small file size
 # -Og -g -ggdb debugging
-CFLAGS+=-O0 -g -ggdb
+CFLAGS+=-Ofast -march=native
 
 PLATFORM=$(shell uname -s)
 ifeq ($(PLATFORM),Darwin)
 	ifneq ($(wildcard /usr/local/opt/gcc/bin/*),)
-		CC=/usr/local/opt/gcc/bin/g++-7
+		CC=g++-7
 	else
 		# support for Xcode/clang
 		CC=g++
@@ -32,9 +32,6 @@ ifeq ($(PLATFORM),Darwin)
 	# Below 2 lines add support for MacPorts
 	LIBS+=-L/opt/local/lib
 	CFLAGS+=-I/opt/local/include
-else ifeq ($(PLATFORM),NetBSD)
-	LIBS+=`pcre-config --libs`
-	CFLAGS+=`pcre-config --cflags`
 else
 	CC=g++-7
 	OPENCL_LIBS=-lOpenCL

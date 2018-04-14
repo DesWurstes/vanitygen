@@ -43,8 +43,8 @@ unsigned int count_processors(void);
 
 #define PRSIZET "I"
 
-static inline char *strtok_r(char *strToken, const char *strDelimit,
-			     char **context) {
-  return strtok_s(strToken, strDelimit, context);
+static inline char *strtok_r(
+	char *strToken, const char *strDelimit, char **context) {
+	return strtok_s(strToken, strDelimit, context);
 }
 #endif /* !defined (__VG_WINGLUE_H__) */
