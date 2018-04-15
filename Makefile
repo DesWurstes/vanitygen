@@ -8,7 +8,7 @@ PROGS=vanitygen keyconv oclvanitygen oclvanityminer
 # -Ofast -march=native = aggressive optimization
 # -Os = small file size
 # -Og -g -ggdb debugging
-CFLAGS+=-Ofast -march=native
+CFLAGS+=-O0 -march=native
 
 PLATFORM=$(shell uname -s)
 ifeq ($(PLATFORM),Darwin)

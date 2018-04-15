@@ -143,7 +143,7 @@ void CashAddrEncode(const int isTestNet, const unsigned char *payload,
 	checksum[5] = 0;
 	checksum[6] = 0;
 	checksum[7] = 0;
-	convertBits8to5(data, type << 3, payload);
+	convertBits8to5(data, type, payload);
 	CreateChecksum(isTestNet, data, checksum);
 	for (checksum += 8; data < checksum; data++) {
 		*data = CHARSET[(int) (*data)];

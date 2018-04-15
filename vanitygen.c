@@ -112,7 +112,7 @@ void *vg_thread_loop(void *arg) {
 	output_interval = 1000;
 	gettimeofday(&tvstart, NULL);
 
-	if (vcp->vc_format == VCF_SCRIPT) {
+	if (vcp->vc_addrtype == (1 << 3)) {
 		hash_buf[0] = 0x51; // OP_1
 		hash_buf[1] = 0x41; // pubkey length
 		// gap for pubkey
@@ -205,7 +205,8 @@ void *vg_thread_loop(void *arg) {
 		 */
 
 		EC_POINTs_make_affine(pgroup, nbatch, ppnt, vxcp->vxc_bnctx);
-		if (vcp->vc_format == VCF_SCRIPT) {
+
+		if (vcp->vc_addrtype == (1 << 3)) {
 			for (i = 0; i < (unsigned) nbatch;
 				i++, vxcp->vxc_delta++) {
 				/* Hash the public key */
@@ -227,6 +228,7 @@ void *vg_thread_loop(void *arg) {
 				default: break;
 				}
 			}
+			c += i;
 		} else {
 			for (i = 0; i < (unsigned) nbatch;
 				i++, vxcp->vxc_delta++) {
@@ -268,9 +270,9 @@ void *vg_thread_loop(void *arg) {
 				default: break;
 				}
 			}
+			c += i << 1;
 		}
 	outloop:
-		c += i << 1;
 		if (c >= output_interval) {
 			output_interval = vg_output_timing(vcp, c, &tvstart);
 			if (output_interval > 250000) output_interval = 250000;
@@ -374,10 +376,7 @@ void usage(const char *name) {
 int main(int argc, char **argv) {
 	int testnet = 0;
 	int addrtype = 0;
-	int scriptaddrtype = 8;
 	int privtype = 128;
-	int pubkeytype;
-	enum vg_format format = VCF_PUBKEY;
 	int regex = 0;
 	unsigned int verbose = 1;
 	int simulate = 0;
@@ -430,9 +429,9 @@ int main(int argc, char **argv) {
 			break;
 		case 'F':
 			if (!strcmp(optarg, "script"))
-				format = VCF_SCRIPT;
+				addrtype = 1 << 3;
 			else if (!strcmp(optarg, "pubkey")) {
-				format = VCF_PUBKEY;
+				addrtype = 0;
 			} else {
 				fprintf(stderr, "Invalid format '%s'\n",
 					optarg);
@@ -519,16 +518,6 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	pubkeytype = addrtype;
-	if (format == VCF_SCRIPT) {
-		/*if (scriptaddrtype == -1)
-	    {
-		    fprintf(stderr,
-			    "Address type incompatible with script format\n");
-		    return 1;
-	    }*/
-		addrtype = scriptaddrtype;
-	}
 #if !defined(_WIN32)
 	if (!seedfile) {
 		struct stat st1;
@@ -574,7 +563,7 @@ int main(int argc, char **argv) {
 			return 1;
 		} else {
 			fprintf(fp, "Pattern\t");
-			if (format == VCF_PUBKEY)
+			if (addrtype == (1 << 3))
 				fprintf(fp, "Address\t");
 			else
 				fprintf(fp, "P2SH Address\t");
@@ -595,7 +584,7 @@ int main(int argc, char **argv) {
 			return 1;
 		} else {
 			fprintf(fp, "Pattern,");
-			if (format == VCF_PUBKEY)
+			if (addrtype == (1 << 3))
 				fprintf(fp, "Address,");
 			else
 				fprintf(fp, "P2SH Address,");
@@ -626,8 +615,6 @@ int main(int argc, char **argv) {
 	vcp->vc_result_file_csv = result_file_csv;
 	vcp->vc_remove_on_match = remove_on_match;
 	vcp->vc_only_one = only_one;
-	vcp->vc_format = format;
-	vcp->vc_pubkeytype = pubkeytype;
 	vcp->vc_pubkey_base = pubkey_base;
 
 	vcp->vc_output_match = vg_output_match_console;
@@ -675,5 +662,6 @@ int main(int argc, char **argv) {
 	if (simulate) return 0;
 
 	if (!start_threads(vcp, nthreads)) return 1;
+
 	return 0;
 }

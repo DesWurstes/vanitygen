@@ -801,15 +801,6 @@ int main(int argc, char **argv) {
 		}
 	}
 
-#if OPENSSL_VERSION_NUMBER < 0x10000000L
-	/* Complain about older versions of OpenSSL */
-	if (verbose > 0) {
-		fprintf(stderr,
-			"WARNING: Built with " OPENSSL_VERSION_TEXT
-			"\n"
-			"WARNING: Use OpenSSL 1.0.0d+ for best performance\n");
-	}
-#endif
 	curl_easy_init();
 
 	vcp = vg_prefix_context_new(0, 128, 0);

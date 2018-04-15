@@ -34,15 +34,17 @@ Windows
 
 ### Significant changes made (to comply with AGPL v3)
 
-- Make it generate addresses in CashAddr format (remove case sensitivity...)
+- **Make it generate addresses in CashAddr format (remove case sensitivity...)**
+
+- **Let Vanitygen search for both compressed and uncompressed addresses**
+
+- **Output in TSV and CSV formats**
+
+- **Replace PCRE with Hyperscan for efficient regex search!**
 
 - Fix some warnings
 
 - Make it OpenSS 1.1L compatible
-
-- Let Vanitygen search for both compressed and uncompressed addresses.
-
-- Output in TSV and CSV formats
 
 ### TODOs:
 

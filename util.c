@@ -261,7 +261,7 @@ void vg_encode_script_address(const EC_POINT *ppoint, const EC_GROUP *pgroup,
 	SHA256(script_buf, 69, hash1);
 	//	RIPEMD160(hash1, sizeof(hash1), &binres[1]);
 	RIPEMD160(hash1, sizeof(hash1), binres);
-	CashAddrEncode(testnet, binres, 0, 1, result);
+	CashAddrEncode(testnet, binres, 1 << 3, 1, result);
 	//	vg_b58_encode_check(binres, sizeof(binres), result);
 }
 

@@ -107,11 +107,6 @@ typedef void (*vg_output_match_func_t)(vg_context_t *vcp, EC_KEY *pkey,
 typedef void (*vg_output_timing_func_t)(vg_context_t *vcp, double count,
 	unsigned long long rate, unsigned long long total);
 
-enum vg_format {
-	VCF_PUBKEY,
-	VCF_SCRIPT,
-};
-
 /* Application-level context, incl. parameters and global pattern store */
 struct _vg_context_s {
 	int vc_addrtype;
@@ -127,8 +122,6 @@ struct _vg_context_s {
 	int vc_remove_on_match;
 	int vc_only_one;
 	int vc_verbose;
-	enum vg_format vc_format;
-	int vc_pubkeytype;
 	EC_POINT *vc_pubkey_base;
 	int vc_halt;
 

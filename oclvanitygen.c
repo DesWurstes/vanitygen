@@ -292,16 +292,6 @@ int main(int argc, char **argv) {
 		}
 	}
 
-#if OPENSSL_VERSION_NUMBER < 0x10000000L
-	/* Complain about older versions of OpenSSL */
-	if (verbose > 0) {
-		fprintf(stderr,
-			"WARNING: Built with " OPENSSL_VERSION_TEXT
-			"\n"
-			"WARNING: Use OpenSSL 1.0.0d+ for best performance\n");
-	}
-#endif
-
 #if !defined(_WIN32)
 	if (!seedfile) {
 		struct stat st1;
@@ -379,7 +369,7 @@ int main(int argc, char **argv) {
 	vcp->vc_result_file_csv = result_file_csv;
 	vcp->vc_remove_on_match = remove_on_match;
 	vcp->vc_only_one = only_one;
-	vcp->vc_pubkeytype = addrtype;
+	vcp->vc_addrtype = addrtype;
 	vcp->vc_pubkey_base = pubkey_base;
 
 	vcp->vc_output_match = vg_output_match_console;

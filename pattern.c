@@ -473,7 +473,7 @@ void vg_output_match_console(vg_context_t *vcp, EC_KEY *pkey,
 	char privkey_buf[128];
 	const char *keytype = "Privkey";
 	int len;
-	int isscript = (vcp->vc_format == VCF_SCRIPT);
+	int isscript = (vcp->vc_addrtype == (1 << 3));
 
 	EC_POINT *ppnt;
 	int free_ppnt = 0;
@@ -637,12 +637,16 @@ static int get_prefix_ranges(int addrtype, const char *pfx, BIGNUM **result) {
 	BIGNUM *bntmp = BN_new();
 	int p = strlen(pfx);
 	int ret = -1;
+	if (p == 0) {
+		p = 1;
+		goto no_prefix;
+	}
 	if (p > 30) {
 		fprintf(stderr, "Prefix too long! 30 characters at most.\n");
 		ret = -2;
 		goto out;
 	}
-	if (addrtype == 8) {
+	if (addrtype == (1 << 3)) {
 		if (pfx[0] != 'p') {
 			fprintf(stderr,
 				"The first character of the prefix must be 'p' "
@@ -661,6 +665,13 @@ static int get_prefix_ranges(int addrtype, const char *pfx, BIGNUM **result) {
 			goto out;
 		}
 	}
+	if (p == 1) {
+	no_prefix:
+		BN_set_word(bntmp, 3);
+		BN_add(high, high, bntmp);
+		goto end_prefix;
+	}
+
 	if (pfx[1] != 'q' && pfx[1] != 'p' && pfx[1] != 'z' && pfx[1] != 'r') {
 		fprintf(stderr,
 			"The second character of the prefix must be either "
@@ -684,6 +695,7 @@ static int get_prefix_ranges(int addrtype, const char *pfx, BIGNUM **result) {
 		BN_lshift(high, high, 5);
 		BN_add(high, high, bntmp);
 	}
+end_prefix:
 	BN_set_word(bntmp, 31);
 	for (; p < 42; p++) {
 		BN_lshift(low, low, 5);
@@ -711,8 +723,6 @@ static void free_ranges(BIGNUM **ranges) {
 /*
  * Address prefix AVL tree node
  */
-
-//	const int vpk_nwords = (26 + sizeof(BN_ULONG) - 1) / sizeof(BN_ULONG);
 
 typedef struct _vg_prefix_s {
 	avl_item_t vp_item;
@@ -1246,22 +1256,24 @@ static int vg_regex_match_handler(unsigned int id, unsigned long long from,
 	vg_exec_context_t *vxcp = (vg_exec_context_t *) rct->vxcp;
 	vg_regex_context_t *vcrp = (vg_regex_context_t *) vxcp->vxc_vc;
 	rct->state = 1;
-	// Should this be && or ||
-	if (vg_exec_context_upgrade_lock(vxcp) &&
+
+	if (vg_exec_context_upgrade_lock(vxcp) ||
 		vxcp->vxc_regex_sync != vcrp->vcr_sync) {
 		// Should this be done before a match occures?
-		vxcp->vxc_regex_sync = vcrp->vcr_sync;
-		hs_scratch_t *temp_scratch = NULL;
-		if (hs_clone_scratch(vcrp->vcr_sample_scratch, &temp_scratch) ==
-			HS_NOMEM) {
-			fprintf(stderr, "Not enough RAM!\n");
-			hs_free_scratch(vcrp->vcr_sample_scratch);
-			rct->state = 2;
-			return 0;
+		if (vxcp->vxc_regex_sync != vcrp->vcr_sync) {
+			vxcp->vxc_regex_sync = vcrp->vcr_sync;
+			hs_scratch_t *temp_scratch = NULL;
+			if (hs_clone_scratch(vcrp->vcr_sample_scratch, &temp_scratch) ==
+				HS_NOMEM) {
+				fprintf(stderr, "Not enough RAM!\n");
+				hs_free_scratch(vcrp->vcr_sample_scratch);
+				rct->state = 2;
+				return 0;
+			}
+			hs_scratch_t *old_scratch = vxcp->vxc_scratch;
+			vxcp->vxc_scratch = temp_scratch;
+			hs_free_scratch(old_scratch);
 		}
-		hs_scratch_t *old_scratch = vxcp->vxc_scratch;
-		vxcp->vxc_scratch = temp_scratch;
-		hs_free_scratch(old_scratch);
 		rct->state = 3;
 		return 0;
 	}

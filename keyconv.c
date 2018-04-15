@@ -22,7 +22,7 @@ const char *version = VANITYGEN_VERSION;
 static void usage(const char *progname) {
 	fprintf(stderr,
 		"Vanitygen keyconv %s\n"
-		"Usage: %s [-8] [-e|-E <password>] [-c <key>] [<key>]\n"
+		"Usage: %s [-8] [-c <key>] [<key>]\n"
 		"-G            Generate a key pair and output the full public "
 		"key\n"
 		"-8            Output key in PKCS#8 form\n"
