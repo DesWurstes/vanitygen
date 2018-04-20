@@ -34,8 +34,6 @@
 #include <pthread.h>
 #include <thread>
 
-#define THIRTY_TWO_BIT_COMPAT
-
 #include <openssl/bn.h>
 #include <openssl/ec.h>
 #include <openssl/rand.h>
@@ -136,22 +134,6 @@ void *vg_thread_loop(void *arg) {
 			BN_sub(vxcp->vxc_bntmp2, vxcp->vxc_bntmp,
 				EC_KEY_get0_private_key(pkey));
 			rekey_at = BN_get_word(vxcp->vxc_bntmp2);
-
-#ifndef BN_MASK2
-#ifndef THIRTY_TWO_BIT_COMPAT
-#ifdef SIXTY_FOUR_BIT_LONG
-#define BN_MASK2 (0xffffffffffffffffL)
-#endif
-#ifdef SIXTY_FOUR_BIT
-#define BN_MASK2 (0xffffffffffffffffLL)
-#endif
-#ifdef THIRTY_TWO_BIT
-#define BN_MASK2 (0xffffffffL)
-#endif
-#else
-#define BN_MASK2 (0xffffffffL)
-#endif
-#endif
 
 			if ((rekey_at == BN_MASK2) || (rekey_at > rekey_max))
 				rekey_at = rekey_max;

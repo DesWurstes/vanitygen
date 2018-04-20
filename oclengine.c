@@ -881,12 +881,11 @@ static int vg_ocl_init(vg_context_t *vcp, vg_ocl_context_t *vocp,
 	}
 #ifndef CL_USE_DEPRECATED_OPENCL_1_2_APIS
 	vocp->voc_oclcmdq = clCreateCommandQueueWithProperties(vocp->voc_oclctx,
-		&vocp->voc_ocldid,
+		&vocp->voc_ocldid, 0, &ret);
 #else
 	vocp->voc_oclcmdq = clCreateCommandQueue(vocp->voc_oclctx,
-		vocp->voc_ocldid,
+		vocp->voc_ocldid, 0, &ret);
 #endif
-		0, &ret);
 	if (!vocp->voc_oclcmdq) {
 		vg_ocl_error(vocp, ret, "clCreateCommandQueue");
 		return 0;
@@ -1232,7 +1231,7 @@ static INLINE void vg_ocl_put_bignum_raw(unsigned char *buf, const BIGNUM *bn) {
 #else
 	int bnlen = (bn->top * sizeof(BN_ULONG));
 	if (bnlen >= 32) {
-		if (bn->d) memcpy(buf, bn->d, 32);
+		memcpy(buf, bn->d, 32);
 	} else {
 		memcpy(buf, bn->d, bnlen);
 		memset(buf + bnlen, 0, 32 - bnlen);
@@ -1906,24 +1905,7 @@ l_rekey:
 	BN_sub(vxcp->vxc_bntmp2, vxcp->vxc_bntmp,
 		EC_KEY_get0_private_key(pkey));
 	rekey_at = BN_get_word(vxcp->vxc_bntmp2);
-#if 0
-#ifndef BN_MASK2
-#ifndef THIRTY_TWO_BIT_COMPAT
-#ifdef SIXTY_FOUR_BIT_LONG
-#define BN_MASK2 (0xffffffffffffffffL)
-#endif
-#ifdef SIXTY_FOUR_BIT
-#define BN_MASK2 (0xffffffffffffffffLL)
-#endif
-#ifdef THIRTY_TWO_BIT
-#define BN_MASK2 (0xffffffffL)
-#endif
-#else
-#define BN_MASK2 (0xffffffffL)
-#endif
-#endif
-#endif
-	if ((rekey_at == 0xffffffffL) || (rekey_at > rekey_max))
+	if ((rekey_at == BN_MASK2) || (rekey_at > rekey_max))
 		rekey_at = rekey_max;
 	assert(rekey_at > 0);
 
@@ -1951,9 +1933,8 @@ l_rekey:
 		goto enomem;
 	}
 
-	for (i = 0; i < ncols; i++) {
+	for (i = 0; i < ncols; i++)
 		vg_ocl_put_point_tpa(ocl_points_in, i, ppbase[i]);
-	}
 
 	vg_ocl_unmap_arg_buffer(vocp, 0, 3, ocl_points_in);
 
