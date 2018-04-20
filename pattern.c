@@ -1277,19 +1277,22 @@ static int vg_regex_match_handler(unsigned int id, unsigned long long from,
 		rct->state = 3;
 		return 0;
 	}
+	if (!vcrp->base.vc_npatterns) {
+		goto no_pat_left;
+	}
 	vg_exec_context_consolidate_key(vxcp);
 	vcrp->base.vc_output_match(&vcrp->base, vxcp->vxc_key,
 		vcrp->vcr_regex_pat[id], rct->isaddresscompressed);
 	vcrp->base.vc_found++;
-	if (vcrp->base.vc_only_one || !vcrp->base.vc_npatterns) {
-		rct->state = 2;
-		return 0;
+	if (vcrp->base.vc_only_one) {
+		goto no_pat_left;
 	}
 	if (vcrp->base.vc_remove_on_match) {
 		// TODO: Is there a race condition?
 		vcrp->vcr_regex_pat[id] =
 			vcrp->vcr_regex_pat[--vcrp->base.vc_npatterns];
 		if (!vcrp->base.vc_npatterns) {
+		no_pat_left:
 			rct->state = 2;
 			return 0;
 		}
