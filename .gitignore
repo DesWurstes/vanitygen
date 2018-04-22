@@ -5,7 +5,6 @@
 *.obj
 *.exe
 *.plist
-*.dylib
 *.a
 keyconv
 keyconv.dSYM/
