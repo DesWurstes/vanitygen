@@ -1375,7 +1375,7 @@ static int vg_ocl_gethash_check(vg_ocl_context_t *vocp, int slot) {
 
 	round = vocp->voc_ocl_cols * vocp->voc_ocl_rows;
 	for (i = 0; i < round; i++, vxcp->vxc_delta++) {
-		memcpy(&vxcp->vxc_binres[1], ocl_hashes_out + (20 * i), 20);
+		memcpy(vxcp->vxc_binres, ocl_hashes_out + (20 * i), 20);
 		res = test_func(vxcp, 0);
 		if (res) break;
 	}
@@ -1478,23 +1478,23 @@ static int vg_ocl_prefix_check(vg_ocl_context_t *vocp, int slot) {
 		vg_exec_context_calc_address(vxcp, 0);
 
 		/* Make sure the GPU produced the expected hash */
-		// Be resillient to little differences
-		/*res = 0;
-	    if (!memcmp(vxcp->vxc_binres + 1,
-						    ocl_found_out + 3,
-						    20)) {
-		    res = test_func(vxcp);
-	    }*/
-		res = test_func(vxcp, 0);
+		res = 0;
+		// Just compare the first 16 bytes. That should
+		// be enough for any prefix
+		if (!memcmp(vxcp->vxc_binres,
+			    ocl_found_out + 2,
+			    16)) {
+			res = test_func(vxcp, 0);
+		}
 		if (res == 0) {
 			/*
 			 * The match was not found in
 			 * the pattern list.  Hmm.
 			 */
-			//	tablesize = ocl_found_out[3];
+			//	tablesize = ocl_found_out[2];
 			fprintf(stderr, "Match idx: %d\n", ocl_found_out[1]);
 			fprintf(stderr, "CPU hash: ");
-			fdumphex(stderr, vxcp->vxc_binres + 1, 20);
+			fdumphex(stderr, vxcp->vxc_binres, 20);
 			fprintf(stderr, "GPU hash: ");
 			fdumphex(stderr, (unsigned char *) (ocl_found_out + 2),
 				20);
@@ -1502,8 +1502,6 @@ static int vg_ocl_prefix_check(vg_ocl_context_t *vocp, int slot) {
 				"Found delta: %d "
 				"Start delta: %d\n",
 				found_delta, orig_delta);
-			//	fprintf(stderr, "Compressed: %d\n",
-			// ocl_found_out[0]);
 			res = 1;
 		}
 	} else {

@@ -231,7 +231,7 @@ void vg_exec_context_calc_address(
 	vg_exec_context_t *vxcp, const int isaddresscompressed) {
 	EC_POINT *pubkey;
 	const EC_GROUP *pgroup;
-	unsigned char eckey_buf[96], hash1[32], hash2[20];
+	unsigned char eckey_buf[96], hash1[32];
 	int len;
 
 	vg_exec_context_consolidate_key(vxcp);
@@ -247,8 +247,7 @@ void vg_exec_context_calc_address(
 				      POINT_CONVERSION_UNCOMPRESSED,
 		eckey_buf, sizeof(eckey_buf), vxcp->vxc_bnctx);
 	SHA256(eckey_buf, len, hash1);
-	RIPEMD160(hash1, sizeof(hash1), hash2);
-	memcpy(&vxcp->vxc_binres[1], hash2, 20);
+	RIPEMD160(hash1, sizeof(hash1), vxcp->vxc_binres);
 	EC_POINT_free(pubkey);
 }
 
@@ -680,7 +679,7 @@ static int get_prefix_ranges(int addrtype, const char *pfx, BIGNUM **result) {
 		ret = -2;
 		goto out;
 	}
-	for (int i = 0, c; i < p; i++) {
+	for (int i = 1, c; i < p; i++) {
 		c = CHARSET_REV[(int) pfx[i]];
 		if (c == -1) {
 			fprintf(stderr,
@@ -697,12 +696,13 @@ static int get_prefix_ranges(int addrtype, const char *pfx, BIGNUM **result) {
 	}
 end_prefix:
 	BN_set_word(bntmp, 31);
-	for (; p < 42; p++) {
+	for (; p < 34; p++) {
 		BN_lshift(low, low, 5);
 		BN_lshift(high, high, 5);
 		BN_add(high, high, bntmp);
 	}
-	// TODO: Research why we need this:
+	// Actually, the last char before the
+	// checksum contains 3 bits of info!
 	BN_rshift(low, low, 2);
 	BN_rshift(high, high, 2);
 	result[0] = low;
@@ -902,7 +902,7 @@ static void vg_prefix_context_next_difficulty(vg_prefix_context_t *vcpp,
 	BIGNUM *bntmp, BIGNUM *bntmp2, BN_CTX *bnctx) {
 	char *dbuf;
 	BN_clear(bntmp);
-	BN_set_bit(bntmp, 200);
+	BN_set_bit(bntmp, 160);
 	BN_div(bntmp2, NULL, bntmp, vcpp->vcp_difficulty, bnctx);
 
 	dbuf = BN_bn2dec(bntmp2);
@@ -961,7 +961,7 @@ static int vg_prefix_context_add_patterns(
 
 		if (vcp->vc_verbose > 1) {
 			BN_clear(bntmp2);
-			BN_set_bit(bntmp2, 200);
+			BN_set_bit(bntmp2, 160);
 			BN_div(bntmp3, NULL, bntmp2, bntmp, bnctx);
 
 			dbuf = BN_bn2dec(bntmp3);
@@ -1008,7 +1008,7 @@ double vg_prefix_get_difficulty(int addrtype, const char *pattern) {
 		free_ranges(ranges);
 
 		BN_clear(bntmp);
-		BN_set_bit(bntmp, 200);
+		BN_set_bit(bntmp, 160);
 		BN_div(result, NULL, bntmp, result, bnctx);
 
 		dbuf = BN_bn2dec(result);
@@ -1034,7 +1034,7 @@ static int vg_prefix_test(
 	 * check code.
 	 */
 
-	BN_bin2bn(vxcp->vxc_binres, 26, vxcp->vxc_bntarg);
+	BN_bin2bn(vxcp->vxc_binres, 20, vxcp->vxc_bntarg);
 
 research:
 	vp = vg_prefix_avl_search(&vcpp->vcp_avlroot, vxcp->vxc_bntarg);
@@ -1081,7 +1081,7 @@ static int vg_prefix_hash160_sort(vg_context_t *vcp, void *buf) {
 	vg_prefix_t *vp;
 	unsigned char *cbuf = (unsigned char *) buf;
 	unsigned char bnbuf[26];
-	int nbytes, ncopy, nskip, npfx = 0;
+	int nbytes, npfx = 0;
 
 	/*
 	 * Walk the prefix tree in order, copy the upper and lower bound
@@ -1095,20 +1095,16 @@ static int vg_prefix_hash160_sort(vg_context_t *vcp, void *buf) {
 
 		/* Low */
 		nbytes = BN_bn2bin(vp->vp_low, bnbuf);
-		ncopy = ((nbytes >= 25) ? 20 :
-					  ((nbytes > 5) ? (nbytes - 5) : 0));
-		nskip = (nbytes >= 25) ? (nbytes - 25) : 0;
-		if (ncopy < 20) memset(cbuf, 0, 20 - ncopy);
-		memcpy(cbuf + (20 - ncopy), bnbuf + nskip, ncopy);
+		assert(nbytes < 21);
+		if (nbytes < 20) memset(cbuf, 0, 20 - nbytes);
+		memcpy(cbuf + (20 - nbytes), bnbuf, nbytes);
 		cbuf += 20;
 
 		/* High */
 		nbytes = BN_bn2bin(vp->vp_high, bnbuf);
-		ncopy = ((nbytes >= 25) ? 20 :
-					  ((nbytes > 5) ? (nbytes - 5) : 0));
-		nskip = (nbytes >= 25) ? (nbytes - 25) : 0;
-		if (ncopy < 20) memset(cbuf, 0, 20 - ncopy);
-		memcpy(cbuf + (20 - ncopy), bnbuf + nskip, ncopy);
+		assert(nbytes < 21);
+		if (nbytes < 20) memset(cbuf, 0, 20 - nbytes);
+		memcpy(cbuf + (20 - nbytes), bnbuf, nbytes);
 		cbuf += 20;
 	}
 	return npfx;
@@ -1319,7 +1315,7 @@ static int vg_regex_test(
 	vg_regex_context_t *vcrp = (vg_regex_context_t *) vxcp->vxc_vc;
 
 	char addr[42];
-	CashAddrEncode(vcrp->base.vc_istestnet, &vxcp->vxc_binres[1],
+	CashAddrEncode(vcrp->base.vc_istestnet, vxcp->vxc_binres,
 		vcrp->base.vc_addrtype, 0, addr);
 
 	/*

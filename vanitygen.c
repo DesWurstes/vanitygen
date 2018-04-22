@@ -105,7 +105,7 @@ void *vg_thread_loop(void *arg) {
 	rekey_at = 0;
 	nbatch = 0;
 	vxcp->vxc_key = pkey;
-	vxcp->vxc_binres[0] = vcp->vc_addrtype;
+	//vxcp->vxc_binres[0] = vcp->vc_addrtype;
 	c = 0;
 	output_interval = 1000;
 	gettimeofday(&tvstart, NULL);
@@ -199,7 +199,7 @@ void *vg_thread_loop(void *arg) {
 
 				SHA256(hash_buf, 69, hash1);
 				RIPEMD160(hash1, sizeof(hash1),
-					&vxcp->vxc_binres[1]);
+					vxcp->vxc_binres);
 				switch (test_func(vxcp, 0)) {
 				case 1:
 					npoints = 0;
@@ -222,7 +222,7 @@ void *vg_thread_loop(void *arg) {
 
 				SHA256(hash_buf, 65, hash1);
 				RIPEMD160(hash1, sizeof(hash1),
-					&vxcp->vxc_binres[1]);
+					vxcp->vxc_binres);
 				switch (test_func(vxcp, 0)) {
 				case 1:
 					npoints = 0;
@@ -241,7 +241,7 @@ void *vg_thread_loop(void *arg) {
 
 				SHA256(hash_buf, 33, hash1);
 				RIPEMD160(hash1, sizeof(hash1),
-					&vxcp->vxc_binres[1]);
+					vxcp->vxc_binres);
 				switch (test_func(vxcp, 1)) {
 				case 1:
 					npoints = 0;
