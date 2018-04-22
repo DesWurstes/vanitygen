@@ -3,10 +3,11 @@
 cd "$(dirname "$0")"
 cd ..
 make clean
-make all
+make static_$1
+make static_$1_ocl
 cd production-build-utils
-mv ../vanitygen-cash $1
-mv ../oclvanitygen-cash $1
+mv ../static_vanitygen-cash $1/vanitygen-cash
+mv ../static_oclvanitygen-cash $1/oclvanitygen-cash
 mv ../calc_addrs.cl $1
 mv ../LICENSE $1
 mv resources/hyperscan_license.txt $1

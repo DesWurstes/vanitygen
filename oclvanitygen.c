@@ -107,7 +107,6 @@ int main(int argc, char **argv) {
 	int testnet = 0;
 	int addrtype = 0;
 	int privtype = 128;
-	int regex = 0;
 	int opt;
 	int platformidx = -1, deviceidx = -1;
 	char *seedfile = NULL;
@@ -323,12 +322,8 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	if (regex) {
-		vcp = vg_regex_context_new(addrtype, privtype, testnet);
 
-	} else {
-		vcp = vg_prefix_context_new(addrtype, privtype, testnet);
-	}
+	vcp = vg_prefix_context_new(addrtype, privtype, testnet);
 
 	if (result_file) {
 		FILE *fp = fopen(result_file, "a");
@@ -405,10 +400,6 @@ int main(int argc, char **argv) {
 		fprintf(stderr, "No patterns to search\n");
 		return 1;
 	}
-
-	if ((verbose > 0) && regex && (vcp->vc_npatterns > 1))
-		fprintf(stderr, "Regular expressions: %ld\n",
-			vcp->vc_npatterns);
 
 	if (ndevstrs) {
 		for (opt = 0; opt < ndevstrs; opt++) {

@@ -5,6 +5,8 @@
 *.obj
 *.exe
 *.plist
+*.dylib
+*.a
 keyconv
 keyconv.dSYM/
 oclvanitygen-cash
@@ -14,3 +16,4 @@ oclvanityminer.dSYM/
 vanitygen-cash
 vanitygen-cash.dSYM/
 building-temp/
+rangege*
