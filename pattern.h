@@ -36,7 +36,9 @@
 #define INLINE inline
 #define PRSIZET "z"
 
+#ifndef _WIN32
 #include <hs/hs.h>
+#endif
 
 #include <errno.h>
 #include <sys/stat.h>
@@ -79,7 +81,7 @@
 #endif
 #endif
 
-#define VANITYGEN_VERSION "0.24"
+#define VANITYGEN_VERSION "0.25"
 
 typedef struct _vg_context_s vg_context_t;
 
@@ -103,7 +105,9 @@ struct _vg_exec_context_s {
 	vg_exec_context_threadfunc_t vxc_threadfunc;
 	pthread_t vxc_pthread;
 	int vxc_thread_active;
+#ifndef _WIN32
 	hs_scratch_t *vxc_scratch;
+#endif
 
 	/* Thread synchronization */
 	struct _vg_exec_context_s *vxc_next;

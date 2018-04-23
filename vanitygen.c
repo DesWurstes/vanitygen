@@ -302,55 +302,43 @@ int start_threads(vg_context_t *vcp, int nthreads) {
 }
 
 void usage(const char *name) {
+// clang-format off
 	fprintf(stderr,
 		COLOR44
-		"Vanitygen Cash %s" COLOR0 " (" OPENSSL_VERSION_TEXT
-		")\n"
-		"Usage: %s [-vcqnrk1T] [-t <threads>] [-f <filename>|-] "
-		"[<pattern>...]\n"
-		"Generates a bitcoin receiving address matching <pattern>, and "
-		"outputs "
-		"the\n"
-		"address and associated private key.  The private key may be "
-		"stored in a "
-		"safe\n"
-		"location or imported into a bitcoin client to spend any "
-		"balance "
-		"received "
-		"on\n"
-		"the address.\n"
-		"By default, <pattern> is interpreted as an exact prefix.\n"
-		"\n"
-		"Options:\n"
-		"-v            Verbose output\n"
-		"-c            Print conditions for a valid address prefix "
-		"(e.g. "
-		"alphabet) "
-		"and quit\n"
-		"-q            Quiet output\n"
-		"-n            Simulate\n"
-		"-r            Use regular expression match instead of prefix\n"
-		"              (Feasibility of expression is not checked)\n"
-		"-k            Keep pattern and continue search after finding "
-		"a match\n"
-		"-1            Stop after first match\n"
-		"-T            Generate Bitcoin Cash testnet address\n"
-		"-F <format>   Generate address with the given format (pubkey "
-		"or script) "
-		"(EXPERTS ONLY!)\n"
-		"-P <pubkey>   Specify base public key for piecewise key "
-		"generation\n"
-		"-t <threads>  Set number of worker threads (Default: number "
-		"of CPUs)\n"
-		"-f <file>     File containing list of patterns, one per line\n"
-		"              (Use \"-\" as the file name for stdin)\n"
-		"-o <file>     Write pattern matches to <file> in TSV format "
-		"(readable)\n"
-		"-O <file>     Write pattern matches to <file> in CSV format "
-		"(importable "
-		"e.g. Excel)\n"
-		"-s <file>     Seed random number generator from <file>\n",
+"Vanitygen Cash %s" COLOR0 " (" OPENSSL_VERSION_TEXT ")\n"
+"Usage: %s [-vcqnrk1T] [-t <threads>] [-f <filename>|-] [<pattern>...]\n"
+"Generates a Bitcoin Cash receiving address matching <pattern>, and outputs\n"
+"the address and associated private key. The private key may be stored in a\n"
+"safe location or imported into a wallet client to spend any balance\n"
+"received on the address.\n"
+"By default, <pattern> is interpreted as an exact prefix.\n"
+"\n"
+"Options:\n"
+"-v            Verbose output\n"
+"-c            Print conditions for a valid address prefix\n"
+"              (i.e. alphabet) and quit\n"
+"-q            Quiet output\n"
+"-n            Simulate\n"
+"-r            Use regular expression match instead of prefix\n"
+#ifdef _WIN32
+"              (Disabled on Windows)\n"
+#endif
+"              (Feasibility of expression is not checked)\n"
+"-k            Keep pattern and continue search after finding a match\n"
+"-1            Stop after first match\n"
+"-T            Generate Bitcoin Cash testnet address\n"
+"-F <format>   Generate address with the given format (pubkey or script)\n"
+"              (EXPERTS ONLY!)\n"
+"-P <pubkey>   Specify base public key for piecewise key generation\n"
+"-t <threads>  Set number of worker threads (Default: number of CPUs)\n"
+"-f <file>     File containing list of patterns, one per line\n"
+"              (Use \"-\" as the file name for stdin)\n"
+"-o <file>     Write pattern matches to <file> in TSV format (readable)\n"
+"-O <file>     Write pattern matches to <file> in CSV format\n"
+"              (importable e.g. Excel)\n"
+"-s <file>     Seed random number generator from <file>\n",
 		version, name);
+// clang-format on
 }
 
 #define MAX_FILE 4
@@ -500,7 +488,12 @@ int main(int argc, char **argv) {
 		}
 	}
 
-#if !defined(_WIN32)
+#ifdef _WIN32
+	if (regex) {
+		fprintf(stderr, "regex pattern matching is not possible on Windows!\n");
+		return 1;
+	}
+#else
 	if (!seedfile) {
 		struct stat st1;
 		if (stat("/dev/urandom", &st1) == 0) {
@@ -530,11 +523,15 @@ int main(int argc, char **argv) {
 		}
 	}
 
+#ifdef _WIN32
+	vcp = vg_prefix_context_new(addrtype, privtype, testnet);
+#else
 	if (regex) {
 		vcp = vg_regex_context_new(addrtype, privtype, testnet);
 	} else {
 		vcp = vg_prefix_context_new(addrtype, privtype, testnet);
 	}
+#endif
 
 	if (result_file) {
 		FILE *fp = fopen(result_file, "a");
@@ -637,9 +634,11 @@ int main(int argc, char **argv) {
 		fprintf(stderr, "Regular expressions: %ld\n",
 			vcp->vc_npatterns);
 
+#ifndef _WIN32
 	if (regex && !vg_regex_context_prep_scratch(vcp)) {
 		return 1;
 	}
+#endif
 
 	if (simulate) return 0;
 

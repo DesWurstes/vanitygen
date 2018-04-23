@@ -23,7 +23,10 @@
 #include <time.h>
 #include <windows.h>
 
-#define INLINE
+#ifndef INLINE
+#define INLINE inline
+#endif
+
 #define snprintf _snprintf
 
 struct timezone;

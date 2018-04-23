@@ -39,7 +39,9 @@
 #include <openssl/ripemd.h>
 #include <openssl/sha.h>
 
+#ifndef _WIN32
 #include <hs/hs.h>
+#endif
 
 #include "avl.h"
 #include "cashaddr.h"
@@ -1142,6 +1144,7 @@ vg_context_t *vg_prefix_context_new(int addrtype, int privtype, int testnet) {
 	return &vcpp->base;
 }
 
+#ifndef _WIN32
 typedef struct _vg_regex_context_s {
 	vg_context_t base;
 	hs_database_t *vcr_db;
@@ -1384,3 +1387,4 @@ vg_context_t *vg_regex_context_new(int addrtype, int privtype, int testnet) {
 	}
 	return &vcrp->base;
 }
+#endif // Win32
