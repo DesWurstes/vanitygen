@@ -36,7 +36,7 @@ void usage(const char *name) {
 // clang-format off
 	fprintf(stderr,
 		COLOR44
-"oclVanitygen Cash" COLOR0 " (" OPENSSL_VERSION_TEXT ")\n"
+"oclVanitygen Cash %s" COLOR0 " (" OPENSSL_VERSION_TEXT ")\n"
 "Usage: %s [-vcqk1NTS] [-d <device>] [-f <filename>|-] [<pattern>...]\n"
 "Generates a Bitcoin Cash receiving address matching <pattern>, and outputs\n"
 "the address and associated private key. The private key may be stored in a\n"

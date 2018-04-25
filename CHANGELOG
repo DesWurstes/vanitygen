@@ -121,3 +121,10 @@ Version 0.24, released March 1, 2018:
 	- AMD 68XX, 69XX, 70XX GPU fix
 	- 100% faster prefix and regex search on vanitygen
 	- Clean up
+
+Version 0.25, released April 25, 2018
+	- Fixed static binaries
+	- Fixed P2SH generation
+	- Disabled colored text output for Windows (only Win10 supports it)
+	- Switched to Hyperscan, which allows efficient regex search!
+	- Minor adjustments to CashAddr library
