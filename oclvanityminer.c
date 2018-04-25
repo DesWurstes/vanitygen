@@ -501,13 +501,10 @@ void server_request_free(server_request_t *reqp) {
 
 int server_context_getwork(server_context_t *ctxp) {
 	CURLcode res;
-	server_request_t *reqp;
+	server_request_t reqp;
 	CURL *creq;
 
-	reqp = (server_request_t *) malloc(sizeof(*reqp));
-	memset(reqp, 0, sizeof(*reqp));
-
-	reqp->group = EC_KEY_get0_group(ctxp->dummy_key);
+	reqp.group = EC_KEY_get0_group(ctxp->dummy_key);
 
 	creq = curl_easy_init();
 	if (curl_easy_setopt(creq, CURLOPT_URL, ctxp->getwork) ||
@@ -515,7 +512,10 @@ int server_context_getwork(server_context_t *ctxp) {
 		curl_easy_setopt(
 			creq, CURLOPT_WRITEFUNCTION, server_body_reader) ||
 		curl_easy_setopt(creq, CURLOPT_FOLLOWLOCATION, 1) ||
-		curl_easy_setopt(creq, CURLOPT_WRITEDATA, reqp)) {
+		curl_easy_setopt(creq, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2TLS) ||
+		curl_easy_setopt(creq, CURLOPT_USE_SSL, CURLUSESSL_ALL) ||
+		curl_easy_setopt(creq, CURLOPT_USERAGENT, "vanitygen-cash/0.1") ||
+		curl_easy_setopt(creq, CURLOPT_WRITEDATA, (void *) &reqp)) {
 		fprintf(stderr, "Failed to set up libcurl\n");
 		exit(1);
 	}
@@ -526,11 +526,11 @@ int server_context_getwork(server_context_t *ctxp) {
 	if (res != CURLE_OK) {
 		fprintf(stderr, "Get work request failed: %s\n",
 			curl_easy_strerror(res));
-		server_request_free(reqp);
+		server_request_free(&reqp);
 		return -1;
 	}
 
-	ctxp->items.ar_root = reqp->items.ar_root;
+	ctxp->items.ar_root = reqp.items.ar_root;
 	return 0;
 }
 
@@ -550,6 +550,9 @@ int server_context_submit_solution(
 	creq = curl_easy_init();
 	if (curl_easy_setopt(creq, CURLOPT_URL, urlbuf) ||
 		curl_easy_setopt(creq, CURLOPT_VERBOSE, ctxp->verbose > 1) ||
+		curl_easy_setopt(creq, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2TLS) ||
+		curl_easy_setopt(creq, CURLOPT_USE_SSL, CURLUSESSL_ALL) ||
+		curl_easy_setopt(creq, CURLOPT_USERAGENT, "vanitygen-cash/0.1") ||
 		curl_easy_setopt(creq, CURLOPT_FOLLOWLOCATION, 1)) {
 		fprintf(stderr, "Failed to set up libcurl\n");
 		exit(1);
@@ -860,6 +863,7 @@ int main(int argc, char **argv) {
 	while (1) {
 		if (avl_root_empty(&scp->items)) server_context_getwork(scp);
 
+// TODO: HERE
 		pkb = most_valuable_pkb(scp);
 
 		/* If the work item is the same as the one we're executing,
