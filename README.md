@@ -25,7 +25,7 @@ Mac
 
 Linux
 
-    sudo apt-get install libhyperscan-dev g++-7 ocl-icd-opencl-dev
+    sudo apt-get install libhyperscan-dev g++-7 ocl-icd-opencl-dev libssl-dev
     make
 
 Windows
