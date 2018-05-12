@@ -880,11 +880,11 @@ static int vg_ocl_init(vg_context_t *vcp, vg_ocl_context_t *vocp,
 		return 0;
 	}
 #ifndef CL_USE_DEPRECATED_OPENCL_1_2_APIS
-	vocp->voc_oclcmdq = clCreateCommandQueueWithProperties(vocp->voc_oclctx,
-		&vocp->voc_ocldid, 0, &ret);
+	vocp->voc_oclcmdq = clCreateCommandQueueWithProperties(
+		vocp->voc_oclctx, &vocp->voc_ocldid, 0, &ret);
 #else
-	vocp->voc_oclcmdq = clCreateCommandQueue(vocp->voc_oclctx,
-		vocp->voc_ocldid, 0, &ret);
+	vocp->voc_oclcmdq = clCreateCommandQueue(
+		vocp->voc_oclctx, vocp->voc_ocldid, 0, &ret);
 #endif
 	if (!vocp->voc_oclcmdq) {
 		vg_ocl_error(vocp, ret, "clCreateCommandQueue");
@@ -1481,9 +1481,7 @@ static int vg_ocl_prefix_check(vg_ocl_context_t *vocp, int slot) {
 		res = 0;
 		// Just compare the first 16 bytes. That should
 		// be enough for any prefix
-		if (!memcmp(vxcp->vxc_binres,
-			    ocl_found_out + 2,
-			    16)) {
+		if (!memcmp(vxcp->vxc_binres, ocl_found_out + 2, 16)) {
 			res = test_func(vxcp, 0);
 		}
 		if (res == 0) {

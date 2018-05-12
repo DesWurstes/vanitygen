@@ -13,7 +13,7 @@ CFLAGS+=-Ofast
 PLATFORM=$(shell uname -s)
 ifeq ($(PLATFORM),Darwin)
 	ifneq ($(wildcard /usr/local/opt/gcc/bin/*),)
-		CC=g++-7
+		CC=g++-8
 	else
 		# support for Xcode/clang
 		CC=g++

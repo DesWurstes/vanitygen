@@ -19,46 +19,38 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-/* Copyright (c) 2017 Pieter Wuille
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
-
 const char *CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
 
-static void convertBits8to5(
-	char *out, const uint8_t firstByte, const uint8_t *in) {
-	uint32_t val = (uint32_t) firstByte;
-	int bits = 3;
-	int outlen = 1;
-	unsigned int inlen = 20;
-	out[0] = (val >> bits) & 0x1f;
-	while (inlen--) {
-		val = (val << 8) | *(in++);
-		bits += 8;
-		while (bits >= 5) {
-			bits -= 5;
-			out[outlen++] = (val >> bits) & 0x1f;
-		}
+
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC push_options
+// Only 10% slower than O3
+// but 70% smaller than it.
+#pragma GCC optimize("Os")
+#endif
+static void convertBitsEightToFive(const unsigned char *bytes,
+	unsigned char first_byte, unsigned char *converted) {
+	int a = 1, b = 0;
+	converted[0] = first_byte >> 3;
+	converted[1] = first_byte % 8 << 2;
+	while (a < 32) {
+		converted[a++] |= bytes[b] >> 6;
+		converted[a++] = bytes[b] % 64 >> 1;
+		converted[a] = bytes[b++] % 2 << 4;
+		converted[a++] |= bytes[b] >> 4;
+		converted[a] = bytes[b++] % 16 << 1;
+		converted[a++] |= bytes[b] >> 7;
+		converted[a++] = bytes[b] % 128 >> 2;
+		converted[a] = bytes[b++] % 4 << 3;
+		converted[a++] |= bytes[b] >> 5;
+		converted[a++] = bytes[b++] % 32;
+		converted[a++] = bytes[b] >> 3;
+		converted[a] = bytes[b++] % 8 << 2;
 	}
-	out[outlen] = (val << (5 - bits)) & 0x1f;
 }
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC pop_options
+#endif
 
 // startValue should be 1 if the prefix is a part of the input.
 static uint64_t PolyMod(const char *input, uint64_t startValue) {
@@ -143,7 +135,7 @@ void CashAddrEncode(const int isTestNet, const unsigned char *payload,
 	checksum[5] = 0;
 	checksum[6] = 0;
 	checksum[7] = 0;
-	convertBits8to5(data, type, payload);
+	convertBitsEightToFive(payload, type, (unsigned char *) data);
 	CreateChecksum(isTestNet, data, checksum);
 	for (checksum += 8; data < checksum; data++) {
 		*data = CHARSET[(int) (*data)];

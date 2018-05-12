@@ -1262,8 +1262,8 @@ static int vg_regex_match_handler(unsigned int id, unsigned long long from,
 		if (vxcp->vxc_regex_sync != vcrp->vcr_sync) {
 			vxcp->vxc_regex_sync = vcrp->vcr_sync;
 			hs_scratch_t *temp_scratch = NULL;
-			if (hs_clone_scratch(vcrp->vcr_sample_scratch, &temp_scratch) ==
-				HS_NOMEM) {
+			if (hs_clone_scratch(vcrp->vcr_sample_scratch,
+				    &temp_scratch) == HS_NOMEM) {
 				fprintf(stderr, "Not enough RAM!\n");
 				hs_free_scratch(vcrp->vcr_sample_scratch);
 				rct->state = 2;

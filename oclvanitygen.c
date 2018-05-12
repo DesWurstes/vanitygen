@@ -33,7 +33,7 @@ const char *version = VANITYGEN_VERSION;
 const int debug = 0;
 
 void usage(const char *name) {
-// clang-format off
+	// clang-format off
 	fprintf(stderr,
 		COLOR44
 "oclVanitygen Cash %s" COLOR0 " (" OPENSSL_VERSION_TEXT ")\n"
@@ -76,7 +76,7 @@ void usage(const char *name) {
 "              (importable e.g. Excel)\n"
 "-s <file>     Seed random number generator from <file>\n",
 		version, name);
-// clang-format on
+	// clang-format on
 }
 
 #define MAX_DEVS 32
