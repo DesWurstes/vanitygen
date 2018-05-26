@@ -19,14 +19,10 @@
 #ifndef __VG_UTIL_H__
 #define __VG_UTIL_H__
 
-#include <stdint.h>
 #include <stdio.h>
 
-#include <openssl/bn.h>
+#include <openssl/ossl_typ.h>
 #include <openssl/ec.h>
-
-#include <vector>
-#include "cashaddr.h"
 
 void fdumphex(FILE *fp, const unsigned char *src, size_t len);
 void fdumpbn(FILE *fp, const BIGNUM *bn);

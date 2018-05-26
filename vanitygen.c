@@ -16,15 +16,7 @@
  * along with Vanitygen.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// These are needed, causes problems
-// on Windows. Either way, they'll be
-// included, however, this way compiles
-// on Windows.
-#include <stdint.h>
-#include <cstdint>
-
 #include <assert.h>
-#include <math.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -227,7 +219,6 @@ void *vg_thread_loop(void *arg) {
 				case 1:
 					npoints = 0;
 					rekey_at = 0;
-					i = nbatch;
 					goto outloop;
 					break;
 				case 2: goto out; break;

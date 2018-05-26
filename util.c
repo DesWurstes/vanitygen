@@ -21,17 +21,14 @@
 #endif /* defined(_WIN32) */
 
 #include <assert.h>
-#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include <openssl/bn.h>
 #include <openssl/evp.h>
-#include <openssl/hmac.h>
 #include <openssl/pem.h>
 #include <openssl/pkcs12.h>
-#include <openssl/rand.h>
 #include <openssl/ripemd.h>
 #include <openssl/sha.h>
 #include <openssl/x509.h>
@@ -203,22 +200,15 @@ out:
 
 void vg_encode_compressed_address(const EC_POINT *ppoint,
 	const EC_GROUP *pgroup, int testnet, char *result) {
-	unsigned char eckey_buf[128], *pend;
+	unsigned char eckey_buf[128];
 	unsigned char binres[20] = {};
-	//	unsigned char binres[21] = {0,};
 	unsigned char hash1[32];
-
-	pend = eckey_buf;
 
 	EC_POINT_point2oct(pgroup, ppoint, POINT_CONVERSION_COMPRESSED,
 		eckey_buf, sizeof(eckey_buf), NULL);
-	pend = eckey_buf + 0x21;
-	//	binres[0] = addrtype;
-	SHA256(eckey_buf, pend - eckey_buf, hash1);
-	//	RIPEMD160(hash1, sizeof(hash1), &binres[1]);
+	SHA256(eckey_buf, 33, hash1);
 	RIPEMD160(hash1, sizeof(hash1), binres);
 	CashAddrEncode(testnet, binres, 0, 1, result);
-	//	vg_b58_encode_check(binres, sizeof(binres), result);
 }
 
 void vg_encode_address(const EC_POINT *ppoint, const EC_GROUP *pgroup,
@@ -328,7 +318,7 @@ int vg_decode_privkey(const char *b58encoded, EC_KEY *pkey, int *addrtype) {
 
 	bnpriv = BN_new();
 	BN_bin2bn(ecpriv + 1, res - 1, bnpriv);
-	res = vg_set_privkey(bnpriv, pkey);
+	vg_set_privkey(bnpriv, pkey);
 	BN_clear_free(bnpriv);
 	*addrtype = ecpriv[0];
 	return 1;
@@ -358,13 +348,12 @@ int vg_pkcs8_encode_privkey(
 	if (!bio) goto out;
 
 	if (!pass) {
-		res = PEM_write_bio_PKCS8_PRIV_KEY_INFO(bio, pkcs8);
-
+		PEM_write_bio_PKCS8_PRIV_KEY_INFO(bio, pkcs8);
 	} else {
 		pkcs8_enc = PKCS8_encrypt(-1, EVP_aes_256_cbc(), pass,
 			strlen(pass), NULL, 0, 4096, pkcs8);
 		if (!pkcs8_enc) goto out;
-		res = PEM_write_bio_PKCS8(bio, pkcs8_enc);
+		PEM_write_bio_PKCS8(bio, pkcs8_enc);
 	}
 
 	BIO_get_mem_ptr(bio, &memptr);

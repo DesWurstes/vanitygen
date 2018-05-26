@@ -16,13 +16,6 @@
  * along with Vanitygen.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// These are needed, causes problems
-// on Windows. Either way, they'll be
-// included, however, this way compiles
-// on Windows.
-#include <stdint.h>
-#include <cstdint>
-
 #include <assert.h>
 #include <math.h>
 #include <stdio.h>
@@ -40,7 +33,8 @@
 #include <openssl/sha.h>
 
 #ifndef _WIN32
-#include <hs/hs.h>
+#include "hs/hs_common.h"
+#include "hs/hs_compile.h"
 #endif
 
 #include "avl.h"
@@ -458,7 +452,7 @@ void vg_output_timing_console(vg_context_t *vcp, double count,
 		rem -= p;
 		if (rem < 0) rem = 0;
 	}
-	p = snprintf(&linebuf[p], rem, COLOR0 " ");
+	snprintf(&linebuf[p], rem, COLOR0 " ");
 	if (rem) {
 		memset(&linebuf[sizeof(linebuf) - rem], 0x20, rem);
 		linebuf[sizeof(linebuf) - 1] = '\0';

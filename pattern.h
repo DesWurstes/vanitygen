@@ -19,16 +19,14 @@
 #if !defined(__VG_PATTERN_H__)
 #define __VG_PATTERN_H__
 
-#include <openssl/bn.h>
 #include <openssl/ec.h>
 
-#include <string>
+#include <string.h>
 
 #if defined(_WIN32) && !defined(HAVE_STRUCT_TIMESPEC)
 #define HAVE_STRUCT_TIMESPEC
 #endif
 #include <pthread.h>
-#include "cashaddr.h"
 
 #ifdef _WIN32
 #include "winglue.h"
@@ -37,7 +35,7 @@
 #define PRSIZET "z"
 
 #ifndef _WIN32
-#include <hs/hs.h>
+#include <hs/hs_runtime.h>
 #endif
 
 #include <errno.h>
