@@ -608,7 +608,7 @@ int main(int argc, char **argv) {
 		npatterns = argc - optind;
 
 		if (!vg_context_add_patterns(
-			    vcp, (const char **const) patterns, npatterns))
+			    vcp, (const char **) patterns, npatterns))
 			return 1;
 	}
 
@@ -621,7 +621,7 @@ int main(int argc, char **argv) {
 		if (fp != stdin) fclose(fp);
 
 		if (!vg_context_add_patterns(
-			    vcp, (const char **const) patterns, npatterns))
+			    vcp, (const char **) patterns, npatterns))
 			return 1;
 	}
 
