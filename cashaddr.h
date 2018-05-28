@@ -24,7 +24,6 @@ const signed char CHARSET_REV[128] = {
 /**
  * Encode a cashaddr string. Output will be at most 55 chars, including '\0'
  */
-void CashAddrEncode(const int isTestNet, const unsigned char *payload,
-	const unsigned int type, const unsigned int withPrefix,
-	char *const output);
+void CashAddrEncode(int isTestNet, const unsigned char *payload,
+	unsigned int type, unsigned int withPrefix, char *output);
 #endif

@@ -52,27 +52,48 @@ static void convertBitsEightToFive(const unsigned char *bytes,
 #pragma GCC pop_options
 #endif
 
-// startValue should be 1 if the prefix is a part of the input.
+
+/* Copyright (c) 2017 Jochen Hoenicke
+ * based on code Copyright (c) 2017 Peter Wuille
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 static uint64_t PolyMod(const char *input, uint64_t startValue) {
-	for (unsigned int i = 0; i < 42; i++) {
-		uint64_t c0 = startValue >> 35;
-		startValue = ((startValue & 0x07ffffffff) << 5) ^
-			(uint64_t)(input[i]);
-		if (c0 & 0x01) {
-			startValue ^= 0x98f2bc8e61;
-		}
-		if (c0 & 0x02) {
-			startValue ^= 0x79b76d99e2;
-		}
-		if (c0 & 0x04) {
-			startValue ^= 0xf33e5fb3c4;
-		}
-		if (c0 & 0x08) {
-			startValue ^= 0xae2eabe2a8;
-		}
-		if (c0 & 0x10) {
-			startValue ^= 0x1e4f43e470;
-		}
+	for (unsigned int i = 0; i < 34; i++) {
+		const uint64_t c0 = startValue >> 35;
+		startValue = ((startValue & 0x07ffffffffULL) << 5) ^
+			(uint64_t)(input[i]) ^
+			(-((c0 >> 0) & 1) & 0x98f2bc8e61ULL) ^
+			(-((c0 >> 1) & 1) & 0x79b76d99e2ULL) ^
+			(-((c0 >> 2) & 1) & 0xf33e5fb3c4ULL) ^
+			(-((c0 >> 3) & 1) & 0xae2eabe2a8ULL) ^
+			(-((c0 >> 4) & 1) & 0x1e4f43e470ULL);
+	}
+	for (unsigned int i = 34; i < 42; i++) {
+		const uint64_t c0 = startValue >> 35;
+		startValue = ((startValue & 0x07ffffffffULL) << 5) ^
+			(-((c0 >> 0) & 1) & 0x98f2bc8e61ULL) ^
+			(-((c0 >> 1) & 1) & 0x79b76d99e2ULL) ^
+			(-((c0 >> 2) & 1) & 0xf33e5fb3c4ULL) ^
+			(-((c0 >> 3) & 1) & 0xae2eabe2a8ULL) ^
+			(-((c0 >> 4) & 1) & 0x1e4f43e470ULL);
 	}
 	return startValue ^ 1;
 }
@@ -80,21 +101,16 @@ static uint64_t PolyMod(const char *input, uint64_t startValue) {
 static inline void CreateChecksum(
 	const int isTestNet, const char *payload, char *const result) {
 	// https://play.golang.org/p/sM_CE4AQ7Vp
-	uint64_t mod;
-	if (isTestNet == 0) {
-		mod = PolyMod(payload, 1058337025301);
-	} else {
-		mod = PolyMod(payload, 584719417569);
-	}
+	const uint64_t mod =
+		PolyMod(payload, isTestNet == 0 ? 1058337025301 : 584719417569);
 	for (unsigned int i = 0; i < 8; ++i) {
 		result[i] = (mod >> (5 * (7 - i))) & 0x1f;
 	}
 }
 
-void CashAddrEncode(const int isTestNet, const unsigned char *payload,
-	const unsigned int type, const unsigned int withPrefix,
-	char *const output) {
-	unsigned int i = 0;
+void CashAddrEncode(int isTestNet, const unsigned char *payload,
+	unsigned int type, unsigned int withPrefix, char *output) {
+	char *data;
 	if (withPrefix) {
 		output[0] = 'b';
 		if (isTestNet) {
@@ -105,7 +121,7 @@ void CashAddrEncode(const int isTestNet, const unsigned char *payload,
 			output[5] = 's';
 			output[6] = 't';
 			output[7] = ':';
-			i = 8;
+			data = &output[8];
 			output[50] = '\0';
 		} else {
 			output[1] = 'i';
@@ -119,22 +135,14 @@ void CashAddrEncode(const int isTestNet, const unsigned char *payload,
 			output[9] = 's';
 			output[10] = 'h';
 			output[11] = ':';
-			i = 12;
+			data = &output[12];
 			output[54] = '\0';
 		}
 	} else {
 		output[42] = '\0';
+		data = output;
 	}
-	char *data = output + i;
-	char *checksum = data + 34;
-	checksum[0] = 0;
-	checksum[1] = 0;
-	checksum[2] = 0;
-	checksum[3] = 0;
-	checksum[4] = 0;
-	checksum[5] = 0;
-	checksum[6] = 0;
-	checksum[7] = 0;
+	char *checksum = &data[34];
 	convertBitsEightToFive(payload, type, (unsigned char *) data);
 	CreateChecksum(isTestNet, data, checksum);
 	for (checksum += 8; data < checksum; data++) {

@@ -1311,7 +1311,7 @@ static int vg_regex_test(
 	vg_exec_context_t *vxcp, const int isaddresscompressed) {
 	vg_regex_context_t *vcrp = (vg_regex_context_t *) vxcp->vxc_vc;
 
-	char addr[42];
+	char addr[43];
 	CashAddrEncode(vcrp->base.vc_istestnet, vxcp->vxc_binres,
 		vcrp->base.vc_addrtype, 0, addr);
 

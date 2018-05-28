@@ -97,7 +97,7 @@ void *vg_thread_loop(void *arg) {
 	rekey_at = 0;
 	nbatch = 0;
 	vxcp->vxc_key = pkey;
-	//vxcp->vxc_binres[0] = vcp->vc_addrtype;
+	// vxcp->vxc_binres[0] = vcp->vc_addrtype;
 	c = 0;
 	output_interval = 1000;
 	gettimeofday(&tvstart, NULL);
@@ -190,8 +190,8 @@ void *vg_thread_loop(void *arg) {
 				assert(len == 65);
 
 				SHA256(hash_buf, 69, hash1);
-				RIPEMD160(hash1, sizeof(hash1),
-					vxcp->vxc_binres);
+				RIPEMD160(
+					hash1, sizeof(hash1), vxcp->vxc_binres);
 				switch (test_func(vxcp, 0)) {
 				case 1:
 					npoints = 0;
@@ -213,8 +213,8 @@ void *vg_thread_loop(void *arg) {
 				assert(len == 65);
 
 				SHA256(hash_buf, 65, hash1);
-				RIPEMD160(hash1, sizeof(hash1),
-					vxcp->vxc_binres);
+				RIPEMD160(
+					hash1, sizeof(hash1), vxcp->vxc_binres);
 				switch (test_func(vxcp, 0)) {
 				case 1:
 					npoints = 0;
@@ -231,8 +231,8 @@ void *vg_thread_loop(void *arg) {
 				assert(len == 33);
 
 				SHA256(hash_buf, 33, hash1);
-				RIPEMD160(hash1, sizeof(hash1),
-					vxcp->vxc_binres);
+				RIPEMD160(
+					hash1, sizeof(hash1), vxcp->vxc_binres);
 				switch (test_func(vxcp, 1)) {
 				case 1:
 					npoints = 0;
@@ -293,7 +293,7 @@ int start_threads(vg_context_t *vcp, int nthreads) {
 }
 
 void usage(const char *name) {
-// clang-format off
+	// clang-format off
 	fprintf(stderr,
 		COLOR44
 "Vanitygen Cash %s" COLOR0 " (" OPENSSL_VERSION_TEXT ")\n"
@@ -329,7 +329,7 @@ void usage(const char *name) {
 "              (importable e.g. Excel)\n"
 "-s <file>     Seed random number generator from <file>\n",
 		version, name);
-// clang-format on
+	// clang-format on
 }
 
 #define MAX_FILE 4
@@ -481,7 +481,8 @@ int main(int argc, char **argv) {
 
 #ifdef _WIN32
 	if (regex) {
-		fprintf(stderr, "regex pattern matching is not possible on Windows!\n");
+		fprintf(stderr,
+			"regex pattern matching is not possible on Windows!\n");
 		return 1;
 	}
 #else
