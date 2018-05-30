@@ -375,68 +375,6 @@ out:
 	return res;
 }
 
-int vg_pkcs8_decode_privkey(
-	EC_KEY *pkey, const char *pem_in, const char *pass) {
-	EC_KEY *pkey_in = NULL;
-	EC_KEY *test_key = NULL;
-	EVP_PKEY *evp_key = NULL;
-	PKCS8_PRIV_KEY_INFO *pkcs8 = NULL;
-	X509_SIG *pkcs8_enc = NULL;
-	BIO *bio = NULL;
-	int res = 0;
-
-	bio = BIO_new_mem_buf((char *) pem_in, strlen(pem_in));
-	if (!bio) goto out;
-
-	pkcs8_enc = PEM_read_bio_PKCS8(bio, NULL, NULL, NULL);
-	if (pkcs8_enc) {
-		if (!pass) return -1;
-		pkcs8 = PKCS8_decrypt(pkcs8_enc, pass, strlen(pass));
-
-	} else {
-		(void) BIO_reset(bio);
-		pkcs8 = PEM_read_bio_PKCS8_PRIV_KEY_INFO(bio, NULL, NULL, NULL);
-	}
-
-	if (!pkcs8) goto out;
-	evp_key = EVP_PKCS82PKEY(pkcs8);
-	if (!evp_key) goto out;
-	pkey_in = EVP_PKEY_get1_EC_KEY(evp_key);
-	if (!pkey_in) goto out;
-
-	/* Expect a specific curve */
-	test_key = EC_KEY_new_by_curve_name(NID_secp256k1);
-	if (!test_key ||
-		EC_GROUP_cmp(EC_KEY_get0_group(pkey_in),
-			EC_KEY_get0_group(test_key), NULL))
-		goto out;
-
-	if (!EC_KEY_copy(pkey, pkey_in)) goto out;
-
-	res = 1;
-
-out:
-	if (bio) BIO_free(bio);
-	if (test_key) EC_KEY_free(pkey_in);
-	if (evp_key) EVP_PKEY_free(evp_key);
-	if (pkcs8) PKCS8_PRIV_KEY_INFO_free(pkcs8);
-	if (pkcs8_enc) X509_SIG_free(pkcs8_enc);
-	return res;
-}
-
-int vg_decode_privkey_any(
-	EC_KEY *pkey, int *addrtype, const char *input, const char *pass) {
-	int res;
-
-	if (vg_decode_privkey(input, pkey, addrtype)) return 1;
-	res = vg_pkcs8_decode_privkey(pkey, input, pass);
-	if (res > 0) {
-		/* Assume main network address */
-		*addrtype = 128;
-	}
-	return res;
-}
-
 /*
  * Pattern file reader
  * Absolutely disgusting, unable to free the pattern list when it's done

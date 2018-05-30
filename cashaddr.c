@@ -99,7 +99,7 @@ static uint64_t PolyMod(const char *input, uint64_t startValue) {
 }
 
 static inline void CreateChecksum(
-	const int isTestNet, const char *payload, char *const result) {
+	const int isTestNet, const char *payload, char *result) {
 	// https://play.golang.org/p/sM_CE4AQ7Vp
 	const uint64_t mod =
 		PolyMod(payload, isTestNet == 0 ? 1058337025301 : 584719417569);
