@@ -225,10 +225,7 @@ void *vg_thread_loop(void *arg) {
 				default: break;
 				}
 
-				len = EC_POINT_point2oct(pgroup, ppnt[i],
-					POINT_CONVERSION_COMPRESSED, eckey_buf,
-					33, vxcp->vxc_bnctx);
-				assert(len == 33);
+				eckey_buf[0] = 0x02 | (eckey_buf[64] & 1);
 
 				SHA256(hash_buf, 33, hash1);
 				RIPEMD160(
