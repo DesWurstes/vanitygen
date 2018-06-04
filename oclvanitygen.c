@@ -58,6 +58,7 @@ void usage(const char *name) {
 "-1            Stop after first match\n"
 "-T            Generate Bitcoin Cash testnet address\n"
 "-P <pubkey>   Specify base public key for piecewise key generation\n"
+"-l <hex>      Choose prefix for the hex format of private key (EXPERTS)\n"
 "-p <platform> Select OpenCL platform\n"
 "-d <device>   Select OpenCL device\n"
 "-D <devstr>   Use OpenCL device, identified by device string\n"
@@ -108,6 +109,8 @@ int main(int argc, char **argv) {
 	char *devstrs[MAX_DEVS];
 	int ndevstrs = 0;
 	int opened = 0;
+	char privkey_prefix[32];
+	unsigned int privkey_prefix_length = 0;
 
 	FILE *pattfp[MAX_FILE], *fp;
 	int npattfp = 0;
@@ -116,7 +119,7 @@ int main(int argc, char **argv) {
 	int i;
 
 	while ((opt = getopt(argc, argv,
-			"vcqk1Tp:P:d:w:t:g:b:VSh?f:o:O:s:D:")) != -1) {
+			"vcqk1Tp:P:l:d:w:t:g:b:VSh?f:o:O:s:D:")) != -1) {
 		switch (opt) {
 		case 'v': verbose = 2; break;
 		case 'c':
@@ -140,6 +143,48 @@ int main(int argc, char **argv) {
 		case 'T':
 			privtype = 239;
 			testnet = 1;
+			break;
+		case 'l':
+			if (privkey_prefix_length != 0) {
+				fprintf(stderr,
+					"Hex privkey prefix has been set "
+					"before.\n");
+				return 1;
+			}
+			privkey_prefix_length = strlen(optarg);
+			if (privkey_prefix_length % 2) {
+				fprintf(stderr,
+					"Hex privkey prefix length must be a "
+					"multiple of 2.\n");
+				return 1;
+			}
+			privkey_prefix_length /= 2;
+			if (privkey_prefix_length > 15) {
+				fprintf(stderr,
+					"At most 30 characters, please.\n");
+				return 1;
+			}
+
+			if (privkey_prefix_length > 24) {
+				fprintf(stderr,
+					"Pkey prefix is longer than 48 "
+					"characters, will try, "
+					"but no promise.\n"
+					"Pkey prefix with at most 48 "
+					"characters is advised for security, "
+					"or "
+					"a private key may not be found at "
+					"all.\n");
+			}
+			for (unsigned int i = 0;
+				i < (unsigned int) privkey_prefix_length; i++) {
+				int value; // Can't sscanf directly to char
+					   // array because of overlapping on
+					   // Win32
+				sscanf(&optarg[i * 2], "%2x",
+					(unsigned int *) &value);
+				privkey_prefix[i] = value;
+			}
 			break;
 		case 'p': platformidx = atoi(optarg); break;
 		case 'd': deviceidx = atoi(optarg); break;
@@ -345,6 +390,8 @@ int main(int argc, char **argv) {
 	vcp->vc_only_one = only_one;
 	vcp->vc_addrtype = addrtype;
 	vcp->vc_pubkey_base = pubkey_base;
+	memcpy(vcp->vc_privkey_prefix, privkey_prefix, privkey_prefix_length);
+	vcp->vc_privkey_prefix_length = privkey_prefix_length;
 
 	vcp->vc_output_match = vg_output_match_console;
 	vcp->vc_output_timing = vg_output_timing_console;

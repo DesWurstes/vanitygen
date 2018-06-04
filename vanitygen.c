@@ -118,6 +118,22 @@ void *vg_thread_loop(void *arg) {
 			vg_exec_context_upgrade_lock(vxcp);
 			/* Generate a new random private key */
 			EC_KEY_generate_key(pkey);
+			if (vcp->vc_privkey_prefix_length != 0) {
+				BIGNUM *pkbn =
+					BN_dup(EC_KEY_get0_private_key(pkey));
+				unsigned char pkey_arr[32];
+				assert(BN_bn2bin(pkbn, pkey_arr) < 33);
+				memcpy((char *) pkey_arr,
+					vcp->vc_privkey_prefix,
+					vcp->vc_privkey_prefix_length);
+				BN_bin2bn(pkey_arr, 32, pkbn);
+				EC_KEY_set_private_key(pkey, pkbn);
+
+				EC_POINT *origin = EC_POINT_new(pgroup);
+				EC_POINT_mul(pgroup, origin, pkbn, NULL, NULL,
+					vxcp->vxc_bnctx);
+				EC_KEY_set_public_key(pkey, origin);
+			}
 			npoints = 0;
 
 			/* Determine rekey interval */
@@ -307,14 +323,14 @@ void usage(const char *name) {
 "              (i.e. alphabet) and quit\n"
 "-q            Quiet output\n"
 "-n            Simulate\n"
+#ifndef _WIN32
 "-r            Use regular expression match instead of prefix\n"
-#ifdef _WIN32
-"              (Disabled on Windows)\n"
 #endif
 "              (Feasibility of expression is not checked)\n"
 "-k            Keep pattern and continue search after finding a match\n"
 "-1            Stop after first match\n"
 "-T            Generate Bitcoin Cash testnet address\n"
+"-l <hex>      Choose prefix for the hex format of private key (EXPERTS)\n"
 "-F <format>   Generate address with the given format (pubkey or script)\n"
 "              (EXPERTS ONLY!)\n"
 "-P <pubkey>   Specify base public key for piecewise key generation\n"
@@ -349,6 +365,8 @@ int main(int argc, char **argv) {
 	int nthreads = 0;
 	vg_context_t *vcp = NULL;
 	EC_POINT *pubkey_base = NULL;
+	char privkey_prefix[32];
+	unsigned int privkey_prefix_length = 0;
 
 	FILE *pattfp[MAX_FILE], *fp;
 	int npattfp = 0;
@@ -356,7 +374,7 @@ int main(int argc, char **argv) {
 
 	unsigned int i;
 
-	while ((opt = getopt(argc, argv, "cvqnrk1P:TF:t:h?f:o:O:s:")) != -1) {
+	while ((opt = getopt(argc, argv, "cvqnrk1P:Tl:F:t:h?f:o:O:s:")) != -1) {
 		switch (opt) {
 		case 'c':
 			fprintf(stderr, "%s\n",
@@ -384,6 +402,48 @@ int main(int argc, char **argv) {
 			privtype = 239;
 			//	scriptaddrtype = 196;
 			testnet = 1;
+			break;
+		case 'l':
+			if (privkey_prefix_length != 0) {
+				fprintf(stderr,
+					"Hex privkey prefix has been set "
+					"before.\n");
+				return 1;
+			}
+			privkey_prefix_length = strlen(optarg);
+			if (privkey_prefix_length % 2) {
+				fprintf(stderr,
+					"Hex privkey prefix length must be a "
+					"multiple of 2.\n");
+				return 1;
+			}
+			privkey_prefix_length /= 2;
+			if (privkey_prefix_length > 15) {
+				fprintf(stderr,
+					"At most 30 characters, please.\n");
+				return 1;
+			}
+
+			if (privkey_prefix_length > 24) {
+				fprintf(stderr,
+					"Pkey prefix is longer than 48 "
+					"characters, will try, "
+					"but no promise.\n"
+					"Pkey prefix with at most 48 "
+					"characters is advised for security, "
+					"or "
+					"a private key may not be found at "
+					"all.\n");
+			}
+			for (unsigned int i = 0;
+				i < (unsigned int) privkey_prefix_length; i++) {
+				int value; // Can't sscanf directly to char
+					   // array because of overlapping on
+					   // Win32
+				sscanf(&optarg[i * 2], "%2x",
+					(unsigned int *) &value);
+				privkey_prefix[i] = value;
+			}
 			break;
 		case 'F':
 			if (!strcmp(optarg, "script"))
@@ -584,6 +644,8 @@ int main(int argc, char **argv) {
 	vcp->vc_remove_on_match = remove_on_match;
 	vcp->vc_only_one = only_one;
 	vcp->vc_pubkey_base = pubkey_base;
+	memcpy(vcp->vc_privkey_prefix, privkey_prefix, privkey_prefix_length);
+	vcp->vc_privkey_prefix_length = privkey_prefix_length;
 
 	vcp->vc_output_match = vg_output_match_console;
 	vcp->vc_output_timing = vg_output_timing_console;
