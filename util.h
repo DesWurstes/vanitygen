@@ -51,7 +51,6 @@ int vg_protect_decode_privkey(
 
 int vg_pkcs8_encode_privkey(
 	char *out, int outlen, const EC_KEY *pkey, const char *pass);
-int vg_pkcs8_decode_privkey(EC_KEY *pkey, const char *pem_in, const char *pass);
 
 int vg_decode_privkey_any(
 	EC_KEY *pkey, int *addrtype, const char *input, const char *pass);

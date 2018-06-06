@@ -1912,7 +1912,7 @@ l_rekey:
 	BN_sub(vxcp->vxc_bntmp2, vxcp->vxc_bntmp,
 		EC_KEY_get0_private_key(pkey));
 	rekey_at = BN_get_word(vxcp->vxc_bntmp2);
-	if ((rekey_at == BN_MASK2) || (rekey_at > rekey_max))
+	if (rekey_at > rekey_max)
 		rekey_at = rekey_max;
 	assert(rekey_at > 0);
 

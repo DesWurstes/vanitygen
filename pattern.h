@@ -60,25 +60,6 @@
 #define COLOR0 ""
 #endif
 
-
-#define THIRTY_TWO_BIT_COMPAT
-
-#ifndef BN_MASK2
-#ifndef THIRTY_TWO_BIT_COMPAT
-#ifdef SIXTY_FOUR_BIT_LONG
-#define BN_MASK2 (0xffffffffffffffffL)
-#endif
-#ifdef SIXTY_FOUR_BIT
-#define BN_MASK2 (0xffffffffffffffffLL)
-#endif
-#ifdef THIRTY_TWO_BIT
-#define BN_MASK2 (0xffffffffL)
-#endif
-#else
-#define BN_MASK2 (0xffffffffL)
-#endif
-#endif
-
 #define VANITYGEN_VERSION "0.25"
 
 typedef struct _vg_context_s vg_context_t;

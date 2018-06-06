@@ -143,7 +143,7 @@ void *vg_thread_loop(void *arg) {
 				EC_KEY_get0_private_key(pkey));
 			rekey_at = BN_get_word(vxcp->vxc_bntmp2);
 
-			if ((rekey_at == BN_MASK2) || (rekey_at > rekey_max))
+			if (rekey_at > rekey_max)
 				rekey_at = rekey_max;
 			assert(rekey_at > 0);
 
@@ -280,9 +280,7 @@ out:
 
 #if !defined(_WIN32) || (_MSC_FULL_VER > 189999999)
 unsigned int count_processors(void) {
-#if ((__GNUC__ > 3 && __GNUC_MINOR__ > 7) || __GNUC__ > 4) || \
-	(_MSC_FULL_VER > 189999999) || \
-	(__clang_major__ > 3 || (__clang_major__ > 2 || __clang_major__ > 2))
+#if (__GNUC__ > 4) || (_MSC_FULL_VER > 189999999) || (__clang_major__ > 3)
 	// C++11
 	return std::thread::hardware_concurrency();
 #else
