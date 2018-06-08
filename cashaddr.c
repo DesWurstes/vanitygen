@@ -22,8 +22,8 @@
 const char *CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
 
 
-static void convertBitsEightToFive(const unsigned char * bytes,
-	unsigned char first_byte, unsigned char * converted) {
+static void convertBitsEightToFive(const unsigned char *__restrict bytes,
+	unsigned char first_byte, unsigned char *__restrict converted) {
 	int a = 1, b = 0;
 	converted[0] = first_byte >> 3;
 	converted[1] = first_byte % 8 << 2;
