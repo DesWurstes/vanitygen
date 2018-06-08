@@ -22,14 +22,8 @@
 const char *CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
 
 
-#if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC push_options
-// Only 10% slower than O3
-// but 70% smaller than it.
-#pragma GCC optimize("Os")
-#endif
-static void convertBitsEightToFive(const unsigned char *bytes,
-	unsigned char first_byte, unsigned char *converted) {
+static void convertBitsEightToFive(const unsigned char * bytes,
+	unsigned char first_byte, unsigned char * converted) {
 	int a = 1, b = 0;
 	converted[0] = first_byte >> 3;
 	converted[1] = first_byte % 8 << 2;
@@ -48,9 +42,6 @@ static void convertBitsEightToFive(const unsigned char *bytes,
 		converted[a] = bytes[b++] % 8 << 2;
 	}
 }
-#if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC pop_options
-#endif
 
 
 /* Copyright (c) 2017 Jochen Hoenicke
@@ -97,6 +88,8 @@ static uint64_t PolyMod(const char *input, uint64_t startValue) {
 	}
 	return startValue ^ 1;
 }
+
+// End of Jochen Hoenicke + Pieter Wuille licenses
 
 static inline void CreateChecksum(
 	const int isTestNet, const char *payload, char *result) {

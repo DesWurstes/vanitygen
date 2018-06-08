@@ -575,7 +575,7 @@ void vg_context_free(vg_context_t *vcp) {
 }
 
 int vg_context_add_patterns(
-	vg_context_t *vcp, const char **const patterns, int npatterns) {
+	vg_context_t *vcp, const char **patterns, int npatterns) {
 	vcp->vc_pattern_generation++;
 	return vcp->vc_add_patterns(vcp, patterns, npatterns);
 }
@@ -917,7 +917,7 @@ static void vg_prefix_context_next_difficulty(vg_prefix_context_t *vcpp,
 }
 
 static int vg_prefix_context_add_patterns(
-	vg_context_t *vcp, const char **const patterns, int npatterns) {
+	vg_context_t *vcp, const char **patterns, int npatterns) {
 	vg_prefix_context_t *vcpp = (vg_prefix_context_t *) vcp;
 	vg_prefix_t *vp;
 	BN_CTX *bnctx;
@@ -1024,12 +1024,6 @@ static int vg_prefix_test(
 	vg_prefix_t *vp;
 	int res = 0;
 
-	/*
-	 * We constrain the prefix so that we can check for
-	 * a match without generating the lower four byte
-	 * check code.
-	 */
-
 	BN_bin2bn(vxcp->vxc_binres, 20, vxcp->vxc_bntarg);
 
 research:
@@ -1082,7 +1076,7 @@ static int vg_prefix_hash160_sort(vg_context_t *vcp, void *buf) {
 	/*
 	 * Walk the prefix tree in order, copy the upper and lower bound
 	 * values into the hash160 buffer.  Skip the lower four bytes
-	 * and anything above the 24th byte.
+	 * and anything above the 20th byte.
 	 */
 	for (vp = vg_prefix_first(&vcpp->vcp_avlroot); vp != NULL;
 		vp = vg_prefix_next(vp)) {
@@ -1188,7 +1182,7 @@ static void vg_regex_context_clear_all_patterns(vg_context_t *vcp) {
 	vcrp->base.vc_found = 0;
 }
 
-static int vg_regex_compile_patterns(const char **const patterns,
+static int vg_regex_compile_patterns(const char **patterns,
 	unsigned int npatterns, hs_database_t **db,
 	hs_compile_error_t **compile_error) {
 	unsigned int ids[npatterns];
@@ -1203,7 +1197,7 @@ static int vg_regex_compile_patterns(const char **const patterns,
 }
 
 static int vg_regex_context_add_patterns(
-	vg_context_t *vcp, const char **const patterns, int npatterns) {
+	vg_context_t *vcp, const char **patterns, int npatterns) {
 	if (!npatterns) return 1;
 	vg_regex_context_t *vcrp = (vg_regex_context_t *) vcp;
 	const char **old_patterns = vcrp->vcr_regex_pat;
@@ -1235,7 +1229,7 @@ static void vg_regex_context_free(vg_context_t *vcp) {
 }
 
 typedef struct _vg_regex_scan_result_s {
-	char state;
+	int state;
 	int isaddresscompressed;
 	vg_exec_context_t *vxcp;
 } vg_regex_scan_result_t;

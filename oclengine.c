@@ -1912,8 +1912,7 @@ l_rekey:
 	BN_sub(vxcp->vxc_bntmp2, vxcp->vxc_bntmp,
 		EC_KEY_get0_private_key(pkey));
 	rekey_at = BN_get_word(vxcp->vxc_bntmp2);
-	if (rekey_at > rekey_max)
-		rekey_at = rekey_max;
+	if (rekey_at > rekey_max) rekey_at = rekey_max;
 	assert(rekey_at > 0);
 
 	EC_POINT_copy(ppbase[0], EC_KEY_get0_public_key(pkey));
