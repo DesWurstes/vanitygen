@@ -6,7 +6,7 @@
 #ifndef CASHADDR_H
 #define CASHADDR_H
 
-extern const char *CHARSET;
+extern const char * const CHARSET;
 
 // clang-format off
 const signed char CHARSET_REV[128] = {

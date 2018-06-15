@@ -19,30 +19,28 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-const char *CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
-
+const char * const CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
 
 static void convertBitsEightToFive(const unsigned char *__restrict bytes,
 	unsigned char first_byte, unsigned char *__restrict converted) {
 	int a = 1, b = 0;
 	converted[0] = first_byte >> 3;
-	converted[1] = first_byte % 8 << 2;
+	converted[1] = first_byte % (1 << 3) << 2;
 	while (a < 32) {
 		converted[a++] |= bytes[b] >> 6;
-		converted[a++] = bytes[b] % 64 >> 1;
-		converted[a] = bytes[b++] % 2 << 4;
+		converted[a++] = bytes[b] % (1 << 6) >> 1;
+		converted[a] = bytes[b++] % (1 << 1) << 4;
 		converted[a++] |= bytes[b] >> 4;
-		converted[a] = bytes[b++] % 16 << 1;
+		converted[a] = bytes[b++] % (1 << 4) << 1;
 		converted[a++] |= bytes[b] >> 7;
-		converted[a++] = bytes[b] % 128 >> 2;
-		converted[a] = bytes[b++] % 4 << 3;
+		converted[a++] = bytes[b] % (1 << 7) >> 2;
+		converted[a] = bytes[b++] % (1 << 2) << 3;
 		converted[a++] |= bytes[b] >> 5;
-		converted[a++] = bytes[b++] % 32;
+		converted[a++] = bytes[b++] % (1 << 5);
 		converted[a++] = bytes[b] >> 3;
-		converted[a] = bytes[b++] % 8 << 2;
+		converted[a] = bytes[b++] % (1 << 3) << 2;
 	}
 }
-
 
 /* Copyright (c) 2017 Jochen Hoenicke
  * based on code Copyright (c) 2017 Peter Wuille

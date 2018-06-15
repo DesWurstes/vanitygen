@@ -1,4 +1,4 @@
-LIBS=-lcrypto -lm -lpthread -lhs
+LIBS=-lm -lpthread -lhs
 CFLAGS=-Wall -Wextra
 OBJS=vanitygen.o oclvanitygen.o oclvanityminer.o oclengine.o keyconv.o pattern.o util.o cashaddr.o
 PROGS=vanitygen keyconv oclvanitygen oclvanityminer
@@ -20,10 +20,10 @@ ifeq ($(PLATFORM),Darwin)
 		CFLAGS+=-std=c++14
 	endif
 	ifneq ($(wildcard /usr/local/opt/openssl@1.1/lib/*),)
-		LIBS+=-L/usr/local/opt/openssl@1.1/lib
+		LIBS+=/usr/local/opt/openssl@1.1/lib/libcrypto.a
 		CFLAGS+=-I/usr/local/opt/openssl@1.1/include
 	else
-		LIBS+=-L/usr/local/opt/openssl/lib
+		LIBS+=/usr/local/opt/openssl/lib/libcrypto.a
 		CFLAGS+=-I/usr/local/opt/openssl/include
 	endif
 	OPENCL_LIBS=-framework OpenCL
@@ -33,6 +33,7 @@ ifeq ($(PLATFORM),Darwin)
 	LIBS+=-L/opt/local/lib
 	CFLAGS+=-I/opt/local/include
 else
+	LIBS+=-lcrypto
 	CC=g++-7
 	OPENCL_LIBS=-lOpenCL
 endif
@@ -60,11 +61,11 @@ static_Linux_ocl: oclvanitygen.o oclengine.o pattern.o util.o cashaddr.o
 	$(CC) $^ -Wl,-rpath,. -o static_oclvanitygen-cash $(CFLAGS) $(LIBS) $(OPENCL_LIBS)
 
 static_Mac: vanitygen.o pattern.o util.o cashaddr.o
-	$(CC) $^ -o static_vanitygen-cash $(CFLAGS) $(LIBS)
+	$(CC) $^ -o static_vanitygen-cash $(CFLAGS) -static-libstdc++ -static-libgcc $(LIBS)
 	install_name_tool -change /usr/local/opt/hyperscan/lib/libhs.4.dylib @executable_path/libhs.4.dylib static_vanitygen-cash
 
 static_Mac_ocl: oclvanitygen.o oclengine.o pattern.o util.o cashaddr.o
-	$(CC) $^ -o static_oclvanitygen-cash $(CFLAGS) $(LIBS) $(OPENCL_LIBS)
+	$(CC) $^ -o static_oclvanitygen-cash $(CFLAGS) -static-libstdc++ -static-libgcc $(LIBS) $(OPENCL_LIBS)
 	install_name_tool -change /usr/local/opt/hyperscan/lib/libhs.4.dylib @executable_path/libhs.4.dylib static_oclvanitygen-cash
 
 clean:
