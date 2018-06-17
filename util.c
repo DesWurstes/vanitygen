@@ -433,17 +433,18 @@ int vg_read_range_file(
 		}
 		char *buff2 = (char *) malloc(40 * sizeof(char));
 		for (int i = 0; i < 80; i += 2) {
-			buff2[i / 2] = decodeHex(buff[i]) * 16 +
-				decodeHex(buff[i + 1]);
+			char k1 = decodeHex(buff[i]);
+			char k2 = decodeHex(buff[i + 1]);
+			if (k1 == -1 || k2 == -1) goto nonb32;
+			buff2[i / 2] = k1 * 16 + k2;
 		}
-		for (int i = 0; i < 40; i++) {
-			if (buff2[i] == -1) {
-				fprintf(stderr,
-					"Non-lowercase-base16 character in line that starts with \"%.15s...\"\n",
-					buff);
-				free(buff);
-				return 0;
-			}
+		if (0) {
+		nonb32:
+			fprintf(stderr,
+				"Non-lowercase-base16 character in line that starts with \"%.15s...\"\n",
+				buff);
+			free(buff);
+			return 0;
 		}
 		(*pat_list)[(*pat_count)++] = (const char *) buff2;
 	}
