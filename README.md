@@ -8,7 +8,7 @@ Vanitygen for Bitcoin Cash! Crafted by the creators of [CashAddress.Github.io](h
 
 The compiled binaries for Windows, Mac and Linux can be found at [releases](https://github.com/cashaddress/vanitygen-cash/releases).
 
-## Tips
+## Advice
 
 Alphabet: `023456789acdefghjklmnpqrstuvwxyz`
 
@@ -48,8 +48,8 @@ Windows
 
 ### TODOs:
 
-- Allow to choose between compressed and uncompressed addresses
-
-- Allow to choose between "gethash" and "prefix"
-
 - Port libsecp256k1 code (long term)
+
+- SHA256 accelerate
+
+- OCL compressed

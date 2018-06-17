@@ -60,7 +60,7 @@
 #define COLOR0 ""
 #endif
 
-#define VANITYGEN_VERSION "0.25"
+#define VANITYGEN_VERSION "0.26"
 
 typedef struct _vg_context_s vg_context_t;
 
