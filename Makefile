@@ -55,10 +55,10 @@ keyconv: keyconv.o util.o cashaddr.o
 	$(CC) $^ -o $@ $(CFLAGS) $(LIBS)
 
 static_Linux: vanitygen.o pattern.o util.o cashaddr.o
-	$(CC) $^ -Wl,-rpath,. -o static_vanitygen-cash $(CFLAGS) $(LIBS)
+	$(CC) $^ -Wl,-rpath,. -o static_vanitygen-cash $(CFLAGS) -static-libstdc++ -static-libgcc $(LIBS)
 
 static_Linux_ocl: oclvanitygen.o oclengine.o pattern.o util.o cashaddr.o
-	$(CC) $^ -Wl,-rpath,. -o static_oclvanitygen-cash $(CFLAGS) $(LIBS) $(OPENCL_LIBS)
+	$(CC) $^ -Wl,-rpath,. -o static_oclvanitygen-cash $(CFLAGS) -static-libstdc++ -static-libgcc $(LIBS) $(OPENCL_LIBS)
 
 static_Mac: vanitygen.o pattern.o util.o cashaddr.o
 	$(CC) $^ -o static_vanitygen-cash $(CFLAGS) -static-libstdc++ -static-libgcc $(LIBS)
