@@ -828,20 +828,12 @@ static void vg_prefix_delete(avl_root_t *rootp, vg_prefix_t *vp) {
 
 static vg_prefix_t *vg_prefix_add_ranges(avl_root_t *rootp, const char *pattern,
 	BIGNUM **ranges, vg_prefix_t *master) {
-	vg_prefix_t *vp, *vp2 = NULL;
-
 	assert(ranges[0]);
-	vp = vg_prefix_add(rootp, pattern, ranges[0], ranges[1]);
+	vg_prefix_t *vp = vg_prefix_add(rootp, pattern, ranges[0], ranges[1]);
 	if (!vp) return NULL;
 
 	if (!master) {
-		vp->vp_sibling = vp2;
-		if (vp2) vp2->vp_sibling = vp;
-	} else if (vp2) {
-		vp->vp_sibling = vp2;
-		vp2->vp_sibling =
-			(master->vp_sibling ? master->vp_sibling : master);
-		master->vp_sibling = vp;
+		vp->vp_sibling = NULL;
 	} else {
 		vp->vp_sibling =
 			(master->vp_sibling ? master->vp_sibling : master);
@@ -984,6 +976,85 @@ static int vg_prefix_context_add_patterns(
 	BN_clear_free(bntmp3);
 	BN_CTX_free(bnctx);
 	return ret;
+}
+
+static int vg_prefix_context_add_raw_ranges(vg_context_t *vcp,
+	const char *patname, const char **range, int nrange) {
+	vg_prefix_context_t *vcpp = (vg_prefix_context_t *) vcp;
+	vg_prefix_t *vp = NULL;
+	BN_CTX *bnctx;
+	BIGNUM *bntmp = BN_new(), *bntmp2 = BN_new(), *bntmp3 = BN_new();
+	BIGNUM *difficulty = BN_new();
+	BIGNUM *ranges[2];
+	unsigned long npfx;
+	char *dbuf;
+
+	bnctx = BN_CTX_new();
+
+	npfx = 0;
+	for (int i = 0; i < nrange; i++) {
+		ranges[0] = BN_new();
+		ranges[1] = BN_new();
+		if (BN_bin2bn((const unsigned char *) range[i], 20,
+			    ranges[0]) == NULL ||
+			BN_bin2bn((const unsigned char *) &range[i][20], 20,
+				ranges[1]) == NULL) {
+			fprintf(stderr,
+				"Internal Bignum error, skipping range.\n");
+			continue;
+		}
+		if (BN_ucmp(ranges[0], ranges[1]) == 1) {
+			fprintf(stderr,
+				"Lower range is larger than the upper range in the range file %s, skipping range.\n",
+				patname);
+			continue;
+		}
+		vp = vg_prefix_add_ranges(
+			&vcpp->vcp_avlroot, patname, ranges, vp);
+
+		if (!vp) continue;
+
+		npfx++;
+
+		/* Determine the probability of finding a match */
+		vg_prefix_range_sum(vp, bntmp, bntmp2);
+		BN_add(bntmp2, vcpp->vcp_difficulty, bntmp);
+		BN_copy(vcpp->vcp_difficulty, bntmp2);
+
+		if (vcp->vc_verbose > 1) {
+			BN_add(bntmp2, difficulty, bntmp);
+			BN_copy(difficulty, bntmp2);
+		}
+	}
+
+	if (vcp->vc_verbose > 1) {
+		BN_clear(bntmp2);
+		BN_set_bit(bntmp2, 160);
+		BN_div(bntmp3, NULL, bntmp2, difficulty, bnctx);
+
+		dbuf = BN_bn2dec(bntmp3);
+		fprintf(stderr, "Range file %s difficulty: %20s\n", patname,
+			dbuf);
+		OPENSSL_free(dbuf);
+	}
+
+	vcpp->base.vc_npatterns += npfx;
+	vcpp->base.vc_npatterns_start += npfx;
+
+	if (npfx) vg_prefix_context_next_difficulty(vcpp, bntmp, bntmp2, bnctx);
+
+	BN_clear_free(bntmp);
+	BN_clear_free(bntmp2);
+	BN_clear_free(bntmp3);
+	BN_clear_free(difficulty);
+	BN_CTX_free(bnctx);
+	return npfx != 0;
+}
+
+int vg_prefix_context_add_ranges(vg_context_t *vcp, const char *patname,
+	const char **range, int nrange) {
+	vcp->vc_pattern_generation++;
+	return vg_prefix_context_add_raw_ranges(vcp, patname, range, nrange);
 }
 
 double vg_prefix_get_difficulty(int addrtype, const char *pattern) {

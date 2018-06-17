@@ -1,5 +1,5 @@
 LIBS=-lm -lpthread -lhs
-CFLAGS=-Wall -Wextra
+CFLAGS=-Wall -Wextra -Winline
 OBJS=vanitygen.o oclvanitygen.o oclvanityminer.o oclengine.o keyconv.o pattern.o util.o cashaddr.o
 PROGS=vanitygen keyconv oclvanitygen oclvanityminer
 # OPTIMIZE

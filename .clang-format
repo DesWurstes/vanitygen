@@ -26,7 +26,7 @@ BinPackParameters: true
 BreakBeforeBraces: Attach
 BreakBeforeBinaryOperators: None
 BreakBeforeTernaryOperators: false
-BreakStringLiterals: true
+BreakStringLiterals: false
 IndentCaseLabels: false
 IndentWrappedFunctionNames: false
 PointerAlignment: Right

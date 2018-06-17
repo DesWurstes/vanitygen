@@ -19,7 +19,7 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-const char * const CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
+const char *const CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
 
 static void convertBitsEightToFive(const unsigned char *__restrict bytes,
 	unsigned char first_byte, unsigned char *__restrict converted) {

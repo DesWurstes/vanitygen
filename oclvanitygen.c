@@ -70,6 +70,7 @@ void usage(const char *name) {
 "-g <x>x<y>    Set grid size\n"
 "-b <invsize>  Set modular inverse ops per thread\n"
 "-V            Enable kernel/OpenCL/hardware verification (SLOW)\n"
+"-G <file>     Rangegen pattern file\n"
 "-f <file>     File containing list of patterns, one per line\n"
 "              (Use \"-\" as the file name for stdin)\n"
 "-o <file>     Write pattern matches to <file> in TSV format (readable)\n"
@@ -116,26 +117,24 @@ int main(int argc, char **argv) {
 	int npattfp = 0;
 	int pattstdin = 0;
 
+	const char **rangef = (const char **) malloc(4 * sizeof(const char *));
+	int range_alloc = 4;
+	int nrange = 0;
+
 	int i;
 
 	while ((opt = getopt(argc, argv,
-			"vcqk1Tp:P:l:d:w:t:g:b:VSh?f:o:O:s:D:")) != -1) {
+			"vcqk1Tp:P:l:d:w:t:g:b:VSh?f:G:o:O:s:D:")) != -1) {
 		switch (opt) {
 		case 'v': verbose = 2; break;
 		case 'c':
 			fprintf(stderr, "%s\n",
 				"Conditions:\n"
-				"• The alphabet is "
-				"023456789acdefghjklmnpqrstuvwxyz\n"
-				"• The first character must be 'q' for "
-				"standard addresses or 'p' "
-				"for P2SH\n"
-				"• The second character must be either 'p', "
-				"'q', 'r' or 'z'.\n"
-				"• The prefix must be lowercase and typed "
-				"without the CashAddr "
-				"prefix "
-				"(e.g. no \"bitcoincash:\")\n");
+				"• The alphabet is 023456789acdefghjklmnpqrstuvwxyz\n"
+				"• The first character must be 'q' for standard addresses or 'p' for P2SH\n"
+				"• The second character must be either 'p', 'q', 'r' or 'z'.\n"
+				"• The prefix must be lowercase and typed without the CashAddr "
+				"prefix (e.g. no \"bitcoincash:\")\n");
 			return 0;
 		case 'q': verbose = 0; break;
 		case 'k': remove_on_match = 0; break;
@@ -282,8 +281,15 @@ int main(int argc, char **argv) {
 				}
 			}
 			pattfp[npattfp] = fp;
-			// pattfpi[npattfp] = caseinsensitive;
 			npattfp++;
+			break;
+		case 'G':
+			if (nrange == range_alloc) {
+				range_alloc *= 2;
+				rangef = (const char **) realloc(rangef,
+					range_alloc * sizeof(const char *));
+			}
+			rangef[nrange++] = optarg;
 			break;
 		case 'o':
 			if (result_file) {
@@ -396,7 +402,7 @@ int main(int argc, char **argv) {
 	vcp->vc_output_match = vg_output_match_console;
 	vcp->vc_output_timing = vg_output_timing_console;
 
-	if (!npattfp) {
+	if (!npattfp && !nrange) {
 		if (optind >= argc) {
 			usage(argv[0]);
 			return 1;
@@ -420,6 +426,29 @@ int main(int argc, char **argv) {
 		if (!vg_context_add_patterns(
 			    vcp, (const char **) patterns, npatterns))
 			return 1;
+	}
+
+	for (i = 0; i < nrange; i++) {
+		fp = fopen(rangef[i], "r");
+		if (!fp) {
+			fprintf(stderr, "Could not open %s: %s\n", rangef[i],
+				strerror(errno));
+			return 1;
+		}
+		char **range_list = (char **) malloc(8 * sizeof(char *));
+		int range_count = 0;
+		int range_alloc = 8;
+		if (!vg_read_range_file(fp, (const char ***) &range_list,
+			    &range_count, &range_alloc))
+			return 1;
+		fclose(fp);
+		int r = vg_prefix_context_add_ranges(vcp, rangef[i],
+			(const char **) range_list, range_count);
+		for (int k = 0; k < range_count; k++) {
+			free(range_list[k]);
+		}
+		free(range_list);
+		if (!r) return 1;
 	}
 
 	if (!vcp->vc_npatterns) {

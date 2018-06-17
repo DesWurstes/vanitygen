@@ -328,12 +328,12 @@ void usage(const char *name) {
 "-1            Stop after first match\n"
 "-T            Generate Bitcoin Cash testnet address\n"
 "-l <hex>      Choose prefix for the hex format of private key (EXPERTS)\n"
-"-F <format>   Generate address with the given format (pubkey or script)\n"
-"              (EXPERTS ONLY!)\n"
+"-F            Generate address with the script format (EXPERTS ONLY!)\n"
 "-P <pubkey>   Specify base public key for piecewise key generation\n"
 "-t <threads>  Set number of worker threads (Default: number of CPUs)\n"
 "-f <file>     File containing list of patterns, one per line\n"
 "              (Use \"-\" as the file name for stdin)\n"
+"-G <file>     Rangegen pattern file\n"
 "-o <file>     Write pattern matches to <file> in TSV format (readable)\n"
 "-O <file>     Write pattern matches to <file> in CSV format\n"
 "              (importable e.g. Excel)\n"
@@ -369,24 +369,22 @@ int main(int argc, char **argv) {
 	int npattfp = 0;
 	int pattstdin = 0;
 
+	const char **rangef = (const char **) malloc(4 * sizeof(const char *));
+	int range_alloc = 4;
+	int nrange = 0;
+
 	unsigned int i;
 
-	while ((opt = getopt(argc, argv, "cvqnrk1P:Tl:F:t:h?f:o:O:s:")) != -1) {
+	while ((opt = getopt(argc, argv, "cvqnrk1P:Tl:Ft:h?f:G:o:O:s:")) !=
+		-1) {
 		switch (opt) {
 		case 'c':
 			fprintf(stderr, "%s\n",
 				"Conditions:\n"
-				"• The alphabet is "
-				"023456789acdefghjklmnpqrstuvwxyz\n"
-				"• The first character must be 'q' for "
-				"standard addresses or 'p' "
-				"for P2SH\n"
-				"• The second character must be either 'p', "
-				"'q', 'r' or 'z'.\n"
-				"• The prefix must be lowercase and typed "
-				"without the CashAddr "
-				"prefix "
-				"(e.g. no \"bitcoincash:\")\n");
+				"• The alphabet is 023456789acdefghjklmnpqrstuvwxyz\n"
+				"• The first character must be 'q' for standard addresses or 'p' for P2SH\n"
+				"• The second character must be either 'p', 'q', 'r' or 'z'.\n"
+				"• The prefix must be lowercase and typed without the CashAddr prefix (e.g. no \"bitcoincash:\")\n");
 			return 0;
 		case 'v': verbose = 2; break;
 		case 'q': verbose = 0; break;
@@ -395,9 +393,7 @@ int main(int argc, char **argv) {
 		case 'k': remove_on_match = 0; break;
 		case '1': only_one = 1; break;
 		case 'T':
-			//	addrtype = 111;
 			privtype = 239;
-			//	scriptaddrtype = 196;
 			testnet = 1;
 			break;
 		case 'l':
@@ -423,14 +419,9 @@ int main(int argc, char **argv) {
 
 			if (privkey_prefix_length > 24) {
 				fprintf(stderr,
-					"Pkey prefix is longer than 48 "
-					"characters, will try, "
-					"but no promise.\n"
-					"Pkey prefix with at most 48 "
-					"characters is advised for security, "
-					"or "
-					"a private key may not be found at "
-					"all.\n");
+					"Pkey prefix is longer than 48 characters, will try, but no promise.\n"
+					"Pkey prefix with at most 48 characters is advised for security, or "
+					"a private key may not be found at all.\n");
 			}
 			for (unsigned int i = 0;
 				i < (unsigned int) privkey_prefix_length; i++) {
@@ -442,17 +433,7 @@ int main(int argc, char **argv) {
 				privkey_prefix[i] = value;
 			}
 			break;
-		case 'F':
-			if (!strcmp(optarg, "script"))
-				addrtype = 1 << 3;
-			else if (!strcmp(optarg, "pubkey")) {
-				addrtype = 0;
-			} else {
-				fprintf(stderr, "Invalid format '%s'\n",
-					optarg);
-				return 1;
-			}
-			break;
+		case 'F': addrtype = 1 << 3; break;
 		case 'P': {
 			if (pubkey_base != NULL) {
 				fprintf(stderr,
@@ -500,8 +481,15 @@ int main(int argc, char **argv) {
 					return 1;
 				}
 			}
-			pattfp[npattfp] = fp;
-			npattfp++;
+			pattfp[npattfp++] = fp;
+			break;
+		case 'G':
+			if (nrange == range_alloc) {
+				range_alloc *= 2;
+				rangef = (const char **) realloc(rangef,
+					range_alloc * sizeof(const char *));
+			}
+			rangef[nrange++] = optarg;
 			break;
 		case 'o':
 			if (result_file) {
@@ -547,9 +535,16 @@ int main(int argc, char **argv) {
 		}
 	}
 #endif
+
+	if (regex && nrange != 0) {
+		fprintf(stderr,
+			"Can't have range files specified in regex mode!\n");
+		return 1;
+	}
+
 	if (seedfile) {
 		opt = -1;
-#if !defined(_WIN32)
+#ifndef _WIN32
 		{
 			struct stat st;
 			if (!stat(seedfile, &st) &&
@@ -647,7 +642,7 @@ int main(int argc, char **argv) {
 	vcp->vc_output_match = vg_output_match_console;
 	vcp->vc_output_timing = vg_output_timing_console;
 
-	if (!npattfp) {
+	if (!npattfp && !nrange) {
 		if (optind >= argc) {
 			usage(argv[0]);
 			return 1;
@@ -671,6 +666,30 @@ int main(int argc, char **argv) {
 		if (!vg_context_add_patterns(
 			    vcp, (const char **) patterns, npatterns))
 			return 1;
+	}
+
+	for (i = 0; i < (unsigned) nrange; i++) {
+		fp = fopen(rangef[i], "r");
+		if (!fp) {
+			fprintf(stderr, "Could not open %s: %s\n", rangef[i],
+				strerror(errno));
+			return 1;
+		}
+		char **range_list = (char **) malloc(8 * sizeof(char *));
+		int range_count = 0;
+		int range_alloc = 8;
+		if (!vg_read_range_file(fp, (const char ***) &range_list,
+			    &range_count, &range_alloc))
+			return 1;
+		fclose(fp);
+		vg_prefix_context_add_ranges(vcp, rangef[i],
+			(const char **) range_list, range_count);
+		for (int k = 0; k < range_count; k++) {
+			free(range_list[k]);
+		}
+		free(range_list);
+		// if (!r)
+		//	return 1;
 	}
 
 	if (!vcp->vc_npatterns) {

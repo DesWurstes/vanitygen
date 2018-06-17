@@ -375,6 +375,83 @@ out:
 	return res;
 }
 
+inline static char decodeHex(char s) {
+	switch (s) {
+	case '0': return 0;
+	case '1': return 1;
+	case '2': return 2;
+	case '3': return 3;
+	case '4': return 4;
+	case '5': return 5;
+	case '6': return 6;
+	case '7': return 7;
+	case '8': return 8;
+	case '9': return 9;
+	case 'a': return 10;
+	case 'b': return 11;
+	case 'c': return 12;
+	case 'd': return 13;
+	case 'e': return 14;
+	case 'f': return 15;
+	default: return -1;
+	}
+}
+
+int vg_read_range_file(
+	FILE *fp, const char ***pat_list, int *pat_count, int *pat_alloc) {
+	// newline + null character + extra
+	char *buff = (char *) malloc((80 + 1 + 1 + 1) * sizeof(char));
+	buff[82] = 0x01;
+	while (1) {
+		if (*pat_alloc == *pat_count) {
+			*pat_list = (const char **) realloc(
+				*pat_list, 2 * (*pat_alloc) * sizeof(char *));
+			if (*pat_list == NULL) {
+				fprintf(stderr, "Out of memory!\n");
+				free(*pat_list);
+				free(buff);
+				return 0;
+			}
+			*pat_alloc *= 2;
+		}
+		if (fgets(buff, 80 + 1 + 1 + 1, (FILE *) fp) == NULL) {
+			if (feof(fp)) break;
+			fprintf(stderr,
+				"Couldn't read range from input file! Error: %s\n",
+				strerror(errno));
+			fclose(fp);
+			free(buff);
+			return 0;
+		}
+		if (buff[82] != 0x01) {
+			fprintf(stderr,
+				"Line that starts with \"%.15s...\" is too long! (Corrupted range file)\n",
+				buff);
+			fclose(fp);
+			free(buff);
+			return 0;
+		}
+		char *buff2 = (char *) malloc(40 * sizeof(char));
+		for (int i = 0; i < 80; i += 2) {
+			buff2[i / 2] = decodeHex(buff[i]) * 16 +
+				decodeHex(buff[i + 1]);
+		}
+		for (int i = 0; i < 40; i++) {
+			if (buff2[i] == -1) {
+				fprintf(stderr,
+					"Non-lowercase-base16 character in line that starts with \"%.15s...\"\n",
+					buff);
+				free(buff);
+				return 0;
+			}
+		}
+		(*pat_list)[(*pat_count)++] = (const char *) buff2;
+	}
+	fclose(fp);
+	free(buff);
+	return 1;
+}
+
 /*
  * Pattern file reader
  * Absolutely disgusting, unable to free the pattern list when it's done

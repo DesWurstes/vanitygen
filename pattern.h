@@ -163,6 +163,8 @@ void vg_context_wait_for_completion(vg_context_t *vcp);
 
 /* Prefix context methods */
 vg_context_t *vg_prefix_context_new(int addrtype, int privtype, int testnet);
+int vg_prefix_context_add_ranges(
+	vg_context_t *vcp, const char *patname, const char **range, int nrange);
 double vg_prefix_get_difficulty(int addrtype, const char *pattern);
 
 /* Regex context methods */

@@ -55,6 +55,9 @@ int vg_pkcs8_encode_privkey(
 int vg_decode_privkey_any(
 	EC_KEY *pkey, int *addrtype, const char *input, const char *pass);
 
+int vg_read_range_file(
+	FILE *fp, const char ***pat_list, int *pat_count, int *pat_alloc);
+
 int vg_read_file(FILE *fp, char ***result, int *rescount);
 
 #endif /* !defined (__VG_UTIL_H__) */
